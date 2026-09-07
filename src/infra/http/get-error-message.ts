@@ -15,6 +15,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   USER_NOT_FOUND: 'Não encontramos uma conta com esses dados.',
   IDENTIFIER_REQUIRED: 'Informe seu e-mail ou telefone.',
   PASSWORD_TOO_SHORT: 'A nova senha deve ter pelo menos 8 caracteres.',
+  PASSWORD_UNCHANGED: 'A nova senha deve ser diferente da senha atual.',
   INVALID_CREDENTIALS: 'Credenciais inválidas. Confira os dados e tente novamente.',
   PHONE_INVALID: 'Número de telefone inválido.',
   PHONE_REQUIRED: 'Informe seu número de telefone.',

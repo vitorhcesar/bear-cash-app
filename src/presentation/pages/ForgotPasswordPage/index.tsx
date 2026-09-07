@@ -62,13 +62,6 @@ function stepForPhase(phase: Phase) {
   return 3;
 }
 
-function passwordErrorMessage(error: unknown, fallback: string) {
-  if (isApiError(error) && error.code === 'PASSWORD_TOO_SHORT') {
-    return 'A nova senha deve ter pelo menos 8 caracteres.';
-  }
-  return getErrorMessage(error, fallback);
-}
-
 export function ForgotPasswordPage() {
   const router = useRouter();
   const api = useApiService();
@@ -270,7 +263,7 @@ export function ForgotPasswordPage() {
     } catch (err) {
       Alert.alert(
         'Erro ao alterar senha',
-        passwordErrorMessage(err, 'Não foi possível alterar a senha. Tente novamente.'),
+        getErrorMessage(err, 'Não foi possível alterar a senha. Tente novamente.'),
       );
     } finally {
       setSaving(false);

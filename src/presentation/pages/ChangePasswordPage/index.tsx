@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getErrorMessage, isApiError } from '@/infra/http/get-error-message';
+import { getErrorMessage } from '@/infra/http/get-error-message';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { InfoCircleIcon } from '@/presentation/components/ui/api-keys-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
@@ -22,15 +22,6 @@ import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const MIN_PASSWORD_LENGTH = 8;
-
-function passwordErrorMessage(error: unknown, fallback: string) {
-  if (isApiError(error)) {
-    if (error.code === 'PASSWORD_TOO_SHORT') {
-      return 'A nova senha deve ter pelo menos 8 caracteres.';
-    }
-  }
-  return getErrorMessage(error, fallback);
-}
 
 export function ChangePasswordPage() {
   const router = useRouter();
@@ -83,7 +74,7 @@ export function ChangePasswordPage() {
     } catch (error) {
       Alert.alert(
         'Erro ao alterar senha',
-        passwordErrorMessage(
+        getErrorMessage(
           error,
           'Não foi possível alterar a senha. Tente novamente.',
         ),
