@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useMemo, useRef } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { AuthMethod } from '@/presentation/auth/auth-flow';
 import { isValidEmail } from '@/presentation/auth/auth-flow';
@@ -29,6 +29,7 @@ export type ExistingAccountLoginProps = {
   onSubmit: (nextPassword?: string) => void;
   onGooglePress?: () => void;
   onApplePress?: () => void;
+  onForgotPassword?: () => void;
 };
 
 export function ExistingAccountLogin({
@@ -45,6 +46,7 @@ export function ExistingAccountLogin({
   onSubmit,
   onGooglePress,
   onApplePress,
+  onForgotPassword,
 }: ExistingAccountLoginProps) {
   const phoneDisplay = useMemo(() => formatBrazilPhoneDisplay(phone), [phone]);
   const avatar = useMemo(() => getAvatarOption(avatarKey), [avatarKey]);
@@ -123,6 +125,15 @@ export function ExistingAccountLogin({
             enablesReturnKeyAutomatically
             onSubmitEditing={() => onSubmit()}
           />
+          {onForgotPassword ? (
+            <Pressable
+              accessibilityRole="link"
+              onPress={onForgotPassword}
+              hitSlop={8}
+            >
+              <Text style={styles.forgotLink}>Esqueci minha senha</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         <Button
@@ -188,6 +199,13 @@ const styles = StyleSheet.create({
   fields: {
     alignSelf: 'stretch',
     gap: 16,
+  },
+  forgotLink: {
+    ...OttoTypography.bodySmall,
+    color: OttoColors.textSoft,
+    textDecorationLine: 'underline',
+    textAlign: 'right',
+    alignSelf: 'stretch',
   },
   socialActions: {
     alignSelf: 'stretch',

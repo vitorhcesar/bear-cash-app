@@ -1,3 +1,4 @@
+import { type Href } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { BackButton } from '@/presentation/components/ui/back-button';
@@ -6,12 +7,23 @@ import { StepGroup } from '@/presentation/components/ui/step-group';
 type AuthFlowHeaderProps = {
   total: number;
   current: number;
+  fallbackHref?: Href;
+  onBack?: () => void;
 };
 
-export function AuthFlowHeader({ total, current }: AuthFlowHeaderProps) {
+export function AuthFlowHeader({
+  total,
+  current,
+  fallbackHref = '/',
+  onBack,
+}: AuthFlowHeaderProps) {
   return (
     <View style={styles.topBar}>
-      <BackButton fallbackHref="/" style={styles.backButton} />
+      <BackButton
+        onPress={onBack}
+        fallbackHref={fallbackHref}
+        style={styles.backButton}
+      />
       <StepGroup total={total} current={current} />
     </View>
   );

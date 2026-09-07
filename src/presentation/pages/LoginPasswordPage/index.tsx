@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
   Alert,
@@ -28,6 +28,7 @@ import { OttoColors } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export function LoginPasswordPage() {
+  const router = useRouter();
   const api = useApiService();
   const { applyAuthResult } = useAuthSession();
   const { signIn: signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
@@ -129,6 +130,17 @@ export function LoginPasswordPage() {
                 }}
                 onApplePress={() => {
                   void signInWithApple();
+                }}
+                onForgotPassword={() => {
+                  router.push({
+                    pathname: '/forgot-password',
+                    params: {
+                      method,
+                      email,
+                      phone,
+                      avatarKey,
+                    },
+                  });
                 }}
               />
             </AuthScene>

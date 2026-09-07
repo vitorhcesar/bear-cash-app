@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
-import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useRef, useState } from "react";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -20,7 +20,7 @@ import {
 
 import { getErrorMessage } from "@/infra/http/get-error-message";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
-import { type AuthMethod, isValidEmail } from "@/presentation/auth/auth-flow";
+import { type AuthMethod, isValidEmail, paramString, parseAuthMethod } from "@/presentation/auth/auth-flow";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import {
   authFadeIn,
@@ -63,19 +63,60 @@ export function LoginEmailPage() {
     setAvatarKey,
     resetDraft,
   } = useAuthDraft();
-  const [method, setMethodLocal] = useState<AuthMethod>("email");
-  const [phase, setPhase] = useState<AuthPhase>("identify");
-  const [email, setEmailLocal] = useState("");
-  const [phone, setPhoneLocal] = useState("");
+  const params = useLocalSearchParams<{
+    resume?: string;
+    email?: string;
+    phone?: string;
+    method?: string;
+    avatarKey?: string;
+  }>();
+  const resumeLogin = paramString(params.resume) === "login";
+  const resumedMethod: AuthMethod =
+    resumeLogin && parseAuthMethod(params.method) === "phone" ? "phone" : "email";
+  const [method, setMethodLocal] = useState<AuthMethod>(
+    resumeLogin ? resumedMethod : "email",
+  );
+  const [phase, setPhase] = useState<AuthPhase>(
+    resumeLogin ? "password" : "identify",
+  );
+  const [email, setEmailLocal] = useState(() =>
+    resumeLogin ? paramString(params.email) : "",
+  );
+  const [phone, setPhoneLocal] = useState(() =>
+    resumeLogin ? paramString(params.phone) : "",
+  );
   const [password, setPassword] = useState("");
-  const [avatarKey, setAvatarKeyLocal] = useState("");
+  const [avatarKey, setAvatarKeyLocal] = useState(() =>
+    resumeLogin ? paramString(params.avatarKey) : "",
+  );
   const [loading, setLoading] = useState(false);
   const [hasSwitchedMethod, setHasSwitchedMethod] = useState(false);
-  const [hasLeftIdentify, setHasLeftIdentify] = useState(false);
+  const [hasLeftIdentify, setHasLeftIdentify] = useState(resumeLogin);
   const submittingRef = useRef(false);
   const departedToRegister = useRef(false);
   const insets = useSafeAreaInsets();
   const sceneMotion = useAuthSceneMotion();
+
+  useEffect(() => {
+    if (!resumeLogin) {
+      return;
+    }
+
+    setMethod(resumedMethod);
+    setEmail(paramString(params.email));
+    setPhone(paramString(params.phone));
+    setAvatarKey(paramString(params.avatarKey));
+  }, [
+    params.avatarKey,
+    params.email,
+    params.phone,
+    resumeLogin,
+    resumedMethod,
+    setAvatarKey,
+    setEmail,
+    setMethod,
+    setPhone,
+  ]);
 
   const canContinue =
     method === "email"
@@ -281,6 +322,17 @@ export function LoginEmailPage() {
                   }}
                   onApplePress={() => {
                     void signInWithApple();
+                  }}
+                  onForgotPassword={() => {
+                    router.push({
+                      pathname: "/forgot-password",
+                      params: {
+                        method,
+                        email,
+                        phone,
+                        avatarKey,
+                      },
+                    });
                   }}
                 />
               ) : (

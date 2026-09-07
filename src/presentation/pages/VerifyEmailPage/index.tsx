@@ -11,7 +11,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage, isApiError } from '@/infra/http/get-error-message';
@@ -209,34 +209,26 @@ export function VerifyEmailPage() {
           >
             <Animated.View
               key={phase}
-              entering={
-                phase === 'prompt' && !hasLeftPrompt
-                  ? undefined
-                  : authFadeIn(phase === 'prompt' ? 'left' : 'right')
-              }
+              entering={authFadeIn(
+                phase === 'prompt' && hasLeftPrompt ? 'left' : 'right',
+              )}
               exiting={authFadeOut(phase === 'prompt' ? 'left' : 'right')}
               style={styles.scene}
             >
               {phase === 'prompt' ? (
                 <>
-                  <Animated.View
-                    entering={ZoomIn.springify().damping(13).stiffness(160)}
-                    style={styles.mailBadge}
-                  >
+                  <View style={styles.mailBadge}>
                     <EmailIcon size={28} color={OttoColors.warningText} />
-                  </Animated.View>
+                  </View>
 
-                  <Animated.View
-                    entering={FadeInDown.delay(80).duration(320)}
-                    style={styles.headerCopy}
-                  >
+                  <View style={styles.headerCopy}>
                     <Text style={styles.title}>Verifique seu e-mail</Text>
                     <Text style={styles.subtitle}>
                       Vamos enviar um código OTP para confirmar que este e-mail é
                       seu:
                     </Text>
                     <Text style={styles.highlight}>{email || '—'}</Text>
-                  </Animated.View>
+                  </View>
 
                   <Button
                     label="Enviar código"
@@ -314,28 +306,18 @@ export function VerifyEmailPage() {
 
               {phase === 'success' ? (
                 <>
-                  <Animated.View
-                    entering={ZoomIn.springify().damping(11).stiffness(140)}
-                  >
-                    <VerifiedBadgeIcon size={72} color={OttoColors.primary} />
-                  </Animated.View>
+                  <VerifiedBadgeIcon size={72} color={OttoColors.primary} />
 
-                  <Animated.View
-                    entering={FadeInDown.delay(120).duration(360)}
-                    style={styles.headerCopy}
-                  >
+                  <View style={styles.headerCopy}>
                     <Text style={styles.title}>E-mail confirmado</Text>
                     <Text style={styles.subtitle}>
                       Seu e-mail {email} foi verificado com sucesso.
                     </Text>
-                  </Animated.View>
+                  </View>
 
-                  <Animated.View
-                    entering={FadeInDown.delay(220).duration(360)}
-                    style={styles.successAction}
-                  >
+                  <View style={styles.successAction}>
                     <Button label="Voltar" variant="filled" onPress={goToSettings} />
-                  </Animated.View>
+                  </View>
                 </>
               ) : null}
             </Animated.View>

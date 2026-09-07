@@ -45,6 +45,31 @@ export type AuthProfile = {
   onboardingCompleted: boolean;
 };
 
+export type PasswordRecoveryChannel = 'sms' | 'email';
+
+export type PasswordRecoveryChannelOption = {
+  available: boolean;
+  masked: string | null;
+};
+
+export type PasswordRecoveryOptionsResponse = {
+  sms: PasswordRecoveryChannelOption;
+  email: PasswordRecoveryChannelOption;
+};
+
+export type PasswordRecoveryOtpSendResponse = {
+  channel: PasswordRecoveryChannel;
+  masked: string;
+  expiresIn: number;
+  resendCooldown: number;
+  devHint?: string;
+};
+
+export type PasswordRecoveryOtpVerifyResponse = {
+  resetToken: string;
+  expiresIn: number;
+};
+
 export type EmailOtpSendResponse = {
   email: string;
   expiresIn: number;
@@ -114,6 +139,25 @@ export interface IAuthModule {
   verifyPasswordOtp(code: string): Promise<OtpVerifyResponse>;
   sendEmailOtp(): Promise<EmailOtpSendResponse>;
   verifyEmailOtp(code: string): Promise<MeResponse>;
+  getPasswordRecoveryOptions(input: {
+    email?: string;
+    phone?: string;
+  }): Promise<PasswordRecoveryOptionsResponse>;
+  sendPasswordRecoveryOtp(input: {
+    email?: string;
+    phone?: string;
+    channel: PasswordRecoveryChannel;
+  }): Promise<PasswordRecoveryOtpSendResponse>;
+  verifyPasswordRecoveryOtp(input: {
+    email?: string;
+    phone?: string;
+    channel: PasswordRecoveryChannel;
+    code: string;
+  }): Promise<PasswordRecoveryOtpVerifyResponse>;
+  resetPassword(input: {
+    resetToken: string;
+    newPassword: string;
+  }): Promise<{ ok: true }>;
   changePassword(input: {
     newPassword: string;
     verificationToken: string;
@@ -198,6 +242,47 @@ export class AuthModule extends BaseApiModule implements IAuthModule {
 
   verifyEmailOtp(code: string) {
     return this.http.post<MeResponse>('/api/v1/auth/me/email-otp/verify', { code });
+  }
+
+  getPasswordRecoveryOptions(input: { email?: string; phone?: string }) {
+    return this.http.post<PasswordRecoveryOptionsResponse>(
+      '/api/v1/auth/password/recovery/options',
+      input,
+      { skipAuth: true },
+    );
+  }
+
+  sendPasswordRecoveryOtp(input: {
+    email?: string;
+    phone?: string;
+    channel: PasswordRecoveryChannel;
+  }) {
+    return this.http.post<PasswordRecoveryOtpSendResponse>(
+      '/api/v1/auth/password/recovery/otp/send',
+      input,
+      { skipAuth: true },
+    );
+  }
+
+  verifyPasswordRecoveryOtp(input: {
+    email?: string;
+    phone?: string;
+    channel: PasswordRecoveryChannel;
+    code: string;
+  }) {
+    return this.http.post<PasswordRecoveryOtpVerifyResponse>(
+      '/api/v1/auth/password/recovery/otp/verify',
+      input,
+      { skipAuth: true },
+    );
+  }
+
+  resetPassword(input: { resetToken: string; newPassword: string }) {
+    return this.http.post<{ ok: true }>(
+      '/api/v1/auth/password/recovery/reset',
+      input,
+      { skipAuth: true },
+    );
   }
 
   changePassword(input: { newPassword: string; verificationToken: string }) {

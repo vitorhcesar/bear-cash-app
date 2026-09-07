@@ -9,7 +9,6 @@ import {
   Text,
   View,
 } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
@@ -241,30 +240,28 @@ export function SettingsPage() {
             />
 
             {!user?.emailVerified && user?.email ? (
-              <Animated.View entering={FadeInDown.duration(420).springify().damping(16)}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Verifique seu e-mail"
-                  onPress={() => router.push('/verify-email')}
-                  style={({ pressed }) => [
-                    styles.verifyBanner,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <View style={styles.verifyBannerLeft}>
-                    <View style={styles.verifyBannerIcon}>
-                      <EmailIcon size={16} color={OttoColors.warningText} />
-                    </View>
-                    <View style={styles.verifyBannerCopy}>
-                      <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
-                      <Text style={styles.verifyBannerSubtitle}>
-                        Confirme sua conta com um código
-                      </Text>
-                    </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Verifique seu e-mail"
+                onPress={() => router.push('/verify-email')}
+                style={({ pressed }) => [
+                  styles.verifyBanner,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={styles.verifyBannerLeft}>
+                  <View style={styles.verifyBannerIcon}>
+                    <EmailIcon size={16} color={OttoColors.warningText} />
                   </View>
-                  <SettingsChevronIcon size={16} color={OttoColors.warningText} />
-                </Pressable>
-              </Animated.View>
+                  <View style={styles.verifyBannerCopy}>
+                    <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
+                    <Text style={styles.verifyBannerSubtitle}>
+                      Confirme sua conta com um código
+                    </Text>
+                  </View>
+                </View>
+                <SettingsChevronIcon size={16} color={OttoColors.warningText} />
+              </Pressable>
             ) : null}
           </View>
 

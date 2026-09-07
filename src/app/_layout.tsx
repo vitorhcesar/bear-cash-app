@@ -88,7 +88,7 @@ function RootNavigator() {
           />
           <Stack.Screen
             name="verify-email"
-            options={{ animation: 'fade' }}
+            options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
             name="profile"
@@ -141,6 +141,7 @@ function RootNavigator() {
           <Stack.Screen name="login-email-profile" options={{ animation: 'none' }} />
           <Stack.Screen name="login-email-data" options={{ animation: 'none' }} />
           <Stack.Screen name="login-password" options={{ animation: 'none' }} />
+          <Stack.Screen name="forgot-password" options={{ animation: 'none' }} />
           <Stack.Screen name="explore" />
         </Stack.Protected>
       </Stack>
