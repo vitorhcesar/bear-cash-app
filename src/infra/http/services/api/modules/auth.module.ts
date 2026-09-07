@@ -45,9 +45,17 @@ export type AuthProfile = {
   onboardingCompleted: boolean;
 };
 
+export type EmailOtpSendResponse = {
+  email: string;
+  expiresIn: number;
+  resendCooldown: number;
+  devHint?: string;
+};
+
 export type AuthUser = {
   id: string;
   email: string;
+  emailVerified: boolean;
   name: string;
   phoneNumber: string | null;
   phoneNumberVerified: boolean;
@@ -104,6 +112,8 @@ export interface IAuthModule {
   verifyPassword(password: string): Promise<{ ok: true }>;
   sendPasswordOtp(): Promise<OtpSendResponse>;
   verifyPasswordOtp(code: string): Promise<OtpVerifyResponse>;
+  sendEmailOtp(): Promise<EmailOtpSendResponse>;
+  verifyEmailOtp(code: string): Promise<MeResponse>;
   changePassword(input: {
     newPassword: string;
     verificationToken: string;
@@ -180,6 +190,14 @@ export class AuthModule extends BaseApiModule implements IAuthModule {
 
   verifyPasswordOtp(code: string) {
     return this.http.post<OtpVerifyResponse>('/api/v1/auth/me/otp/verify', { code });
+  }
+
+  sendEmailOtp() {
+    return this.http.post<EmailOtpSendResponse>('/api/v1/auth/me/email-otp/send');
+  }
+
+  verifyEmailOtp(code: string) {
+    return this.http.post<MeResponse>('/api/v1/auth/me/email-otp/verify', { code });
   }
 
   changePassword(input: { newPassword: string; verificationToken: string }) {

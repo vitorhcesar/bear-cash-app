@@ -43,6 +43,8 @@ export const OttoColors = {
   error: "#f04438",
   errorSoft: "#f97066",
   danger: "#c33a22",
+  warning: "#E8C547",
+  warningText: "#0a0b0a",
   income: "#63e29f",
   expense: "#ff6b6b",
   neutralBlackSoft: "#1C1D1B",

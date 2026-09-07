@@ -66,15 +66,15 @@ export function LoginEmailPhonePage() {
     const phoneDigits = getPhoneDigits(phone);
     setLoading(true);
     try {
-      if (isOauthOnboarding) {
-        const start = await api.modules.auth.startPhone(phoneDigits);
-        if (start.exists) {
-          Alert.alert(
-            'Telefone em uso',
-            'Este número já está vinculado a outra conta. Use outro telefone.',
-          );
-          return;
-        }
+      const start = await api.modules.auth.startPhone(phoneDigits);
+      if (start.exists) {
+        Alert.alert(
+          'Telefone em uso',
+          isOauthOnboarding
+            ? 'Este número já está vinculado a outra conta. Use outro telefone.'
+            : 'Este número já está vinculado a outra conta. Use outro telefone ou faça login com essa conta.',
+        );
+        return;
       }
 
       const otp = await api.modules.auth.sendOtp(phoneDigits);

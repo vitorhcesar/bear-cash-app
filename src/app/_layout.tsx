@@ -87,6 +87,10 @@ function RootNavigator() {
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
+            name="verify-email"
+            options={{ animation: 'fade' }}
+          />
+          <Stack.Screen
             name="profile"
             options={{ animation: 'slide_from_right' }}
           />

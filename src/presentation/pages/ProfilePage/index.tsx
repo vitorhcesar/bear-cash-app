@@ -85,7 +85,7 @@ export function ProfilePage() {
   const email = user?.email?.trim() || '—';
   const phone = formatPhoneDisplay(user?.phoneNumber);
   const phoneVerified = Boolean(user?.phoneNumberVerified);
-  const emailVerified = Boolean(user?.email);
+  const emailVerified = Boolean(user?.emailVerified);
 
   const verifiedBadge = useMemo(
     () => <VerifiedBadgeIcon size={16} color={OttoColors.primary} />,
@@ -151,18 +151,28 @@ export function ProfilePage() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações de contato</Text>
           <View style={styles.fields}>
-            <TextField
-              label="E-mail"
-              value={email}
-              editable={false}
-              trailing={emailVerified ? verifiedBadge : undefined}
-            />
-            <TextField
-              label="Telefone"
-              value={phone}
-              editable={false}
-              trailing={phoneVerified ? verifiedBadge : undefined}
-            />
+            <View style={styles.contactField}>
+              <TextField
+                label="E-mail"
+                value={email}
+                editable={false}
+                trailing={emailVerified ? verifiedBadge : undefined}
+              />
+              {emailVerified ? (
+                <Text style={styles.verifiedHint}>E-mail verificado</Text>
+              ) : null}
+            </View>
+            <View style={styles.contactField}>
+              <TextField
+                label="Telefone"
+                value={phone}
+                editable={false}
+                trailing={phoneVerified ? verifiedBadge : undefined}
+              />
+              {phoneVerified ? (
+                <Text style={styles.verifiedHint}>Telefone verificado</Text>
+              ) : null}
+            </View>
           </View>
         </View>
 
@@ -239,6 +249,13 @@ const styles = StyleSheet.create({
   },
   fields: {
     gap: 16,
+  },
+  contactField: {
+    gap: 6,
+  },
+  verifiedHint: {
+    ...OttoTypography.caption,
+    color: OttoColors.textSoft,
   },
   securityRow: {
     flexDirection: 'row',

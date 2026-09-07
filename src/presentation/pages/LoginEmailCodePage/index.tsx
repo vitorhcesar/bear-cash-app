@@ -114,7 +114,7 @@ export function LoginEmailCodePage() {
       setMethod(method);
 
       if (result.phoneRegistered) {
-        if (isOauthMethod(method)) {
+        if (method !== 'phone') {
           setError('Este telefone já está vinculado a outra conta.');
           return;
         }

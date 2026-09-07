@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
@@ -22,6 +23,7 @@ import {
   NubankLogo,
   SantanderLogo,
 } from '@/presentation/components/ui/bank-logos';
+import { EmailIcon } from '@/presentation/components/ui/brand-icons';
 import { ProfileAvatarControl } from '@/presentation/components/ui/profile-avatar-control';
 import { ReportProblemSheet } from '@/presentation/components/ui/report-problem-sheet';
 import {
@@ -237,6 +239,33 @@ export function SettingsPage() {
               icon={<SettingsStarIcon size={16} />}
               onPress={() => comingSoon('Avalie o Otto')}
             />
+
+            {!user?.emailVerified && user?.email ? (
+              <Animated.View entering={FadeInDown.duration(420).springify().damping(16)}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Verifique seu e-mail"
+                  onPress={() => router.push('/verify-email')}
+                  style={({ pressed }) => [
+                    styles.verifyBanner,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <View style={styles.verifyBannerLeft}>
+                    <View style={styles.verifyBannerIcon}>
+                      <EmailIcon size={16} color={OttoColors.warningText} />
+                    </View>
+                    <View style={styles.verifyBannerCopy}>
+                      <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
+                      <Text style={styles.verifyBannerSubtitle}>
+                        Confirme sua conta com um código
+                      </Text>
+                    </View>
+                  </View>
+                  <SettingsChevronIcon size={16} color={OttoColors.warningText} />
+                </Pressable>
+              </Animated.View>
+            ) : null}
           </View>
 
           <Section title="Geral">
@@ -421,6 +450,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 26,
     color: OttoColors.textMid,
+  },
+  verifyBanner: {
+    alignSelf: 'stretch',
+    minHeight: 58,
+    backgroundColor: OttoColors.warning,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  verifyBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    paddingRight: 8,
+  },
+  verifyBannerIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(10, 11, 10, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifyBannerCopy: {
+    flex: 1,
+    gap: 0,
+  },
+  verifyBannerTitle: {
+    fontFamily: OttoFonts.semiBold,
+    fontSize: 16,
+    lineHeight: 22,
+    color: OttoColors.warningText,
+  },
+  verifyBannerSubtitle: {
+    ...OttoTypography.caption,
+    color: OttoColors.warningText,
+    opacity: 0.72,
   },
   section: {
     alignSelf: 'stretch',
