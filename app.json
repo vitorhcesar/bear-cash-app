@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.fansyfans.otto",
       "icon": "./assets/images/otto-app-icon.png",
       "backgroundColor": "#0a0b0a",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -32,6 +33,7 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
+      "expo-apple-authentication",
       [
         "expo-splash-screen",
         {

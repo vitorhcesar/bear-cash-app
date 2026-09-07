@@ -23,10 +23,12 @@ export type ExistingAccountLoginProps = {
   avatarKey: string;
   loading: boolean;
   googleLoading?: boolean;
+  appleLoading?: boolean;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: (nextPassword?: string) => void;
   onGooglePress?: () => void;
+  onApplePress?: () => void;
 };
 
 export function ExistingAccountLogin({
@@ -37,10 +39,12 @@ export function ExistingAccountLogin({
   avatarKey,
   loading,
   googleLoading = false,
+  appleLoading = false,
   onEmailChange,
   onPasswordChange,
   onSubmit,
   onGooglePress,
+  onApplePress,
 }: ExistingAccountLoginProps) {
   const phoneDisplay = useMemo(() => formatBrazilPhoneDisplay(phone), [phone]);
   const avatar = useMemo(() => getAvatarOption(avatarKey), [avatarKey]);
@@ -124,7 +128,7 @@ export function ExistingAccountLogin({
         <Button
           label="Entrar"
           variant="filled"
-          disabled={!canContinue || googleLoading}
+          disabled={!canContinue || googleLoading || appleLoading}
           loading={loading}
           onPress={() => onSubmit()}
         />
@@ -138,7 +142,7 @@ export function ExistingAccountLogin({
           variant="stroke"
           leftIcon={<GoogleIcon size={16} />}
           loading={googleLoading}
-          disabled={loading}
+          disabled={loading || appleLoading}
           onPress={() => {
             onGooglePress?.();
           }}
@@ -147,8 +151,10 @@ export function ExistingAccountLogin({
           label="Entrar com Apple"
           variant="stroke"
           leftIcon={<AppleIcon size={16} />}
+          loading={appleLoading}
+          disabled={loading || googleLoading}
           onPress={() => {
-            // Backend wiring comes later
+            onApplePress?.();
           }}
         />
       </View>

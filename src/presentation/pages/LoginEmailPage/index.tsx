@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useRef, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -25,9 +25,11 @@ import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import {
   authFadeIn,
   authFadeOut,
+  useAuthSceneMotion,
 } from "@/presentation/auth/auth-switch-transition";
 import { ExistingAccountLogin } from "@/presentation/auth/existing-account-login";
 import { useGoogleSignIn } from "@/presentation/auth/use-google-sign-in";
+import { useAppleSignIn } from "@/presentation/auth/use-apple-sign-in";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import {
   AppleIcon,
@@ -52,6 +54,7 @@ export function LoginEmailPage() {
   const api = useApiService();
   const { applyAuthResult } = useAuthSession();
   const { signIn: signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
+  const { signIn: signInWithApple, loading: appleLoading } = useAppleSignIn();
   const {
     setMethod,
     setEmail,
@@ -70,7 +73,9 @@ export function LoginEmailPage() {
   const [hasSwitchedMethod, setHasSwitchedMethod] = useState(false);
   const [hasLeftIdentify, setHasLeftIdentify] = useState(false);
   const submittingRef = useRef(false);
+  const departedToRegister = useRef(false);
   const insets = useSafeAreaInsets();
+  const sceneMotion = useAuthSceneMotion();
 
   const canContinue =
     method === "email"
@@ -101,11 +106,23 @@ export function LoginEmailPage() {
     setPhase("identify");
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!departedToRegister.current || phase !== "identify") {
+        return;
+      }
+
+      departedToRegister.current = false;
+      void sceneMotion.playEnter();
+    }, [phase, sceneMotion.playEnter]),
+  );
+
   async function handleContinue() {
     if (!canContinue || loading) {
       return;
     }
 
+    Keyboard.dismiss();
     setLoading(true);
     try {
       if (method === "email") {
@@ -121,6 +138,8 @@ export function LoginEmailPage() {
           return;
         }
 
+        departedToRegister.current = true;
+        await sceneMotion.playExit();
         router.push({
           pathname: "/login-email-phone",
           params: {
@@ -147,6 +166,8 @@ export function LoginEmailPage() {
       const otp = await api.modules.auth.sendOtp(result.phone);
       setOtpDevHint(otp.devHint ?? "");
 
+      departedToRegister.current = true;
+      await sceneMotion.playExit();
       router.push({
         pathname: "/login-email-code",
         params: {
@@ -232,7 +253,10 @@ export function LoginEmailPage() {
                   : authFadeIn(phase === "password" ? "right" : "left")
               }
               exiting={authFadeOut(phase === "password" ? "right" : "left")}
-              style={styles.scene}
+              style={[
+                styles.scene,
+                phase === "identify" ? sceneMotion.style : undefined,
+              ]}
             >
               {phase === "password" ? (
                 <ExistingAccountLogin
@@ -243,6 +267,7 @@ export function LoginEmailPage() {
                   avatarKey={avatarKey}
                   loading={loading}
                   googleLoading={googleLoading}
+                  appleLoading={appleLoading}
                   onEmailChange={(value) => {
                     setEmailLocal(value);
                     setEmail(value.trim());
@@ -253,6 +278,9 @@ export function LoginEmailPage() {
                   }}
                   onGooglePress={() => {
                     void signInWithGoogle();
+                  }}
+                  onApplePress={() => {
+                    void signInWithApple();
                   }}
                 />
               ) : (
@@ -307,7 +335,7 @@ export function LoginEmailPage() {
                     <Button
                       label="Continuar"
                       variant="filled"
-                      disabled={!canContinue || googleLoading}
+                      disabled={!canContinue || googleLoading || appleLoading}
                       loading={loading}
                       onPress={handleContinue}
                     />
@@ -320,9 +348,10 @@ export function LoginEmailPage() {
                       label="Continuar com Apple"
                       variant="stroke"
                       leftIcon={<AppleIcon size={16} />}
+                      loading={appleLoading}
                       disabled={loading || googleLoading}
                       onPress={() => {
-                        // Backend wiring comes later
+                        void signInWithApple();
                       }}
                     />
                     <Button
@@ -330,7 +359,7 @@ export function LoginEmailPage() {
                       variant="stroke"
                       leftIcon={<GoogleIcon size={16} />}
                       loading={googleLoading}
-                      disabled={loading}
+                      disabled={loading || appleLoading}
                       onPress={() => {
                         void signInWithGoogle();
                       }}

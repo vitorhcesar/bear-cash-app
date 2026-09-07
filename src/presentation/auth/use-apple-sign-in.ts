@@ -3,13 +3,13 @@ import { Alert } from 'react-native';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
 import {
-  isGoogleSignInCanceled,
-  signInWithGoogle,
-} from '@/infra/auth/google-sign-in';
+  isAppleSignInCanceled,
+  signInWithApple,
+} from '@/infra/auth/apple-sign-in';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 
-export function useGoogleSignIn() {
+export function useAppleSignIn() {
   const { applyAuthResult } = useAuthSession();
   const { setMethod, setEmail, resetDraft } = useAuthDraft();
   const [loading, setLoading] = useState(false);
@@ -21,21 +21,21 @@ export function useGoogleSignIn() {
 
     setLoading(true);
     try {
-      const result = await signInWithGoogle();
-      setMethod('google');
+      const result = await signInWithApple();
+      setMethod('apple');
       setEmail(result.user.email);
-      await applyAuthResult(result, 'google');
+      await applyAuthResult(result, 'apple');
       if (result.profile.onboardingCompleted) {
         resetDraft();
       }
     } catch (error) {
-      if (isGoogleSignInCanceled(error)) {
+      if (isAppleSignInCanceled(error)) {
         return;
       }
 
       Alert.alert(
-        'Google',
-        getErrorMessage(error, 'Não foi possível entrar com o Google. Tente novamente.'),
+        'Apple',
+        getErrorMessage(error, 'Não foi possível entrar com a Apple. Tente novamente.'),
       );
     } finally {
       setLoading(false);

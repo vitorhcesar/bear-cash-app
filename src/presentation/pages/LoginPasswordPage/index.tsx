@@ -20,8 +20,9 @@ import {
 } from '@/presentation/auth/auth-flow';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
-import { authFadeIn } from '@/presentation/auth/auth-switch-transition';
+import { AuthScene, authFadeIn } from '@/presentation/auth/auth-switch-transition';
 import { useGoogleSignIn } from '@/presentation/auth/use-google-sign-in';
+import { useAppleSignIn } from '@/presentation/auth/use-apple-sign-in';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { OttoColors } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
@@ -30,6 +31,7 @@ export function LoginPasswordPage() {
   const api = useApiService();
   const { applyAuthResult } = useAuthSession();
   const { signIn: signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
+  const { signIn: signInWithApple, loading: appleLoading } = useAppleSignIn();
   const { draft, setEmail, resetDraft } = useAuthDraft();
   const params = useLocalSearchParams<{
     email?: string;
@@ -104,7 +106,7 @@ export function LoginPasswordPage() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Animated.View entering={authFadeIn('right')} style={styles.scene}>
+            <AuthScene kind="login" style={styles.scene}>
               <ExistingAccountLogin
                 method={method}
                 email={email}
@@ -113,6 +115,7 @@ export function LoginPasswordPage() {
                 avatarKey={avatarKey}
                 loading={loading}
                 googleLoading={googleLoading}
+                appleLoading={appleLoading}
                 onEmailChange={(value) => {
                   setEmailLocal(value);
                   setEmail(value.trim());
@@ -124,8 +127,11 @@ export function LoginPasswordPage() {
                 onGooglePress={() => {
                   void signInWithGoogle();
                 }}
+                onApplePress={() => {
+                  void signInWithApple();
+                }}
               />
-            </Animated.View>
+            </AuthScene>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>

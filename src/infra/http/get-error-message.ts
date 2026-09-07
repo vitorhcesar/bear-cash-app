@@ -18,6 +18,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   FULL_NAME_INVALID: 'Informe seu nome completo.',
   GOOGLE_SESSION_MISSING: 'Não foi possível concluir o login com o Google.',
   GOOGLE_SIGN_IN_FAILED: 'Não foi possível entrar com o Google. Tente novamente.',
+  APPLE_SESSION_MISSING: 'Não foi possível concluir o login com a Apple.',
+  APPLE_SIGN_IN_FAILED: 'Não foi possível entrar com a Apple. Tente novamente.',
 };
 
 /** Mensagem amigável para Alert — inclui falha de rede. */

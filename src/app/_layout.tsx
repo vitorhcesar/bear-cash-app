@@ -134,13 +134,13 @@ function RootNavigator() {
 
         <Stack.Protected guard={!canUseApp}>
           <Stack.Screen name="index" options={{ animation: 'none' }} />
-          <Stack.Screen name="login-email" />
-          <Stack.Screen name="login-email-phone" />
-          <Stack.Screen name="login-email-whatsapp" />
-          <Stack.Screen name="login-email-code" />
-          <Stack.Screen name="login-email-profile" />
-          <Stack.Screen name="login-email-data" />
-          <Stack.Screen name="login-password" />
+          <Stack.Screen name="login-email" options={{ animation: 'none' }} />
+          <Stack.Screen name="login-email-phone" options={{ animation: 'none' }} />
+          <Stack.Screen name="login-email-whatsapp" options={{ animation: 'none' }} />
+          <Stack.Screen name="login-email-code" options={{ animation: 'none' }} />
+          <Stack.Screen name="login-email-profile" options={{ animation: 'none' }} />
+          <Stack.Screen name="login-email-data" options={{ animation: 'none' }} />
+          <Stack.Screen name="login-password" options={{ animation: 'none' }} />
           <Stack.Screen name="explore" />
         </Stack.Protected>
       </Stack>

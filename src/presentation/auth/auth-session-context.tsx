@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 import { authClient } from '@/infra/auth/auth-client';
 import { clearSession, getSessionToken, saveSession } from '@/infra/auth/session-store';
 import type { AuthProfile, AuthResult, AuthUser } from '@/infra/http/services/api/modules/auth.module';
+import type { AuthMethod } from '@/presentation/auth/auth-flow';
+import { isOauthMethod } from '@/presentation/auth/auth-flow';
 import { useSessionTransition } from '@/presentation/auth/session-transition';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
@@ -13,7 +15,7 @@ type AuthSessionContextValue = {
   hasCompletedOnboarding: boolean;
   user: AuthUser | null;
   profile: AuthProfile | null;
-  applyAuthResult: (result: AuthResult) => Promise<void>;
+  applyAuthResult: (result: AuthResult, source?: AuthMethod) => Promise<void>;
   refreshSession: () => Promise<void>;
   updateAvatar: (avatarKey: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -66,7 +68,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshSession]);
 
-  const applyAuthResult = useCallback(async (result: AuthResult) => {
+  const applyAuthResult = useCallback(async (result: AuthResult, source?: AuthMethod) => {
     await saveSession(result.session);
     setUser(result.user);
     setProfile(result.profile);
@@ -75,7 +77,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       router.replace({
         pathname: '/login-email-phone',
         params: {
-          method: 'google',
+          method: source && isOauthMethod(source) ? source : 'google',
           email: result.user.email,
         },
       });

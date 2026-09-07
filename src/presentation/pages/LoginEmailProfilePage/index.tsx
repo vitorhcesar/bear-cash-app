@@ -17,10 +17,11 @@ import {
   paramString,
   parseAuthMethod,
 } from "@/presentation/auth/auth-flow";
+import { AuthScene } from "@/presentation/auth/auth-switch-transition";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
+import { AuthFlowHeader } from "@/presentation/components/ui/auth-flow-header";
 import { Button } from "@/presentation/components/ui/button";
 import { PasswordField } from "@/presentation/components/ui/password-field";
-import { StepGroup } from "@/presentation/components/ui/step-group";
 import { TextField } from "@/presentation/components/ui/text-field";
 import { OttoColors, OttoTypography } from "@/presentation/constants/theme";
 
@@ -72,11 +73,7 @@ export function LoginEmailProfilePage() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea}>
-        <StepGroup
-          total={step.total}
-          current={step.current}
-          style={styles.steps}
-        />
+        <AuthFlowHeader total={step.total} current={step.current} />
 
         <KeyboardAvoidingView
           style={styles.flex}
@@ -87,6 +84,7 @@ export function LoginEmailProfilePage() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <AuthScene kind="register" style={styles.scene}>
             <Image
               source={require("@/assets/images/auth/logo.png")}
               style={styles.logo}
@@ -140,6 +138,7 @@ export function LoginEmailProfilePage() {
                 onPress={handleContinue}
               />
             </View>
+            </AuthScene>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -158,10 +157,6 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  steps: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
@@ -173,6 +168,11 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 400,
     alignSelf: "center",
+  },
+  scene: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: 32,
   },
   logo: {
     width: 57,

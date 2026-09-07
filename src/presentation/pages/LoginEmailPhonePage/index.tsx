@@ -20,11 +20,12 @@ import {
   paramString,
   parseAuthMethod,
 } from '@/presentation/auth/auth-flow';
+import { AuthScene } from '@/presentation/auth/auth-switch-transition';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
+import { AuthFlowHeader } from '@/presentation/components/ui/auth-flow-header';
 import { Button } from '@/presentation/components/ui/button';
 import { getPhoneDigits, PhoneField } from '@/presentation/components/ui/phone-field';
-import { StepGroup } from '@/presentation/components/ui/step-group';
 import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
@@ -50,10 +51,12 @@ export function LoginEmailPhonePage() {
   const email = paramString(params.email) || user?.email || '';
   const isOauthOnboarding =
     isOauthMethod(method) || (isAuthenticated && !profile?.onboardingCompleted);
+  const oauthMethod = isOauthMethod(method) ? method : 'google';
+  const funnelMethod = isOauthOnboarding ? oauthMethod : 'email';
   const [phone, setPhoneLocal] = useState('');
   const [loading, setLoading] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
-  const step = getAuthStep(isOauthOnboarding ? 'google' : 'email', 'phone');
+  const step = getAuthStep(funnelMethod, 'phone');
 
   const username = useMemo(() => getUsernameFromEmail(email), [email]);
   const canContinue = getPhoneDigits(phone).length >= 10;
@@ -78,7 +81,7 @@ export function LoginEmailPhonePage() {
       }
 
       const otp = await api.modules.auth.sendOtp(phoneDigits);
-      setMethod(isOauthOnboarding ? 'google' : 'email');
+      setMethod(funnelMethod);
       setEmail(email);
       setPhone(phoneDigits);
       setOtpDevHint(otp.devHint ?? '');
@@ -86,7 +89,7 @@ export function LoginEmailPhonePage() {
       router.push({
         pathname: '/login-email-code',
         params: {
-          method: isOauthOnboarding ? 'google' : 'email',
+          method: funnelMethod,
           email,
           phone: phoneDigits,
         },
@@ -104,7 +107,7 @@ export function LoginEmailPhonePage() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea}>
-        <StepGroup total={step.total} current={step.current} style={styles.steps} />
+        <AuthFlowHeader total={step.total} current={step.current} />
 
         <KeyboardAvoidingView
           style={styles.flex}
@@ -115,6 +118,7 @@ export function LoginEmailPhonePage() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <AuthScene kind="register" style={styles.scene}>
             <Image
               source={require('@/assets/images/auth/logo.png')}
               style={styles.logo}
@@ -167,6 +171,7 @@ export function LoginEmailPhonePage() {
                 </>
               )}
             </View>
+            </AuthScene>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -185,10 +190,6 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  steps: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -200,6 +201,11 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     alignSelf: 'center',
+  },
+  scene: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    gap: 32,
   },
   logo: {
     width: 57,

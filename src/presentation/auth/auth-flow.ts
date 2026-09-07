@@ -1,4 +1,4 @@
-export type AuthMethod = 'email' | 'phone' | 'google';
+export type AuthMethod = 'email' | 'phone' | 'google' | 'apple';
 
 export type AuthScreen = 'phone' | 'code' | 'profile' | 'data';
 
@@ -22,7 +22,7 @@ const PHONE_STEPS: Record<Exclude<AuthScreen, 'phone'>, number> = {
   data: 3,
 };
 
-const GOOGLE_STEPS: Record<AuthScreen, number> = {
+const SOCIAL_STEPS: Record<AuthScreen, number> = {
   phone: 1,
   code: 2,
   profile: 2,
@@ -41,7 +41,7 @@ export function isValidEmail(value: string) {
 }
 
 export function isOauthMethod(method: AuthMethod) {
-  return method === 'google';
+  return method === 'google' || method === 'apple';
 }
 
 export function isSocialOnboardingPath(pathname: string) {
@@ -54,16 +54,16 @@ export function parseAuthMethod(value: unknown): AuthMethod {
   if (value === 'phone' || value === 'whatsapp') {
     return 'phone';
   }
-  if (value === 'google') {
-    return 'google';
+  if (value === 'google' || value === 'apple') {
+    return value;
   }
   return 'email';
 }
 
 export function getAuthStep(method: AuthMethod, screen: AuthScreen): AuthStep {
-  if (method === 'google') {
+  if (isOauthMethod(method)) {
     return {
-      current: GOOGLE_STEPS[screen],
+      current: SOCIAL_STEPS[screen],
       total: 3,
     };
   }

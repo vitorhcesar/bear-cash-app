@@ -18,12 +18,13 @@ import {
   paramString,
   parseAuthMethod,
 } from "@/presentation/auth/auth-flow";
+import { AuthScene } from "@/presentation/auth/auth-switch-transition";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
+import { AuthFlowHeader } from "@/presentation/components/ui/auth-flow-header";
 import { ShieldCheckIcon } from "@/presentation/components/ui/auth-icons";
 import { Button } from "@/presentation/components/ui/button";
 import { ProfileAvatarControl } from "@/presentation/components/ui/profile-avatar-control";
-import { StepGroup } from "@/presentation/components/ui/step-group";
 import { TextField } from "@/presentation/components/ui/text-field";
 import {
   DEFAULT_AVATARS,
@@ -107,7 +108,7 @@ export function LoginEmailDataPage() {
     isOauthMethod(method) || (isAuthenticated && !profile?.onboardingCompleted);
   const email = paramString(params.email) || draft.email || user?.email || "";
   const phone = paramString(params.phone) || draft.phone;
-  const step = getAuthStep(isOauthOnboarding ? "google" : method, "data");
+  const step = getAuthStep(isOauthOnboarding ? (isOauthMethod(method) ? method : "google") : method, "data");
 
   const [fullName, setFullName] = useState(user?.name ?? "");
   const [birthDate, setBirthDate] = useState("");
@@ -175,11 +176,7 @@ export function LoginEmailDataPage() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea}>
-        <StepGroup
-          total={step.total}
-          current={step.current}
-          style={styles.steps}
-        />
+        <AuthFlowHeader total={step.total} current={step.current} />
 
         <KeyboardAvoidingView
           style={styles.flex}
@@ -190,6 +187,7 @@ export function LoginEmailDataPage() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
+            <AuthScene kind="register" style={styles.scene}>
             <ProfileAvatarControl
               avatar={selectedAvatar}
               onChange={setSelectedAvatar}
@@ -249,6 +247,7 @@ export function LoginEmailDataPage() {
                 onPress={handleCreateAccount}
               />
             </View>
+            </AuthScene>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -267,10 +266,6 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  steps: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
@@ -282,6 +277,11 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 400,
     alignSelf: "center",
+  },
+  scene: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: 32,
   },
   form: {
     alignSelf: "stretch",
