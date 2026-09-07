@@ -14,8 +14,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
-import { getAuthStep, paramString } from '@/presentation/auth/auth-flow';
+import {
+  getAuthStep,
+  isOauthMethod,
+  paramString,
+  parseAuthMethod,
+} from '@/presentation/auth/auth-flow';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
+import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { Button } from '@/presentation/components/ui/button';
 import { getPhoneDigits, PhoneField } from '@/presentation/components/ui/phone-field';
 import { StepGroup } from '@/presentation/components/ui/step-group';
@@ -34,15 +40,20 @@ function getUsernameFromEmail(email?: string) {
 export function LoginEmailPhonePage() {
   const router = useRouter();
   const api = useApiService();
+  const { signOut, isAuthenticated, profile, user } = useAuthSession();
   const { setEmail, setPhone, setMethod, setOtpDevHint } = useAuthDraft();
-  const { email: emailParam } = useLocalSearchParams<{
+  const params = useLocalSearchParams<{
     email?: string;
     method?: string;
   }>();
-  const email = paramString(emailParam);
+  const method = parseAuthMethod(params.method);
+  const email = paramString(params.email) || user?.email || '';
+  const isOauthOnboarding =
+    isOauthMethod(method) || (isAuthenticated && !profile?.onboardingCompleted);
   const [phone, setPhoneLocal] = useState('');
   const [loading, setLoading] = useState(false);
-  const step = getAuthStep('email', 'phone');
+  const [signingOut, setSigningOut] = useState(false);
+  const step = getAuthStep(isOauthOnboarding ? 'google' : 'email', 'phone');
 
   const username = useMemo(() => getUsernameFromEmail(email), [email]);
   const canContinue = getPhoneDigits(phone).length >= 10;
@@ -55,8 +66,19 @@ export function LoginEmailPhonePage() {
     const phoneDigits = getPhoneDigits(phone);
     setLoading(true);
     try {
+      if (isOauthOnboarding) {
+        const start = await api.modules.auth.startPhone(phoneDigits);
+        if (start.exists) {
+          Alert.alert(
+            'Telefone em uso',
+            'Este número já está vinculado a outra conta. Use outro telefone.',
+          );
+          return;
+        }
+      }
+
       const otp = await api.modules.auth.sendOtp(phoneDigits);
-      setMethod('email');
+      setMethod(isOauthOnboarding ? 'google' : 'email');
       setEmail(email);
       setPhone(phoneDigits);
       setOtpDevHint(otp.devHint ?? '');
@@ -64,7 +86,7 @@ export function LoginEmailPhonePage() {
       router.push({
         pathname: '/login-email-code',
         params: {
-          method: 'email',
+          method: isOauthOnboarding ? 'google' : 'email',
           email,
           phone: phoneDigits,
         },
@@ -118,10 +140,32 @@ export function LoginEmailPhonePage() {
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Já tem uma conta?</Text>
-              <Pressable accessibilityRole="link" onPress={() => router.replace('/')}>
-                <Text style={styles.footerLink}>Fazer login</Text>
-              </Pressable>
+              {isOauthOnboarding ? (
+                <>
+                  <Text style={styles.footerText}>Quer usar outra conta?</Text>
+                  <Pressable
+                    accessibilityRole="link"
+                    onPress={() => {
+                      if (signingOut) {
+                        return;
+                      }
+                      setSigningOut(true);
+                      void signOut().finally(() => setSigningOut(false));
+                    }}
+                  >
+                    <Text style={styles.footerLink}>
+                      {signingOut ? 'Saindo…' : 'Sair'}
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.footerText}>Já tem uma conta?</Text>
+                  <Pressable accessibilityRole="link" onPress={() => router.replace('/')}>
+                    <Text style={styles.footerLink}>Fazer login</Text>
+                  </Pressable>
+                </>
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

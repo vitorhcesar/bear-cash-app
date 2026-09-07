@@ -21,15 +21,16 @@ import { HomeLoading } from '@/presentation/pages/HomePage';
 type Gate = 'pending' | 'open' | 'locked';
 
 export function BiometricLockGate({ children }: { children: ReactNode }) {
-  const { isAuthenticated, signOut } = useAuthSession();
-  const [gate, setGate] = useState<Gate>(isAuthenticated ? 'pending' : 'open');
+  const { isAuthenticated, hasCompletedOnboarding, signOut } = useAuthSession();
+  const lockEnabled = isAuthenticated && hasCompletedOnboarding;
+  const [gate, setGate] = useState<Gate>(lockEnabled ? 'pending' : 'open');
   const [capability, setCapability] = useState<BiometricCapability | null>(null);
   const [signingOut, setSigningOut] = useState(false);
 
   const gateRef = useRef(gate);
   const promptingRef = useRef(false);
   const appStateRef = useRef(AppState.currentState);
-  const sawLoggedOutReady = useRef(!isAuthenticated);
+  const sawLoggedOutReady = useRef(!lockEnabled);
 
   useEffect(() => {
     gateRef.current = gate;
@@ -67,7 +68,7 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!lockEnabled) {
       sawLoggedOutReady.current = true;
       setGate('open');
       setCapability(null);
@@ -92,19 +93,19 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, lockIfRequired, promptUnlock]);
+  }, [lockEnabled, lockIfRequired, promptUnlock]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
       const previous = appStateRef.current;
       appStateRef.current = nextState;
 
-      if (nextState === 'background' && isAuthenticated) {
+      if (nextState === 'background' && lockEnabled) {
         void lockIfRequired();
         return;
       }
 
-      if (nextState !== 'active' || previous !== 'background' || !isAuthenticated) {
+      if (nextState !== 'active' || previous !== 'background' || !lockEnabled) {
         return;
       }
 
@@ -119,7 +120,7 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
     return () => {
       subscription.remove();
     };
-  }, [isAuthenticated, lockIfRequired, promptUnlock]);
+  }, [lockEnabled, lockIfRequired, promptUnlock]);
 
   async function handleRetry() {
     const bio = capability ?? (await lockIfRequired());
@@ -138,7 +139,7 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
     }
   }
 
-  const cover = isAuthenticated && gate !== 'open';
+  const cover = lockEnabled && gate !== 'open';
   const icon =
     capability?.kind === 'fingerprint' ? (
       <BiometricsFingerprintIcon size={32} color={OttoColors.textMid} />

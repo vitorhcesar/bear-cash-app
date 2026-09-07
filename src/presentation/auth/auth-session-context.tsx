@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
 
+import { authClient } from '@/infra/auth/auth-client';
 import { clearSession, getSessionToken, saveSession } from '@/infra/auth/session-store';
 import type { AuthProfile, AuthResult, AuthUser } from '@/infra/http/services/api/modules/auth.module';
 import { useSessionTransition } from '@/presentation/auth/session-transition';
@@ -9,6 +10,7 @@ import { useApiService } from '@/presentation/hooks/use-api-service';
 type AuthSessionContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
+  hasCompletedOnboarding: boolean;
   user: AuthUser | null;
   profile: AuthProfile | null;
   applyAuthResult: (result: AuthResult) => Promise<void>;
@@ -65,10 +67,22 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   }, [refreshSession]);
 
   const applyAuthResult = useCallback(async (result: AuthResult) => {
+    await saveSession(result.session);
+    setUser(result.user);
+    setProfile(result.profile);
+
+    if (!result.profile.onboardingCompleted) {
+      router.replace({
+        pathname: '/login-email-phone',
+        params: {
+          method: 'google',
+          email: result.user.email,
+        },
+      });
+      return;
+    }
+
     await playEnter(async () => {
-      await saveSession(result.session);
-      setUser(result.user);
-      setProfile(result.profile);
       router.replace('/(tabs)/activities');
     });
   }, [playEnter]);
@@ -88,6 +102,9 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     });
 
     await playLeave(async () => {
+      await authClient.signOut().catch(() => {
+        // ignore Better Auth cookie cleanup errors
+      });
       await clearSession();
       setUser(null);
       setProfile(null);
@@ -106,6 +123,9 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     await api.modules.auth.deleteAccount();
 
     await playLeave(async () => {
+      await authClient.signOut().catch(() => {
+        // ignore Better Auth cookie cleanup errors
+      });
       await clearSession();
       setUser(null);
       setProfile(null);
@@ -117,6 +137,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       isLoading,
       isAuthenticated: Boolean(user),
+      hasCompletedOnboarding: Boolean(profile?.onboardingCompleted),
       user,
       profile,
       applyAuthResult,

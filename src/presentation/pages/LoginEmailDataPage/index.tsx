@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getErrorMessage } from "@/infra/http/get-error-message";
 import {
   getAuthStep,
+  isOauthMethod,
   paramString,
   parseAuthMethod,
 } from "@/presentation/auth/auth-flow";
@@ -94,7 +95,7 @@ function isCompleteCpf(value: string) {
 
 export function LoginEmailDataPage() {
   const api = useApiService();
-  const { applyAuthResult } = useAuthSession();
+  const { applyAuthResult, user, profile, isAuthenticated } = useAuthSession();
   const { draft, resetDraft } = useAuthDraft();
   const params = useLocalSearchParams<{
     email?: string;
@@ -102,11 +103,13 @@ export function LoginEmailDataPage() {
     method?: string;
   }>();
   const method = parseAuthMethod(params.method);
-  const email = paramString(params.email) || draft.email;
+  const isOauthOnboarding =
+    isOauthMethod(method) || (isAuthenticated && !profile?.onboardingCompleted);
+  const email = paramString(params.email) || draft.email || user?.email || "";
   const phone = paramString(params.phone) || draft.phone;
-  const step = getAuthStep(method, "data");
+  const step = getAuthStep(isOauthOnboarding ? "google" : method, "data");
 
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(user?.name ?? "");
   const [birthDate, setBirthDate] = useState("");
   const [cpf, setCpf] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<IAvatarOption>(
@@ -118,34 +121,45 @@ export function LoginEmailDataPage() {
     fullName.trim().length >= 2 &&
     isCompleteBirthDate(birthDate) &&
     isCompleteCpf(cpf) &&
-    Boolean(draft.password) &&
-    Boolean(draft.verificationToken);
+    Boolean(draft.verificationToken) &&
+    (isOauthOnboarding || Boolean(draft.password));
 
   async function handleCreateAccount() {
     if (!canContinue || loading) {
       return;
     }
 
-    if (!draft.password || !draft.verificationToken) {
+    if (!draft.verificationToken || (!isOauthOnboarding && !draft.password)) {
       Alert.alert(
         "Sessão incompleta",
-        "Volte e conclua a verificação do código e a senha.",
+        isOauthOnboarding
+          ? "Volte e conclua a verificação do código enviado por SMS."
+          : "Volte e conclua a verificação do código e a senha.",
       );
       return;
     }
 
     setLoading(true);
     try {
-      const result = await api.modules.auth.register({
-        email: email.trim(),
-        password: draft.password,
-        phone,
-        verificationToken: draft.verificationToken,
-        fullName: fullName.trim(),
-        birthDate,
-        cpf: cpf.replace(/\D/g, ""),
-        avatarKey: selectedAvatar.id,
-      });
+      const result = isOauthOnboarding
+        ? await api.modules.auth.completeOnboarding({
+            phone,
+            verificationToken: draft.verificationToken,
+            fullName: fullName.trim(),
+            birthDate,
+            cpf: cpf.replace(/\D/g, ""),
+            avatarKey: selectedAvatar.id,
+          })
+        : await api.modules.auth.register({
+            email: email.trim(),
+            password: draft.password,
+            phone,
+            verificationToken: draft.verificationToken,
+            fullName: fullName.trim(),
+            birthDate,
+            cpf: cpf.replace(/\D/g, ""),
+            avatarKey: selectedAvatar.id,
+          });
       await applyAuthResult(result);
       resetDraft();
     } catch (error) {
@@ -228,7 +242,7 @@ export function LoginEmailDataPage() {
               </View>
 
               <Button
-                label="Criar conta"
+                label={isOauthOnboarding ? "Concluir cadastro" : "Criar conta"}
                 variant="filled"
                 disabled={!canContinue}
                 loading={loading}

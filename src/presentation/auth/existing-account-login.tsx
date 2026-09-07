@@ -22,9 +22,11 @@ export type ExistingAccountLoginProps = {
   password: string;
   avatarKey: string;
   loading: boolean;
+  googleLoading?: boolean;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
   onSubmit: (nextPassword?: string) => void;
+  onGooglePress?: () => void;
 };
 
 export function ExistingAccountLogin({
@@ -34,9 +36,11 @@ export function ExistingAccountLogin({
   password,
   avatarKey,
   loading,
+  googleLoading = false,
   onEmailChange,
   onPasswordChange,
   onSubmit,
+  onGooglePress,
 }: ExistingAccountLoginProps) {
   const phoneDisplay = useMemo(() => formatBrazilPhoneDisplay(phone), [phone]);
   const avatar = useMemo(() => getAvatarOption(avatarKey), [avatarKey]);
@@ -120,7 +124,7 @@ export function ExistingAccountLogin({
         <Button
           label="Entrar"
           variant="filled"
-          disabled={!canContinue}
+          disabled={!canContinue || googleLoading}
           loading={loading}
           onPress={() => onSubmit()}
         />
@@ -133,8 +137,10 @@ export function ExistingAccountLogin({
           label="Entrar com Google"
           variant="stroke"
           leftIcon={<GoogleIcon size={16} />}
+          loading={googleLoading}
+          disabled={loading}
           onPress={() => {
-            // Backend wiring comes later
+            onGooglePress?.();
           }}
         />
         <Button

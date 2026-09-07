@@ -27,6 +27,7 @@ import {
   authFadeOut,
 } from "@/presentation/auth/auth-switch-transition";
 import { ExistingAccountLogin } from "@/presentation/auth/existing-account-login";
+import { useGoogleSignIn } from "@/presentation/auth/use-google-sign-in";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import {
   AppleIcon,
@@ -50,6 +51,7 @@ export function LoginEmailPage() {
   const router = useRouter();
   const api = useApiService();
   const { applyAuthResult } = useAuthSession();
+  const { signIn: signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
   const {
     setMethod,
     setEmail,
@@ -240,6 +242,7 @@ export function LoginEmailPage() {
                   password={password}
                   avatarKey={avatarKey}
                   loading={loading}
+                  googleLoading={googleLoading}
                   onEmailChange={(value) => {
                     setEmailLocal(value);
                     setEmail(value.trim());
@@ -247,6 +250,9 @@ export function LoginEmailPage() {
                   onPasswordChange={setPassword}
                   onSubmit={(nextPassword) => {
                     void submitLogin(email, nextPassword ?? password);
+                  }}
+                  onGooglePress={() => {
+                    void signInWithGoogle();
                   }}
                 />
               ) : (
@@ -301,7 +307,7 @@ export function LoginEmailPage() {
                     <Button
                       label="Continuar"
                       variant="filled"
-                      disabled={!canContinue}
+                      disabled={!canContinue || googleLoading}
                       loading={loading}
                       onPress={handleContinue}
                     />
@@ -314,6 +320,7 @@ export function LoginEmailPage() {
                       label="Continuar com Apple"
                       variant="stroke"
                       leftIcon={<AppleIcon size={16} />}
+                      disabled={loading || googleLoading}
                       onPress={() => {
                         // Backend wiring comes later
                       }}
@@ -322,8 +329,10 @@ export function LoginEmailPage() {
                       label="Continuar com Google"
                       variant="stroke"
                       leftIcon={<GoogleIcon size={16} />}
+                      loading={googleLoading}
+                      disabled={loading}
                       onPress={() => {
-                        // Backend wiring comes later
+                        void signInWithGoogle();
                       }}
                     />
                     <Animated.View

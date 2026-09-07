@@ -21,6 +21,7 @@ import {
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { authFadeIn } from '@/presentation/auth/auth-switch-transition';
+import { useGoogleSignIn } from '@/presentation/auth/use-google-sign-in';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { OttoColors } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
@@ -28,6 +29,7 @@ import { useApiService } from '@/presentation/hooks/use-api-service';
 export function LoginPasswordPage() {
   const api = useApiService();
   const { applyAuthResult } = useAuthSession();
+  const { signIn: signInWithGoogle, loading: googleLoading } = useGoogleSignIn();
   const { draft, setEmail, resetDraft } = useAuthDraft();
   const params = useLocalSearchParams<{
     email?: string;
@@ -110,6 +112,7 @@ export function LoginPasswordPage() {
                 password={password}
                 avatarKey={avatarKey}
                 loading={loading}
+                googleLoading={googleLoading}
                 onEmailChange={(value) => {
                   setEmailLocal(value);
                   setEmail(value.trim());
@@ -117,6 +120,9 @@ export function LoginPasswordPage() {
                 onPasswordChange={setPassword}
                 onSubmit={(nextPassword) => {
                   void submitLogin(email, nextPassword ?? password);
+                }}
+                onGooglePress={() => {
+                  void signInWithGoogle();
                 }}
               />
             </Animated.View>

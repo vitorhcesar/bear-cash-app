@@ -3,8 +3,10 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@better-auth/expo": "^1.6.25",
     "@expo-google-fonts/poppins": "^0.4.1",
     "@expo/ui": "~57.0.9",
+    "better-auth": "^1.6.25",
     "expo": "~57.0.10",
     "expo-blur": "~57.0.2",
     "expo-clipboard": "~57.0.1",
@@ -50,7 +52,9 @@
   "expo": {
     "autolinking": {
       "android": {
-        "buildFromSource": [".*"]
+        "buildFromSource": [
+          ".*"
+        ]
       }
     }
   },

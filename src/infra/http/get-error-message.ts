@@ -11,6 +11,13 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'Credenciais inválidas. Confira os dados e tente novamente.',
   PHONE_INVALID: 'Número de telefone inválido.',
   PHONE_REQUIRED: 'Informe seu número de telefone.',
+  PHONE_TAKEN: 'Este telefone já está vinculado a outra conta.',
+  EMAIL_TAKEN: 'Este e-mail já está cadastrado.',
+  CPF_TAKEN: 'Este CPF já está vinculado a outra conta.',
+  BIRTH_DATE_INVALID: 'Data de nascimento inválida.',
+  FULL_NAME_INVALID: 'Informe seu nome completo.',
+  GOOGLE_SESSION_MISSING: 'Não foi possível concluir o login com o Google.',
+  GOOGLE_SIGN_IN_FAILED: 'Não foi possível entrar com o Google. Tente novamente.',
 };
 
 /** Mensagem amigável para Alert — inclui falha de rede. */

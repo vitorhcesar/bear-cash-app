@@ -7,12 +7,16 @@ import {
   DarkTheme,
   Stack,
   ThemeProvider,
+  router,
+  usePathname,
   type Theme,
 } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { isSocialOnboardingPath } from '@/presentation/auth/auth-flow';
 import { AuthDraftProvider } from '@/presentation/auth/auth-draft-context';
 import {
   AuthSessionProvider,
@@ -40,7 +44,27 @@ const OttoNavigationTheme: Theme = {
 };
 
 function RootNavigator() {
-  const { isLoading, isAuthenticated } = useAuthSession();
+  const { isLoading, isAuthenticated, hasCompletedOnboarding, user } = useAuthSession();
+  const pathname = usePathname();
+  const canUseApp = isAuthenticated && hasCompletedOnboarding;
+
+  useEffect(() => {
+    if (isLoading || !isAuthenticated || hasCompletedOnboarding) {
+      return;
+    }
+
+    if (isSocialOnboardingPath(pathname)) {
+      return;
+    }
+
+    router.replace({
+      pathname: '/login-email-phone',
+      params: {
+        method: 'google',
+        email: user?.email ?? '',
+      },
+    });
+  }, [hasCompletedOnboarding, isAuthenticated, isLoading, pathname, user?.email]);
 
   if (isLoading) {
     return <HomeLoading />;
@@ -55,7 +79,7 @@ function RootNavigator() {
           contentStyle: styles.screen,
         }}
       >
-        <Stack.Protected guard={isAuthenticated}>
+        <Stack.Protected guard={canUseApp}>
           <Stack.Screen name="(tabs)" options={{ animation: 'none' }} />
           <Stack.Screen name="home" options={{ animation: 'none' }} />
           <Stack.Screen
@@ -104,7 +128,7 @@ function RootNavigator() {
           />
         </Stack.Protected>
 
-        <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Protected guard={!canUseApp}>
           <Stack.Screen name="index" options={{ animation: 'none' }} />
           <Stack.Screen name="login-email" />
           <Stack.Screen name="login-email-phone" />

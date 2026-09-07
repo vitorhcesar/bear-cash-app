@@ -81,12 +81,22 @@ export type RegisterInput = {
   avatarKey?: string;
 };
 
+export type CompleteOnboardingInput = {
+  phone: string;
+  verificationToken: string;
+  fullName: string;
+  birthDate: string;
+  cpf: string;
+  avatarKey?: string;
+};
+
 export interface IAuthModule {
   startEmail(email: string): Promise<EmailStartResponse>;
   startPhone(phone: string): Promise<PhoneStartResponse>;
   sendOtp(phone: string): Promise<OtpSendResponse>;
   verifyOtp(phone: string, code: string): Promise<OtpVerifyResponse>;
   register(input: RegisterInput): Promise<AuthResult>;
+  completeOnboarding(input: CompleteOnboardingInput): Promise<AuthResult>;
   login(input: LoginInput): Promise<AuthResult>;
   logout(): Promise<void>;
   me(): Promise<MeResponse>;
@@ -136,6 +146,10 @@ export class AuthModule extends BaseApiModule implements IAuthModule {
 
   register(input: RegisterInput) {
     return this.http.post<AuthResult>('/api/v1/auth/register', input, { skipAuth: true });
+  }
+
+  completeOnboarding(input: CompleteOnboardingInput) {
+    return this.http.post<AuthResult>('/api/v1/auth/complete-onboarding', input);
   }
 
   login(input: LoginInput) {
