@@ -1,6 +1,6 @@
+import { useRouter } from 'expo-router';
 import { useMemo, type ReactNode } from 'react';
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -61,6 +61,7 @@ function firstNameFromSession(
 }
 
 export function BankConnectionPage() {
+  const router = useRouter();
   const { profile, user } = useAuthSession();
   const firstName = useMemo(
     () =>
@@ -100,9 +101,7 @@ export function BankConnectionPage() {
               color={OttoColors.buttonFilledText}
             />
           }
-          onPress={() =>
-            Alert.alert('Conectar conta', 'Em breve.')
-          }
+          onPress={() => router.push('/bank-select')}
         />
 
         <View style={styles.grid}>

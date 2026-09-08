@@ -131,6 +131,18 @@ function RootNavigator() {
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
+            name="otto-ia"
+            options={{ animation: 'fade' }}
+          />
+          <Stack.Screen
+            name="otto-ia-history"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="bank-select"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
             name="new-transaction"
             options={{ animation: 'slide_from_right' }}
           />

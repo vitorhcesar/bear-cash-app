@@ -23,6 +23,7 @@ export type AppTabKey = "home" | "activities" | "community";
 type AppBottomBarProps = {
   activeTab: AppTabKey;
   onTabPress: (tab: AppTabKey) => void;
+  onAskAiPress?: () => void;
   onSettingsPress?: () => void;
   communityBadgeCount?: number;
 };
@@ -40,6 +41,7 @@ const TAB_INDEX: Record<AppTabKey, number> = {
 export function AppBottomBar({
   activeTab,
   onTabPress,
+  onAskAiPress,
   onSettingsPress,
   communityBadgeCount = 2,
 }: AppBottomBarProps) {
@@ -88,6 +90,7 @@ export function AppBottomBar({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Pergunte ao Otto IA"
+        onPress={onAskAiPress}
       >
         <GlassSurface
           padded={false}

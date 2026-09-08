@@ -71,6 +71,7 @@ function TabsChromeBar() {
           }
           router.navigate("/(tabs)/community");
         }}
+        onAskAiPress={() => router.push("/otto-ia")}
         onSettingsPress={() => router.push("/settings")}
       />
     </View>
