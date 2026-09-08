@@ -133,6 +133,7 @@ function RootNavigator() {
           <Stack.Screen
             name="otto-ia"
             options={{ animation: 'fade' }}
+            dangerouslySingular
           />
           <Stack.Screen
             name="otto-ia-history"

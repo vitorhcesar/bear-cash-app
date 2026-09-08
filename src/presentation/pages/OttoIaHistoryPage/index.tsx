@@ -1,7 +1,8 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { getErrorMessage } from "@/infra/http/get-error-message";
+import type { AiConversationSummary } from "@/infra/http/services/api/modules/ai.module";
 import { SearchIcon } from "@/presentation/components/ui/activities-icons";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import {
@@ -18,95 +21,92 @@ import {
   OttoIaPlusIcon,
 } from "@/presentation/components/ui/otto-ia-icons";
 import { OttoColors, OttoFonts, OttoTypography } from "@/presentation/constants/theme";
+import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const OTTO_AVATAR = require("@/assets/images/otto-ia/avatar.png");
 
-type Conversation = {
-  id: string;
-  title: string;
-  time: string;
-  preview: string;
-  unread?: boolean;
-};
-
-const CONVERSATIONS: Conversation[] = [
-  {
-    id: "food",
-    title: "Gastos com alimentação",
-    time: "Hoje, 14:30",
-    preview: "Você economizou R$ 150,00 evitando deliveries essa semana.",
-    unread: true,
-  },
-  {
-    id: "subs",
-    title: "Análise de assinaturas",
-    time: "Ontem, 18:15",
-    preview: "Identifiquei 3 serviços recorrentes que você não utiliza muito.",
-  },
-  {
-    id: "tips",
-    title: "Dicas para economizar",
-    time: "2 Set",
-    preview: "Tente cozinhar em lote aos domingos para reduzir custos.",
-  },
-  {
-    id: "august",
-    title: "Resumo mensal: Agosto",
-    time: "28 Ago",
-    preview: "Seu patrimônio cresceu 4.2% em relação a Julho.",
-  },
-  {
-    id: "reserve",
-    title: "Meta de reserva de emergência",
-    time: "15 Ago",
-    preview: "Faltam apenas R$ 400,00 para atingir seu objetivo de 3 meses.",
-  },
-  {
-    id: "trip",
-    title: "Planejamento de viagem",
-    time: "10 Ago",
-    preview: "Com o ritmo atual, você poderá viajar em Dezembro.",
-  },
-  {
-    id: "limit",
-    title: "Alerta de limite estourado",
-    time: "02 Ago",
-    preview: "A categoria 'Lazer' ultrapassou o limite em R$ 42,90.",
-  },
-  {
-    id: "setup",
-    title: "Primeira configuração",
-    time: "28 Jul",
-    preview: "Contas conectadas com sucesso. Pronto para analisar seus dados!",
-  },
-];
-
-function matchesQuery(conversation: Conversation, query: string) {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) {
-    return true;
+function formatConversationTime(iso: string, now = new Date()) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
   }
-  return (
-    conversation.title.toLowerCase().includes(normalized) ||
-    conversation.preview.toLowerCase().includes(normalized)
+
+  const time = new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+
+  const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.round(
+    (startToday.getTime() - startTarget.getTime()) / 86_400_000,
   );
+
+  if (diffDays === 0) {
+    return `Hoje, ${time}`;
+  }
+  if (diffDays === 1) {
+    return `Ontem, ${time}`;
+  }
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+  }).format(date);
 }
 
 export function OttoIaHistoryPage() {
   const router = useRouter();
+  const api = useApiService();
   const [query, setQuery] = useState("");
+  const [conversations, setConversations] = useState<AiConversationSummary[]>(
+    [],
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const conversations = useMemo(
-    () => CONVERSATIONS.filter((item) => matchesQuery(item, query)),
-    [query],
+  const loadConversations = useCallback(
+    async (search?: string) => {
+      setLoading(true);
+      try {
+        const response = await api.modules.ai.listConversations(search);
+        setConversations(response.items);
+        setError(null);
+      } catch (loadError) {
+        setError(
+          getErrorMessage(
+            loadError,
+            "Não foi possível carregar as conversas.",
+          ),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api.modules.ai],
   );
 
-  function openChat() {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-    router.replace("/otto-ia");
+  useFocusEffect(
+    useCallback(() => {
+      const handle = setTimeout(() => {
+        void loadConversations(query);
+      }, query ? 250 : 0);
+      return () => clearTimeout(handle);
+    }, [query, loadConversations]),
+  );
+
+  function openNewChat() {
+    router.replace({
+      pathname: "/otto-ia",
+      params: { conversationId: undefined },
+    });
+  }
+
+  function openChat(conversationId: string) {
+    router.replace({
+      pathname: "/otto-ia",
+      params: { conversationId },
+    });
   }
 
   return (
@@ -123,7 +123,7 @@ export function OttoIaHistoryPage() {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Nova conversa com Otto"
-          onPress={openChat}
+          onPress={openNewChat}
           style={({ pressed }) => [
             styles.newChatButton,
             pressed && styles.pressed,
@@ -155,7 +155,13 @@ export function OttoIaHistoryPage() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {conversations.length === 0 ? (
+        {loading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator color={OttoColors.primarySoft} />
+          </View>
+        ) : error ? (
+          <Text style={styles.emptyText}>{error}</Text>
+        ) : conversations.length === 0 ? (
           <Text style={styles.emptyText}>Nenhuma conversa encontrada</Text>
         ) : (
           conversations.map((conversation, index) => (
@@ -163,7 +169,7 @@ export function OttoIaHistoryPage() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={conversation.title}
-                onPress={openChat}
+                onPress={() => openChat(conversation.id)}
                 style={({ pressed }) => [
                   styles.item,
                   pressed && styles.pressed,
@@ -181,15 +187,14 @@ export function OttoIaHistoryPage() {
                     <Text style={styles.itemTitle} numberOfLines={1}>
                       {conversation.title}
                     </Text>
-                    <Text style={styles.itemTime}>{conversation.time}</Text>
+                    <Text style={styles.itemTime}>
+                      {formatConversationTime(conversation.updatedAt)}
+                    </Text>
                   </View>
                   <View style={styles.itemPreviewRow}>
                     <Text style={styles.itemPreview} numberOfLines={1}>
                       {conversation.preview}
                     </Text>
-                    {conversation.unread ? (
-                      <View style={styles.unreadDot} />
-                    ) : null}
                   </View>
                 </View>
               </Pressable>
@@ -270,6 +275,10 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 100,
   },
+  loadingWrap: {
+    paddingVertical: 48,
+    alignItems: "center",
+  },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -323,12 +332,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     fontFamily: OttoFonts.regular,
     color: OttoColors.textMid,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: OttoColors.primarySoft,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

@@ -1,7 +1,9 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Animated,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,9 +12,13 @@ import {
   Text,
   TextInput,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { getErrorMessage } from "@/infra/http/get-error-message";
+import type { AiMessage } from "@/infra/http/services/api/modules/ai.module";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { HomeSparkleIcon } from "@/presentation/components/ui/home-icons";
 import {
@@ -21,6 +27,7 @@ import {
   OttoIaSendIcon,
 } from "@/presentation/components/ui/otto-ia-icons";
 import { OttoColors, OttoFonts, OttoTypography } from "@/presentation/constants/theme";
+import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const OTTO_AVATAR = require("@/assets/images/otto-ia/avatar.png");
 const INPUT_BG = "#212220";
@@ -77,48 +84,30 @@ function currentMonthLabel() {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
-function repliesFor(text: string): Pick<ChatMessage, "role" | "kind" | "text">[] {
-  const normalized = text.toLowerCase();
-  if (
-    normalized.includes("aliment") ||
-    normalized.includes("gastei") ||
-    normalized.includes("despesas")
-  ) {
-    return [{ role: "otto", kind: "insight" }];
-  }
-  if (normalized.includes("dica") || normalized.includes("economizar")) {
-    return [
-      {
-        role: "otto",
-        kind: "text",
-        text: "Dica do Otto: Você economizou bastante evitando deliveries à noite. Continue assim para atingir sua meta!",
-      },
-    ];
-  }
-  if (normalized.includes("resumo") || normalized.includes("semana")) {
-    return [
-      {
-        role: "otto",
-        kind: "text",
-        text: "Nesta semana seus gastos ficaram abaixo da média. Alimentação e transporte puxaram a maior parte — posso detalhar qualquer categoria.",
-      },
-    ];
-  }
-  return [
-    {
-      role: "otto",
-      kind: "text",
-      text: "Analisei suas contas conectadas. Me conte o que você quer olhar — gastos do mês, uma categoria ou uma meta de economia.",
-    },
-  ];
+function firstParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function toChatMessages(items: AiMessage[]): ChatMessage[] {
+  return items.map((item) => ({
+    id: item.id,
+    role: item.role === "user" ? "user" : "otto",
+    kind: "text",
+    text: item.content,
+  }));
 }
 
 export function OttoIaChatPage() {
   const router = useRouter();
+  const api = useApiService();
   const insets = useSafeAreaInsets();
   const { profile, user } = useAuthSession();
+  const params = useLocalSearchParams<{ conversationId?: string | string[] }>();
+  const paramConversationId = firstParam(params.conversationId);
   const scrollRef = useRef<ScrollView>(null);
   const idRef = useRef(0);
+  const skipNextLoad = useRef(false);
+  const pinToBottom = useRef(true);
 
   const firstName = useMemo(
     () =>
@@ -134,27 +123,119 @@ export function OttoIaChatPage() {
     ? `Olá, ${firstName}! Sou o Otto, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?`
     : "Olá! Sou o Otto, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?";
 
+  const welcomeMessage = useMemo<ChatMessage>(
+    () => ({ id: "welcome", role: "otto", kind: "text", text: welcomeText }),
+    [welcomeText],
+  );
+
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>(() => [
-    { id: "welcome", role: "otto", kind: "text", text: welcomeText },
-  ]);
+  const [conversationId, setConversationId] = useState<string | undefined>(
+    paramConversationId,
+  );
+  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
+  const [loadingConversation, setLoadingConversation] = useState(
+    Boolean(paramConversationId),
+  );
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const nextId = useCallback(() => {
     idRef.current += 1;
     return `msg-${idRef.current}`;
   }, []);
 
-  function goBack() {
-    if (router.canGoBack()) {
-      router.back();
+  const scrollToEnd = useCallback((animated = true) => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated });
+    });
+  }, []);
+
+  function handleContentSizeChange() {
+    if (!pinToBottom.current || loadingConversation) {
+      return;
+    }
+    scrollRef.current?.scrollToEnd({ animated: false });
+  }
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const distanceFromBottom =
+      contentSize.height - layoutMeasurement.height - contentOffset.y;
+    pinToBottom.current = distanceFromBottom < 64;
+  }
+
+  useEffect(() => {
+    if (skipNextLoad.current) {
+      skipNextLoad.current = false;
+      return;
+    }
+
+    if (!paramConversationId) {
+      setConversationId(undefined);
+      setMessages([welcomeMessage]);
+      setLoadingConversation(false);
+      setError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingConversation(true);
+    setError(null);
+
+    void (async () => {
+      try {
+        const conversation = await api.modules.ai.getConversation(
+          paramConversationId,
+        );
+        if (cancelled) {
+          return;
+        }
+        setConversationId(conversation.id);
+        setMessages(toChatMessages(conversation.messages));
+        pinToBottom.current = true;
+      } catch (loadError) {
+        if (cancelled) {
+          return;
+        }
+        setConversationId(undefined);
+        setMessages([welcomeMessage]);
+        setError(
+          getErrorMessage(
+            loadError,
+            "Não foi possível carregar esta conversa.",
+          ),
+        );
+      } finally {
+        if (!cancelled) {
+          setLoadingConversation(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [api.modules.ai, paramConversationId, welcomeMessage]);
+
+  useEffect(() => {
+    if (loadingConversation) {
+      pinToBottom.current = true;
+      return;
+    }
+    scrollToEnd(false);
+  }, [loadingConversation, conversationId, messages.length, scrollToEnd]);
+
+  function closeOttoIa() {
+    if (router.canDismiss()) {
+      router.dismissTo("/(tabs)");
       return;
     }
     router.replace("/(tabs)");
   }
 
-  function sendText(raw: string) {
+  async function sendText(raw: string) {
     const text = raw.trim();
-    if (!text) {
+    if (!text || sending) {
       return;
     }
 
@@ -164,20 +245,52 @@ export function OttoIaChatPage() {
       kind: "text",
       text,
     };
-    const replies = repliesFor(text).map((message) => ({
-      ...message,
-      id: nextId(),
-    }));
 
     setDraft("");
-    setMessages((current) => [...current, userMessage, ...replies]);
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollToEnd({ animated: true });
-    });
+    setError(null);
+    setSending(true);
+    pinToBottom.current = true;
+    setMessages((current) => [...current, userMessage]);
+    scrollToEnd();
+
+    try {
+      const response = await api.modules.ai.chat({
+        conversationId,
+        message: text,
+      });
+
+      const assistantMessage: ChatMessage = {
+        id: response.message.id,
+        role: "otto",
+        kind: "text",
+        text: response.message.content,
+      };
+
+      setMessages((current) => [...current, assistantMessage]);
+      setConversationId(response.conversationId);
+
+      if (!conversationId) {
+        skipNextLoad.current = true;
+        router.setParams({ conversationId: response.conversationId });
+      }
+      scrollToEnd();
+    } catch (sendError) {
+      setMessages((current) =>
+        current.filter((item) => item.id !== userMessage.id),
+      );
+      setDraft(text);
+      setError(
+        getErrorMessage(sendError, "Não foi possível falar com o Otto IA."),
+      );
+    } finally {
+      setSending(false);
+    }
   }
 
   const monthLabel = useMemo(() => currentMonthLabel(), []);
-  const canSend = draft.trim().length > 0;
+  const canSend = draft.trim().length > 0 && !sending && !loadingConversation;
+  const showSuggestions =
+    !conversationId && messages.length === 1 && !sending && !loadingConversation;
 
   return (
     <View style={styles.root}>
@@ -218,7 +331,7 @@ export function OttoIaChatPage() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Fechar"
-              onPress={goBack}
+              onPress={closeOttoIa}
               style={({ pressed }) => [
                 styles.closeButton,
                 pressed && styles.pressed,
@@ -235,39 +348,66 @@ export function OttoIaChatPage() {
           contentContainerStyle={styles.chatContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={handleContentSizeChange}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         >
-          {messages.map((message) => {
-            if (message.kind === "insight") {
+          {loadingConversation ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator color={OttoColors.primarySoft} />
+            </View>
+          ) : (
+            messages.map((message) => {
+              if (message.kind === "insight") {
+                return (
+                  <InsightBlock key={message.id} monthLabel={monthLabel} />
+                );
+              }
+              if (message.role === "user") {
+                return (
+                  <View key={message.id} style={styles.userBlock}>
+                    <View style={styles.userBubble}>
+                      <Text style={styles.bubbleText}>{message.text ?? ""}</Text>
+                    </View>
+                  </View>
+                );
+              }
               return (
-                <InsightBlock key={message.id} monthLabel={monthLabel} />
-              );
-            }
-            if (message.role === "user") {
-              return (
-                <View key={message.id} style={styles.userBlock}>
-                  <View style={styles.userBubble}>
+                <View key={message.id} style={styles.ottoBlock}>
+                  <View style={styles.bubbleAvatar}>
+                    <Image
+                      source={OTTO_AVATAR}
+                      style={styles.bubbleAvatarImage}
+                      contentFit="cover"
+                    />
+                  </View>
+                  <View style={styles.ottoBubble}>
                     <Text style={styles.bubbleText}>{message.text ?? ""}</Text>
                   </View>
                 </View>
               );
-            }
-            return (
-              <View key={message.id} style={styles.ottoBlock}>
-                <View style={styles.bubbleAvatar}>
-                  <Image
-                    source={OTTO_AVATAR}
-                    style={styles.bubbleAvatarImage}
-                    contentFit="cover"
-                  />
-                </View>
-                <View style={styles.ottoBubble}>
-                  <Text style={styles.bubbleText}>{message.text ?? ""}</Text>
-                </View>
-              </View>
-            );
-          })}
+            })
+          )}
 
-          {messages.length === 1 ? (
+          {sending ? (
+            <View style={styles.ottoBlock}>
+              <View style={styles.bubbleAvatar}>
+                <Image
+                  source={OTTO_AVATAR}
+                  style={styles.bubbleAvatarImage}
+                  contentFit="cover"
+                />
+              </View>
+              <View
+                style={styles.ottoTypingBubble}
+                accessibilityLabel="Otto está digitando"
+              >
+                <TypingDots />
+              </View>
+            </View>
+          ) : null}
+
+          {showSuggestions ? (
             <View style={styles.suggestions}>
               <Text style={styles.suggestionsLabel}>Perguntas Sugeridas</Text>
               <View style={styles.suggestionsGrid}>
@@ -275,7 +415,9 @@ export function OttoIaChatPage() {
                   <Pressable
                     key={label}
                     accessibilityRole="button"
-                    onPress={() => sendText(label)}
+                    onPress={() => {
+                      void sendText(label);
+                    }}
                     style={({ pressed }) => [
                       styles.suggestionPill,
                       pressed && styles.pressed,
@@ -295,14 +437,63 @@ export function OttoIaChatPage() {
             { paddingBottom: Math.max(insets.bottom, 16) },
           ]}
         >
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
           <Composer
             value={draft}
             onChangeText={setDraft}
-            onSend={() => sendText(draft)}
+            onSend={() => {
+              void sendText(draft);
+            }}
             canSend={canSend}
+            sending={sending}
           />
         </View>
       </KeyboardAvoidingView>
+    </View>
+  );
+}
+
+function TypingDots() {
+  const opacities = useRef([
+    new Animated.Value(0.25),
+    new Animated.Value(0.25),
+    new Animated.Value(0.25),
+  ]).current;
+
+  useEffect(() => {
+    const loops = opacities.map((opacity, index) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(index * 160),
+          Animated.timing(opacity, {
+            toValue: 1,
+            duration: 280,
+            useNativeDriver: true,
+          }),
+          Animated.timing(opacity, {
+            toValue: 0.25,
+            duration: 280,
+            useNativeDriver: true,
+          }),
+        ]),
+      ),
+    );
+
+    loops.forEach((loop) => loop.start());
+    return () => {
+      loops.forEach((loop) => loop.stop());
+      opacities.forEach((opacity) => opacity.setValue(0.25));
+    };
+  }, [opacities]);
+
+  return (
+    <View style={styles.typingDots}>
+      {opacities.map((opacity, index) => (
+        <Animated.View
+          key={index}
+          style={[styles.typingDot, { opacity }]}
+        />
+      ))}
     </View>
   );
 }
@@ -312,11 +503,13 @@ function Composer({
   onChangeText,
   onSend,
   canSend,
+  sending,
 }: {
   value: string;
   onChangeText: (text: string) => void;
   onSend: () => void;
   canSend: boolean;
+  sending: boolean;
 }) {
   return (
     <View style={styles.composerRow}>
@@ -329,6 +522,7 @@ function Composer({
           placeholderTextColor={OttoColors.textSoft}
           onSubmitEditing={onSend}
           returnKeyType="send"
+          editable={!sending}
           accessibilityLabel="Mensagem para o Otto IA"
         />
         <View style={styles.sparkleSlot}>
@@ -346,7 +540,11 @@ function Composer({
           pressed && canSend && styles.pressed,
         ]}
       >
-        <OttoIaSendIcon size={16} />
+        {sending ? (
+          <ActivityIndicator color={OttoColors.buttonFilledText} size="small" />
+        ) : (
+          <OttoIaSendIcon size={16} />
+        )}
       </Pressable>
     </View>
   );
@@ -486,6 +684,15 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     gap: 20,
   },
+  loadingWrap: {
+    paddingVertical: 48,
+    alignItems: "center",
+  },
+  errorText: {
+    ...OttoTypography.captionSmall,
+    color: OttoColors.error,
+    marginBottom: 8,
+  },
   ottoBlock: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -513,6 +720,29 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     padding: 16,
+  },
+  ottoTypingBubble: {
+    alignSelf: "flex-start",
+    backgroundColor: OttoColors.surface,
+    borderWidth: 1,
+    borderColor: OttoColors.borderSoft,
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  typingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: OttoColors.textMid,
   },
   bubbleText: {
     ...OttoTypography.bodySmall,

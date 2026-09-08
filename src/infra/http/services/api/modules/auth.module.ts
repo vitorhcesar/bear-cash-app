@@ -84,6 +84,7 @@ export type AuthUser = {
   name: string;
   phoneNumber: string | null;
   phoneNumberVerified: boolean;
+  role: 'client' | 'admin';
 };
 
 export type AuthSession = {

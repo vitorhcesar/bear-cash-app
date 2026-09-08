@@ -28,6 +28,11 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   GOOGLE_SIGN_IN_FAILED: 'Não foi possível entrar com o Google. Tente novamente.',
   APPLE_SESSION_MISSING: 'Não foi possível concluir o login com a Apple.',
   APPLE_SIGN_IN_FAILED: 'Não foi possível entrar com a Apple. Tente novamente.',
+  AI_NOT_CONFIGURED: 'O Otto IA ainda não está configurado. Tente novamente em instantes.',
+  AI_PROVIDER_ERROR: 'Não foi possível obter uma resposta do Otto IA. Tente novamente.',
+  CONVERSATION_NOT_FOUND: 'Conversa não encontrada.',
+  AI_MESSAGE_EMPTY: 'Digite uma mensagem para o Otto.',
+  AI_MESSAGE_TOO_LONG: 'A mensagem é longa demais. Tente um texto mais curto.',
 };
 
 /** Mensagem amigável para Alert — inclui falha de rede. */
