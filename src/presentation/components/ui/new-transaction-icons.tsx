@@ -4,9 +4,12 @@ import { SvgXml } from 'react-native-svg';
 
 import {
   TRANSACTION_CALENDAR_XML,
+  TRANSACTION_CARD_XML,
   TRANSACTION_CHEVRON_DOWN_XML,
   TRANSACTION_CHEVRON_RIGHT_XML,
   TRANSACTION_PENCIL_XML,
+  TRANSACTION_TRASH_XML,
+  TRANSACTION_EYE_XML,
 } from '@/presentation/components/ui/new-transaction-icon-xml';
 
 type IconProps = {
@@ -57,4 +60,16 @@ export function TransactionChevronRightIcon({ size = 24, color }: IconProps) {
   return (
     <FigmaIcon xml={TRANSACTION_CHEVRON_RIGHT_XML} size={size} color={color} />
   );
+}
+
+export function TransactionCardIcon({ size = 24, color }: IconProps) {
+  return <FigmaIcon xml={TRANSACTION_CARD_XML} size={size} color={color} />;
+}
+
+export function TransactionTrashIcon({ size = 16, color }: IconProps) {
+  return <FigmaIcon xml={TRANSACTION_TRASH_XML} size={size} color={color} />;
+}
+
+export function TransactionEyeIcon({ size = 12, color }: IconProps) {
+  return <FigmaIcon xml={TRANSACTION_EYE_XML} size={size} color={color} />;
 }

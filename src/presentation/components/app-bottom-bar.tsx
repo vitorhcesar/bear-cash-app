@@ -1,8 +1,13 @@
 import { Image } from "expo-image";
+import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  runOnUI,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ActiveTabGlow } from "@/presentation/components/ui/active-tab-glow";
 import {
   AiAskGlyph,
   HomeTabGlyph,
@@ -10,6 +15,7 @@ import {
   WalletTabGlyph,
 } from "@/presentation/components/ui/figma-tab-icons";
 import { GlassSurface } from "@/presentation/components/ui/glass-surface";
+import { springPill } from "@/presentation/components/ui/pill-motion";
 import { OttoColors, OttoTypography } from "@/presentation/constants/theme";
 
 export type AppTabKey = "home" | "activities" | "community";
@@ -21,8 +27,15 @@ type AppBottomBarProps = {
   communityBadgeCount?: number;
 };
 
-const INACTIVE_ICON = OttoColors.buttonFilled;
-const ACTIVE_ICON = OttoColors.primarySoft;
+const INACTIVE_ICON = OttoColors.textMid;
+const ACTIVE_ICON = OttoColors.text;
+const PILL_PAD = 4;
+const PILL_RADIUS = 24;
+const TAB_INDEX: Record<AppTabKey, number> = {
+  home: 0,
+  activities: 1,
+  community: 2,
+};
 
 export function AppBottomBar({
   activeTab,
@@ -31,6 +44,44 @@ export function AppBottomBar({
   communityBadgeCount = 2,
 }: AppBottomBarProps) {
   const insets = useSafeAreaInsets();
+  const slotWidth = useRef(0);
+  const measured = useRef(false);
+  const pillX = useSharedValue(0);
+  const pillW = useSharedValue(0);
+
+  const pillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: pillX.value }],
+    width: pillW.value,
+  }));
+
+  function snapPill(tab: AppTabKey, width: number) {
+    const nextX = PILL_PAD + TAB_INDEX[tab] * width;
+    runOnUI((x: number, w: number) => {
+      "worklet";
+      pillX.value = x;
+      pillW.value = w;
+    })(nextX, width);
+  }
+
+  function animatePill(tab: AppTabKey, width: number) {
+    if (width <= 0) {
+      return;
+    }
+    const nextX = PILL_PAD + TAB_INDEX[tab] * width;
+    runOnUI((x: number, w: number) => {
+      "worklet";
+      pillX.value = springPill(x);
+      pillW.value = springPill(w);
+    })(nextX, width);
+  }
+
+  useEffect(() => {
+    if (!measured.current) {
+      return;
+    }
+    animatePill(activeTab, slotWidth.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- slot width lives in a ref
+  }, [activeTab]);
 
   return (
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
@@ -45,7 +96,7 @@ export function AppBottomBar({
         >
           <Text style={styles.aiPlaceholder}>Pergunte ao Otto IA</Text>
           <View style={styles.aiIconWrap}>
-            <AiAskGlyph size={24} color={ACTIVE_ICON} />
+            <AiAskGlyph size={24} color={OttoColors.primarySoft} />
           </View>
         </GlassSurface>
       </Pressable>
@@ -56,74 +107,119 @@ export function AppBottomBar({
           style={styles.navPill}
           contentStyle={styles.navPillContent}
         >
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Home"
-            accessibilityState={{ selected: activeTab === "home" }}
-            hitSlop={10}
-            onPress={() => onTabPress("home")}
-            style={styles.navItem}
-          >
-            {activeTab === "home" ? <ActiveTabGlow /> : null}
-            <HomeTabGlyph
-              size={24}
-              color={activeTab === "home" ? ACTIVE_ICON : INACTIVE_ICON}
-            />
-          </Pressable>
+          <View
+            style={styles.navTrack}
+            onLayout={(event) => {
+              const inner = Math.max(
+                0,
+                event.nativeEvent.layout.width - PILL_PAD * 2,
+              );
+              const width = inner / 3;
+              const widthChanged = Math.abs(width - slotWidth.current) > 0.5;
+              slotWidth.current = width;
 
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Atividades"
-            accessibilityState={{ selected: activeTab === "activities" }}
-            hitSlop={10}
-            onPress={() => onTabPress("activities")}
-            style={styles.navItem}
-          >
-            {activeTab === "activities" ? <ActiveTabGlow /> : null}
-            <WalletTabGlyph
-              size={24}
-              color={activeTab === "activities" ? ACTIVE_ICON : INACTIVE_ICON}
-            />
-          </Pressable>
+              if (!measured.current) {
+                measured.current = true;
+                snapPill(activeTab, width);
+                return;
+              }
 
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityLabel="Comunidade"
-            accessibilityState={{ selected: activeTab === "community" }}
-            hitSlop={10}
-            onPress={() => onTabPress("community")}
-            style={styles.communityItem}
+              if (widthChanged) {
+                snapPill(activeTab, width);
+              }
+            }}
           >
-            {activeTab === "community" ? <ActiveTabGlow /> : null}
-            <View style={styles.avatarStack}>
-              <View style={[styles.miniAvatar, styles.avatarTopLeft]}>
-                <Image
-                  source={require("@/assets/images/avatars/onca.png")}
-                  style={styles.miniAvatarImage}
-                  contentFit="cover"
-                />
-              </View>
-              <View style={[styles.miniAvatar, styles.avatarTopRight]}>
-                <Image
-                  source={require("@/assets/images/avatars/lhama.png")}
-                  style={styles.miniAvatarImage}
-                  contentFit="cover"
-                />
-              </View>
-              <View style={[styles.miniAvatar, styles.avatarBottom]}>
-                <Image
-                  source={require("@/assets/images/avatars/akita.png")}
-                  style={styles.miniAvatarImage}
-                  contentFit="cover"
-                />
-              </View>
-              {communityBadgeCount > 0 ? (
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>{communityBadgeCount}</Text>
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.routePill, pillStyle]}
+            >
+              <GlassSurface
+                padded={false}
+                radius={PILL_RADIUS}
+                glassEffectStyle="regular"
+                tintColor="rgba(149, 255, 82, 0.06)"
+                bottomGlow
+                style={styles.routePillGlass}
+              />
+            </Animated.View>
+
+            <Pressable
+              accessibilityRole="tab"
+              accessibilityLabel="Home"
+              accessibilityState={{ selected: activeTab === "home" }}
+              hitSlop={10}
+              onPress={() => onTabPress("home")}
+              style={[
+                styles.navSlot,
+                activeTab !== "home" && styles.navSlotIdle,
+              ]}
+            >
+              <HomeTabGlyph
+                size={24}
+                color={activeTab === "home" ? ACTIVE_ICON : INACTIVE_ICON}
+              />
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="tab"
+              accessibilityLabel="Atividades"
+              accessibilityState={{ selected: activeTab === "activities" }}
+              hitSlop={10}
+              onPress={() => onTabPress("activities")}
+              style={[
+                styles.navSlot,
+                activeTab !== "activities" && styles.navSlotIdle,
+              ]}
+            >
+              <WalletTabGlyph
+                size={24}
+                color={
+                  activeTab === "activities" ? ACTIVE_ICON : INACTIVE_ICON
+                }
+              />
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="tab"
+              accessibilityLabel="Comunidade"
+              accessibilityState={{ selected: activeTab === "community" }}
+              hitSlop={10}
+              onPress={() => onTabPress("community")}
+              style={[
+                styles.navSlot,
+                activeTab !== "community" && styles.navSlotIdle,
+              ]}
+            >
+              <View style={styles.avatarStack}>
+                <View style={[styles.miniAvatar, styles.avatarTopLeft]}>
+                  <Image
+                    source={require("@/assets/images/avatars/onca.png")}
+                    style={styles.miniAvatarImage}
+                    contentFit="cover"
+                  />
                 </View>
-              ) : null}
-            </View>
-          </Pressable>
+                <View style={[styles.miniAvatar, styles.avatarTopRight]}>
+                  <Image
+                    source={require("@/assets/images/avatars/lhama.png")}
+                    style={styles.miniAvatarImage}
+                    contentFit="cover"
+                  />
+                </View>
+                <View style={[styles.miniAvatar, styles.avatarBottom]}>
+                  <Image
+                    source={require("@/assets/images/avatars/akita.png")}
+                    style={styles.miniAvatarImage}
+                    contentFit="cover"
+                  />
+                </View>
+                {communityBadgeCount > 0 ? (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{communityBadgeCount}</Text>
+                  </View>
+                ) : null}
+              </View>
+            </Pressable>
+          </View>
         </GlassSurface>
 
         <Pressable
@@ -187,23 +283,36 @@ const styles = StyleSheet.create({
     height: 56,
   },
   navPillContent: {
+    flex: 1,
     height: 56,
-    paddingHorizontal: 24,
+  },
+  navTrack: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "stretch",
-    justifyContent: "space-between",
+    position: "relative",
+    padding: PILL_PAD,
   },
-  navItem: {
-    width: 24,
+  routePill: {
+    position: "absolute",
+    top: PILL_PAD,
+    bottom: PILL_PAD,
+    left: 0,
+    zIndex: 0,
+    overflow: "hidden",
+    borderRadius: PILL_RADIUS,
+  },
+  routePillGlass: {
+    flex: 1,
+  },
+  navSlot: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2,
   },
-  communityItem: {
-    width: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 2,
+  navSlotIdle: {
+    opacity: 0.82,
   },
   avatarStack: {
     width: 34,

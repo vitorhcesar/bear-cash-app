@@ -343,6 +343,21 @@ export function getCategoryLabel(id: string): string | undefined {
   return LABEL_BY_ID.get(id);
 }
 
+export function getCategoryGroupLabel(id: string): string | undefined {
+  const group = GROUP_BY_ID.get(id as CategoryGroupId);
+  if (group) {
+    return group.label;
+  }
+
+  for (const itemGroup of CATEGORY_GROUPS) {
+    if (itemGroup.children.some((child) => child.id === id)) {
+      return itemGroup.label;
+    }
+  }
+
+  return undefined;
+}
+
 export type CategoryDisplay = {
   id: string;
   label: string;

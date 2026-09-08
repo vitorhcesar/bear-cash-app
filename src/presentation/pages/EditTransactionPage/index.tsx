@@ -1,12 +1,14 @@
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -14,7 +16,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
-import type { TransactionType } from '@/infra/http/services/api/modules/transactions.module';
 import {
   getCategoryDisplay,
   getCategoryGroupLabel,
@@ -33,15 +34,19 @@ import { DatePickerSheet } from '@/presentation/components/ui/date-picker-sheet'
 import {
   TransactionCalendarIcon,
   TransactionChevronRightIcon,
+  TransactionEyeIcon,
   TransactionPencilIcon,
 } from '@/presentation/components/ui/new-transaction-icons';
-import { TransactionTypeSwitch } from '@/presentation/components/ui/transaction-type-switch';
+import { OutlineSelect } from '@/presentation/components/ui/outline-select';
+import { TextField } from '@/presentation/components/ui/text-field';
 import {
   OttoColors,
   OttoFonts,
   OttoTypography,
 } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
+
+const ICON_WRAP_IDLE = '#171816';
 
 function formatAmountMask(cents: number) {
   return (cents / 100).toLocaleString('pt-BR', {
@@ -50,10 +55,12 @@ function formatAmountMask(cents: number) {
   });
 }
 
-export function NewTransactionPage() {
+export function EditTransactionPage() {
   const router = useRouter();
   const api = useApiService();
-  const [type, setType] = useState<TransactionType>('CREDIT');
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const transactionId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const [loading, setLoading] = useState(true);
   const [amountCents, setAmountCents] = useState(0);
   const [name, setName] = useState('');
   const [transactionDate, setTransactionDate] = useState(() => new Date());
@@ -62,17 +69,55 @@ export function NewTransactionPage() {
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
+  const [hiddenFromTotals, setHiddenFromTotals] = useState(false);
+  const [type, setType] = useState<'CREDIT' | 'DEBIT'>('DEBIT');
   const [submitting, setSubmitting] = useState(false);
   const category = categoryId ? getCategoryDisplay(categoryId) : undefined;
   const amountLabel = formatAmountMask(amountCents);
   const canSubmit = name.trim().length > 0 && amountCents > 0;
 
-  const amountColor = useMemo(() => {
-    if (amountCents <= 0) {
-      return OttoColors.textMid;
+  useEffect(() => {
+    if (!transactionId) {
+      setLoading(false);
+      Alert.alert('Erro', 'Transação não encontrada.', [
+        { text: 'OK', onPress: () => router.back() },
+      ]);
+      return;
     }
-    return type === 'CREDIT' ? OttoColors.income : OttoColors.dangerBase;
-  }, [amountCents, type]);
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const item = await api.modules.transactions.get(transactionId);
+        if (cancelled) {
+          return;
+        }
+
+        setType(item.type);
+        setAmountCents(Math.round(Math.abs(item.amount) * 100));
+        setName(item.description);
+        setTransactionDate(new Date(item.date));
+        setCurrencyCode(item.currencyCode);
+        setCategoryId(item.categoryId);
+        setHiddenFromTotals(Boolean(item.hiddenFromTotals));
+      } catch (error) {
+        Alert.alert(
+          'Erro',
+          getErrorMessage(error, 'Não foi possível carregar a transação.'),
+          [{ text: 'OK', onPress: () => router.back() }],
+        );
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [api, router, transactionId]);
 
   function handleAmountChange(text: string) {
     const digits = text.replace(/\D/g, '').slice(0, 12);
@@ -80,35 +125,46 @@ export function NewTransactionPage() {
   }
 
   async function handleSubmit() {
-    if (!canSubmit || submitting) {
+    if (!canSubmit || submitting || !transactionId) {
       return;
     }
 
     setSubmitting(true);
     try {
-      await api.modules.transactions.create({
+      await api.modules.transactions.update(transactionId, {
         description: name.trim(),
         amount: amountCents / 100,
         type,
         date: transactionDate.toISOString(),
         currencyCode,
-        ...(categoryId
-          ? {
-              categoryId,
-              category:
-                getCategoryGroupLabel(categoryId) ?? category?.label ?? null,
-            }
-          : {}),
+        categoryId,
+        category: categoryId
+          ? getCategoryGroupLabel(categoryId) ?? category?.label ?? null
+          : null,
+        hiddenFromTotals,
       });
       router.back();
     } catch (error) {
       Alert.alert(
         'Erro',
-        getErrorMessage(error, 'Não foi possível criar a transação.'),
+        getErrorMessage(error, 'Não foi possível salvar a transação.'),
       );
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <View style={styles.screen}>
+          <BackButton fallbackHref="/(tabs)/activities" />
+          <View style={styles.loading}>
+            <ActivityIndicator color={OttoColors.text} />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -126,17 +182,15 @@ export function NewTransactionPage() {
           >
             <View style={styles.header}>
               <BackButton fallbackHref="/(tabs)/activities" />
-              <Text style={styles.title}>Nova Transação</Text>
+              <Text style={styles.title}>Editar transação</Text>
             </View>
 
-            <TransactionTypeSwitch value={type} onChange={setType} />
-
             <View style={styles.amountRow}>
-              <Text style={[styles.amountText, { color: amountColor }]}>
+              <Text style={styles.amountText}>
                 {getCurrencySymbol(currencyCode)}
               </Text>
               <TextInput
-                style={[styles.amountInput, { color: amountColor }]}
+                style={styles.amountInput}
                 value={amountLabel}
                 onChangeText={handleAmountChange}
                 onFocus={() => setCurrencyOpen(false)}
@@ -146,42 +200,32 @@ export function NewTransactionPage() {
               />
             </View>
 
-            <View style={styles.details}>
+            <View style={styles.section}>
               <Text style={styles.sectionTitle}>Dados da Transação</Text>
 
-              <View style={styles.inputShell}>
-                <TextInput
-                  style={styles.nameInput}
-                  placeholder="Nome da transação"
-                  placeholderTextColor={OttoColors.textSoft}
-                  value={name}
-                  onChangeText={setName}
-                  onFocus={() => setCurrencyOpen(false)}
-                  autoCorrect={false}
-                  autoCapitalize="sentences"
-                  returnKeyType="done"
-                  underlineColorAndroid="transparent"
-                />
-              </View>
+              <TextField
+                label="Nome da transação"
+                value={name}
+                onChangeText={setName}
+                onFocus={() => setCurrencyOpen(false)}
+                autoCorrect={false}
+                autoCapitalize="sentences"
+                returnKeyType="done"
+                underlineColorAndroid="transparent"
+              />
 
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Selecionar data"
+              <OutlineSelect
+                label="Data"
+                value={formatLongDate(transactionDate)}
+                trailing={<TransactionCalendarIcon size={16} />}
                 onPress={() => {
                   setCurrencyOpen(false);
                   setDateSheetOpen(true);
                 }}
-                style={styles.inputShell}
-              >
-                <Text style={styles.inputValue}>
-                  {formatLongDate(transactionDate)}
-                </Text>
-                <View style={styles.trailingIcon}>
-                  <TransactionCalendarIcon size={16} />
-                </View>
-              </Pressable>
+              />
 
               <CurrencyPicker
+                label="Selecionar moeda"
                 value={currencyCode}
                 open={currencyOpen}
                 onOpenChange={setCurrencyOpen}
@@ -221,10 +265,45 @@ export function NewTransactionPage() {
                 <TransactionChevronRightIcon size={24} />
               </View>
             </Pressable>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Configurações da transação</Text>
+              <View
+                style={[
+                  styles.toggleCard,
+                  hiddenFromTotals && styles.toggleCardActive,
+                ]}
+              >
+                <View
+                  style={[
+                    styles.toggleIconWrap,
+                    hiddenFromTotals && styles.toggleIconWrapActive,
+                  ]}
+                >
+                  <TransactionEyeIcon size={12} color={OttoColors.text} />
+                </View>
+                <View style={styles.toggleCopy}>
+                  <Text style={styles.toggleTitle}>Ocultar do somatório</Text>
+                  <Text style={styles.toggleDescription}>
+                    Esta transação não será incluída nos totais nem nas análises.
+                  </Text>
+                </View>
+                <Switch
+                  value={hiddenFromTotals}
+                  onValueChange={setHiddenFromTotals}
+                  trackColor={{
+                    false: OttoColors.borderStrong,
+                    true: OttoColors.primary,
+                  }}
+                  thumbColor={OttoColors.background}
+                  ios_backgroundColor={OttoColors.borderStrong}
+                />
+              </View>
+            </View>
           </ScrollView>
 
           <Button
-            label="Adicionar transação"
+            label="Salvar alterações"
             disabled={!canSubmit}
             loading={submitting}
             onPress={() => {
@@ -267,6 +346,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 24,
+    paddingBottom: 8,
   },
   header: {
     gap: 8,
@@ -274,6 +354,11 @@ const styles = StyleSheet.create({
   title: {
     ...OttoTypography.h1,
     color: OttoColors.text,
+  },
+  loading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   amountRow: {
     flexDirection: 'row',
@@ -285,15 +370,18 @@ const styles = StyleSheet.create({
   },
   amountText: {
     ...OttoTypography.h1,
+    color: OttoColors.text,
   },
   amountInput: {
     flex: 1,
     ...OttoTypography.h1,
+    color: OttoColors.text,
     padding: 0,
     margin: 0,
   },
-  details: {
+  section: {
     gap: 16,
+    alignSelf: 'stretch',
   },
   sectionTitle: {
     fontFamily: OttoFonts.semiBold,
@@ -301,33 +389,38 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: OttoColors.text,
   },
-  inputShell: {
+  toggleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    gap: 24,
+    padding: 12,
+    borderRadius: 12,
+  },
+  toggleCardActive: {
+    backgroundColor: OttoColors.surface,
+  },
+  toggleIconWrap: {
+    backgroundColor: ICON_WRAP_IDLE,
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 46,
+    padding: 6,
   },
-  nameInput: {
+  toggleIconWrapActive: {
+    backgroundColor: OttoColors.borderSoft,
+  },
+  toggleCopy: {
     flex: 1,
-    ...OttoTypography.body,
+    minWidth: 0,
+    gap: 2,
+  },
+  toggleTitle: {
+    fontFamily: OttoFonts.semiBold,
+    fontSize: 14,
+    lineHeight: 22,
     color: OttoColors.text,
-    padding: 0,
-    margin: 0,
   },
-  inputValue: {
-    flex: 1,
-    ...OttoTypography.body,
+  toggleDescription: {
+    ...OttoTypography.caption,
     color: OttoColors.textSoft,
-  },
-  trailingIcon: {
-    width: 16,
-    height: 16,
-    overflow: 'hidden',
   },
   categoryRow: {
     flexDirection: 'row',

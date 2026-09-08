@@ -9,7 +9,13 @@ import {
   type StyleProp,
   type ViewStyle,
 } from "react-native";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
+import Svg, {
+  Defs,
+  LinearGradient,
+  RadialGradient,
+  Rect,
+  Stop,
+} from "react-native-svg";
 
 import { useBlurTarget } from "@/presentation/blur/blur-target-context";
 
@@ -29,10 +35,14 @@ const FigmaNavGlass = {
 } as const;
 
 type GlassSurfaceProps = {
-  children: ReactNode;
+  children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   padded?: boolean;
+  radius?: number;
+  glassEffectStyle?: "clear" | "regular";
+  tintColor?: string;
+  bottomGlow?: boolean;
 };
 
 export function GlassSurface({
@@ -40,6 +50,10 @@ export function GlassSurface({
   style,
   contentStyle,
   padded = true,
+  radius = FigmaNavGlass.radius,
+  glassEffectStyle = "clear",
+  tintColor,
+  bottomGlow = false,
 }: GlassSurfaceProps) {
   const blurTarget = useBlurTarget();
   const useLiquidGlass = isLiquidGlassAvailable();
@@ -55,17 +69,21 @@ export function GlassSurface({
 
   const shape: StyleProp<ViewStyle> = [
     StyleSheet.absoluteFill,
-    styles.glassShape,
+    { borderRadius: radius },
   ];
 
   return (
-    <View style={[styles.base, style]} onLayout={onLayout}>
+    <View
+      style={[styles.base, { borderRadius: radius }, style]}
+      onLayout={onLayout}
+    >
       {useLiquidGlass ? (
         <GlassView
           pointerEvents="none"
           style={shape}
-          glassEffectStyle="clear"
+          glassEffectStyle={glassEffectStyle}
           colorScheme="dark"
+          tintColor={tintColor}
         />
       ) : canBlurAndroid ? (
         <BlurView
@@ -89,23 +107,41 @@ export function GlassSurface({
       )}
 
       {size.width > 0 ? (
-        <FigmaGlassChrome width={size.width} height={size.height} />
+        <FigmaGlassChrome
+          width={size.width}
+          height={size.height}
+          radius={radius}
+          bottomGlow={bottomGlow}
+        />
       ) : null}
 
-      <View
-        style={[styles.content, padded ? styles.padded : null, contentStyle]}
-      >
-        {children}
-      </View>
+      {children ? (
+        <View
+          style={[styles.content, padded ? styles.padded : null, contentStyle]}
+        >
+          {children}
+        </View>
+      ) : null}
     </View>
   );
 }
 
-function FigmaGlassChrome({ width, height }: { width: number; height: number }) {
+function FigmaGlassChrome({
+  width,
+  height,
+  radius: radiusProp,
+  bottomGlow = false,
+}: {
+  width: number;
+  height: number;
+  radius: number;
+  bottomGlow?: boolean;
+}) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const fillId = `fill${uid}`;
   const rimId = `rim${uid}`;
-  const radius = Math.min(FigmaNavGlass.radius, height / 2);
+  const glowId = `glow${uid}`;
+  const radius = Math.min(radiusProp, height / 2);
   const stroke = FigmaNavGlass.rimWidth;
   const inset = stroke / 2;
 
@@ -126,8 +162,34 @@ function FigmaGlassChrome({ width, height }: { width: number; height: number }) 
           <Stop offset="0.18" stopColor="rgb(232,237,228)" stopOpacity={0.08} />
           <Stop offset="0.5" stopColor="rgb(212,224,204)" stopOpacity={0.14} />
           <Stop offset="0.82" stopColor="rgb(212,232,200)" stopOpacity={0.1} />
-          <Stop offset="1" stopColor="rgb(214,232,196)" stopOpacity={0.4} />
+          <Stop
+            offset="1"
+            stopColor={bottomGlow ? "rgb(149,255,82)" : "rgb(214,232,196)"}
+            stopOpacity={bottomGlow ? 0.2 : 0.4}
+          />
         </LinearGradient>
+        {bottomGlow ? (
+          <>
+            <RadialGradient
+              id={glowId}
+              cx="50%"
+              cy="108%"
+              rx="78%"
+              ry="92%"
+              fx="50%"
+              fy="108%"
+            >
+              <Stop offset="0" stopColor="rgb(149,255,82)" stopOpacity={0.18} />
+              <Stop offset="0.42" stopColor="rgb(149,255,82)" stopOpacity={0.08} />
+              <Stop offset="1" stopColor="rgb(149,255,82)" stopOpacity={0} />
+            </RadialGradient>
+            <LinearGradient id={`${glowId}Wash`} x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor="rgb(149,255,82)" stopOpacity={0.02} />
+              <Stop offset="0.45" stopColor="rgb(149,255,82)" stopOpacity={0.04} />
+              <Stop offset="1" stopColor="rgb(73,220,20)" stopOpacity={0.09} />
+            </LinearGradient>
+          </>
+        ) : null}
       </Defs>
       <Rect
         x={0}
@@ -137,6 +199,26 @@ function FigmaGlassChrome({ width, height }: { width: number; height: number }) 
         rx={radius}
         fill={`url(#${fillId})`}
       />
+      {bottomGlow ? (
+        <>
+          <Rect
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            rx={radius}
+            fill={`url(#${glowId}Wash)`}
+          />
+          <Rect
+            x={0}
+            y={0}
+            width={width}
+            height={height}
+            rx={radius}
+            fill={`url(#${glowId})`}
+          />
+        </>
+      ) : null}
       <Rect
         x={inset}
         y={inset}
@@ -156,9 +238,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderRadius: FigmaNavGlass.radius,
     backgroundColor: "transparent",
-  },
-  glassShape: {
-    borderRadius: FigmaNavGlass.radius,
   },
   fallback: {
     backgroundColor: "rgba(13,17,11,0.82)",

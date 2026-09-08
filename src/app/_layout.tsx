@@ -123,11 +123,23 @@ function RootNavigator() {
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
+            name="subscription-premium"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
             name="bank-connection"
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
             name="new-transaction"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="edit-transaction"
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="transaction/[id]"
             options={{ animation: 'slide_from_right' }}
           />
         </Stack.Protected>

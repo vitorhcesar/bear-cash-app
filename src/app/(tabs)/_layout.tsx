@@ -13,6 +13,10 @@ import { OttoColors } from "@/presentation/constants/theme";
 /** Espaço reservado para AI bar + nav + safe area */
 export const APP_BOTTOM_CHROME_HEIGHT = 148;
 
+export const unstable_settings = {
+  initialRouteName: "index",
+};
+
 export default function TabsLayout() {
   const blurTargetRef = useRef<View | null>(null);
 

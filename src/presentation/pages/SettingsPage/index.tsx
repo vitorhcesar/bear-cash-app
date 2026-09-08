@@ -23,6 +23,7 @@ import {
   SantanderLogo,
 } from '@/presentation/components/ui/bank-logos';
 import { EmailIcon } from '@/presentation/components/ui/brand-icons';
+import { OttoPremiumBanner } from '@/presentation/components/ui/otto-premium-banner';
 import { ProfileAvatarControl } from '@/presentation/components/ui/profile-avatar-control';
 import { ReportProblemSheet } from '@/presentation/components/ui/report-problem-sheet';
 import {
@@ -173,6 +174,10 @@ export function SettingsPage() {
           <Text style={styles.name}>{displayName}</Text>
 
           <View style={styles.topActions}>
+            <OttoPremiumBanner
+              onPress={() => router.push('/subscription-premium')}
+            />
+
             <View style={styles.summaryRow}>
               <Pressable
                 accessibilityRole="button"

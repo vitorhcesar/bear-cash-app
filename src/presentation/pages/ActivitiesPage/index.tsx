@@ -1,6 +1,7 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,13 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { getErrorMessage } from "@/infra/http/get-error-message";
+import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
+import {
+  DEFAULT_PREFERENCES,
+  getPreferences,
+  updatePreferences,
+} from "@/infra/preferences/preferences-store";
 import {
   ActivitiesFilterSheet,
   DEFAULT_ACTIVITIES_FILTERS,
@@ -26,11 +34,15 @@ import {
   SearchIcon,
 } from "@/presentation/components/ui/activities-icons";
 import { BackButton } from "@/presentation/components/ui/back-button";
+import { formatActivitySection } from "@/presentation/components/ui/calendar";
+import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
+import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
   OttoColors,
   OttoFonts,
   OttoTypography,
 } from "@/presentation/constants/theme";
+import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const FILTERS = ["Entradas", "Saídas", "Pagamentos", "Cartão"] as const;
 
@@ -82,16 +94,142 @@ function SummaryCard({
   );
 }
 
+function formatTotal(amount: number, currencyCode = "BRL") {
+  return `${getCurrencySymbol(currencyCode)}${amount.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function dayKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
+
+function matchesFilter(item: TransactionItem, filter: FilterId) {
+  if (filter === "Entradas") {
+    return item.type === "CREDIT";
+  }
+  if (filter === "Saídas") {
+    return item.type === "DEBIT";
+  }
+  if (filter === "Pagamentos") {
+    return item.operationType === "PAYMENT" || item.paymentData != null;
+  }
+  return Boolean(item.creditCardMetadata);
+}
+
 export function ActivitiesPage() {
   const router = useRouter();
+  const api = useApiService();
   const [query, setQuery] = useState("");
+  const [items, setItems] = useState<TransactionItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterId>("Entradas");
-  const [incomeVisible, setIncomeVisible] = useState(true);
-  const [expenseVisible, setExpenseVisible] = useState(false);
+  const [incomeVisible, setIncomeVisible] = useState(
+    DEFAULT_PREFERENCES.activitiesIncomeVisible,
+  );
+  const [expenseVisible, setExpenseVisible] = useState(
+    DEFAULT_PREFERENCES.activitiesExpenseVisible,
+  );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<ActivitiesFilters>(
     DEFAULT_ACTIVITIES_FILTERS,
   );
+
+  const loadTransactions = useCallback(
+    async (search?: string) => {
+      setLoading(true);
+      try {
+        const response = await api.modules.transactions.list(search);
+        setItems(response.items);
+      } catch (error) {
+        console.warn(
+          getErrorMessage(error, "Não foi possível carregar as atividades."),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api.modules.transactions],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const stored = await getPreferences();
+      if (!cancelled) {
+        setIncomeVisible(stored.activitiesIncomeVisible);
+        setExpenseVisible(stored.activitiesExpenseVisible);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const handle = setTimeout(() => {
+        void loadTransactions(query);
+      }, query ? 250 : 0);
+      return () => clearTimeout(handle);
+    }, [query, loadTransactions]),
+  );
+
+  const toggleIncomeVisibility = useCallback(() => {
+    const next = !incomeVisible;
+    setIncomeVisible(next);
+    void updatePreferences({ activitiesIncomeVisible: next });
+  }, [incomeVisible]);
+
+  const toggleExpenseVisibility = useCallback(() => {
+    const next = !expenseVisible;
+    setExpenseVisible(next);
+    void updatePreferences({ activitiesExpenseVisible: next });
+  }, [expenseVisible]);
+
+  const totals = useMemo(() => {
+    let credit = 0;
+    let debit = 0;
+    for (const item of items) {
+      if (item.hiddenFromTotals) {
+        continue;
+      }
+      const value = Math.abs(item.amount);
+      if (item.type === "CREDIT") {
+        credit += value;
+      } else {
+        debit += value;
+      }
+    }
+    return { credit, debit };
+  }, [items]);
+
+  const grouped = useMemo(() => {
+    const filtered = items.filter((item) => matchesFilter(item, activeFilter));
+    const sections = new Map<string, { key: string; title: string; data: TransactionItem[] }>();
+
+    for (const item of filtered) {
+      const date = new Date(item.date);
+      const key = dayKey(date);
+      const existing = sections.get(key);
+      if (existing) {
+        existing.data.push(item);
+        continue;
+      }
+      sections.set(key, {
+        key,
+        title: formatActivitySection(date),
+        data: [item],
+      });
+    }
+
+    return [...sections.values()];
+  }, [items, activeFilter]);
+
+  const empty = grouped.length === 0;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -173,32 +311,65 @@ export function ActivitiesPage() {
           </View>
         </View>
 
+        {loading && items.length === 0 ? (
+          <View style={styles.loading}>
+            <ActivityIndicator
+              color={OttoColors.text}
+              accessibilityLabel="Carregando atividades"
+            />
+          </View>
+        ) : (
+          <>
         <View style={styles.summaryRow}>
           <SummaryCard
             label="Total entrada"
-            value="R$0,00"
+            value={formatTotal(totals.credit)}
             hidden={!incomeVisible}
-            onToggleVisibility={() => setIncomeVisible((current) => !current)}
+            onToggleVisibility={toggleIncomeVisibility}
             tone="income"
           />
           <SummaryCard
             label="Total saídas"
-            value="R$0,00"
+            value={formatTotal(totals.debit)}
             hidden={!expenseVisible}
-            onToggleVisibility={() => setExpenseVisible((current) => !current)}
+            onToggleVisibility={toggleExpenseVisibility}
             tone="expense"
           />
         </View>
 
-        <View style={styles.emptyState}>
-          <EmptyActivityIcon size={24} />
-          <View style={styles.emptyCopy}>
-            <Text style={styles.emptyTitle}>Nenhuma atividade encontrada</Text>
-            <Text style={styles.emptySubtitle}>
-              Você não possui nenhuma atividade financeira registrada
-            </Text>
+        {empty ? (
+          <View style={styles.emptyState}>
+            <EmptyActivityIcon size={24} />
+            <View style={styles.emptyCopy}>
+              <Text style={styles.emptyTitle}>Nenhuma atividade encontrada</Text>
+              <Text style={styles.emptySubtitle}>
+                Você não possui nenhuma atividade financeira registrada
+              </Text>
+            </View>
           </View>
-        </View>
+        ) : (
+          grouped.map((section) => (
+            <View key={section.key} style={styles.section}>
+              <Text style={styles.sectionTitle}>{section.title}</Text>
+              <View style={styles.sectionList}>
+                {section.data.map((item) => (
+                  <TransactionListItem
+                    key={item.id}
+                    item={item}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/transaction/[id]',
+                        params: { id: item.id },
+                      })
+                    }
+                  />
+                ))}
+              </View>
+            </View>
+          ))
+        )}
+          </>
+        )}
       </ScrollView>
 
       <ActivitiesFilterSheet
@@ -366,5 +537,23 @@ const styles = StyleSheet.create({
     ...OttoTypography.caption,
     color: OttoColors.textSoft,
     textAlign: "center",
+  },
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 180,
+  },
+  section: {
+    gap: 12,
+    width: "100%",
+  },
+  sectionTitle: {
+    ...OttoTypography.body,
+    fontFamily: OttoFonts.semiBold,
+    color: OttoColors.text,
+  },
+  sectionList: {
+    gap: 16,
   },
 });

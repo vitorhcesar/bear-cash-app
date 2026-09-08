@@ -6,6 +6,7 @@ import {
   SETTINGS_BIOMETRICS_XML,
   SETTINGS_CARD_XML,
   SETTINGS_CHEVRON_XML,
+  SETTINGS_CROWN_XML,
   SETTINGS_EDIT_XML,
   SETTINGS_KEY_XML,
   SETTINGS_LOGOUT_XML,
@@ -24,7 +25,7 @@ type IconProps = {
 };
 
 function tintFigmaIcon(xml: string, color: string) {
-  return xml.replace(/#E0E2DF/gi, color);
+  return xml.replace(/#E0E2DF|#FFD700/gi, color);
 }
 
 function FigmaIcon({
@@ -98,4 +99,8 @@ export function SettingsSupportIcon({ size = 16, color }: IconProps) {
 
 export function SettingsLogoutIcon({ size = 16, color }: IconProps) {
   return <FigmaIcon xml={SETTINGS_LOGOUT_XML} size={size} color={color} />;
+}
+
+export function SettingsCrownIcon({ size = 20, color }: IconProps) {
+  return <FigmaIcon xml={SETTINGS_CROWN_XML} size={size} color={color} />;
 }

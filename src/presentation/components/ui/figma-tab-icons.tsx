@@ -8,6 +8,7 @@ import {
   OTTO_MARK_XML,
   WALLET_ICON_XML,
 } from '@/presentation/components/ui/figma-tab-icon-xml';
+import { OttoColors } from '@/presentation/constants/theme';
 
 type TintableIconProps = {
   size?: number;
@@ -48,6 +49,32 @@ export function OttoMarkGlyph() {
   return (
     <View style={styles.markWrap}>
       <SvgXml xml={OTTO_MARK_XML} width={27.425} height={28} />
+    </View>
+  );
+}
+
+export function OttoMarkBadge({ size = 20 }: { size?: number }) {
+  const scale = size / 28;
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: OttoColors.surface,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: OttoColors.borderSoft,
+        overflow: 'hidden',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <SvgXml
+        xml={OTTO_MARK_XML}
+        width={27.425 * scale}
+        height={28 * scale}
+      />
     </View>
   );
 }

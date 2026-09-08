@@ -95,7 +95,11 @@ export function PreferencesPage() {
   }
 
   async function handleRestore() {
-    await persist({ ...DEFAULT_PREFERENCES });
+    await persist({
+      ...DEFAULT_PREFERENCES,
+      activitiesIncomeVisible: preferences.activitiesIncomeVisible,
+      activitiesExpenseVisible: preferences.activitiesExpenseVisible,
+    });
   }
 
   return (

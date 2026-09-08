@@ -85,7 +85,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     }
 
     await playEnter(async () => {
-      router.replace('/(tabs)/activities');
+      router.replace('/(tabs)');
     });
   }, [playEnter]);
 

@@ -9,11 +9,16 @@ import {
   SupportModule,
   type ISupportModule,
 } from '@/infra/http/services/api/modules/support.module';
+import {
+  TransactionsModule,
+  type ITransactionsModule,
+} from '@/infra/http/services/api/modules/transactions.module';
 
 export interface IApiServiceModules {
   auth: IAuthModule;
   support: ISupportModule;
   apiKeys: IApiKeysModule;
+  transactions: ITransactionsModule;
 }
 
 export interface IApiService {
@@ -28,6 +33,7 @@ export class ApiService implements IApiService {
       auth: new AuthModule(httpClient),
       support: new SupportModule(httpClient),
       apiKeys: new ApiKeysModule(httpClient),
+      transactions: new TransactionsModule(httpClient),
     };
   }
 }

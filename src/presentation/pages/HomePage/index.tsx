@@ -1,64 +1,269 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useId, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+  type LayoutChangeEvent,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
-import { useAuthSession } from '@/presentation/auth/auth-session-context';
-import { Button } from '@/presentation/components/ui/button';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
-import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
+import { useAuthSession } from "@/presentation/auth/auth-session-context";
+import { Button } from "@/presentation/components/ui/button";
+import {
+  HomeChevronIcon,
+  HomeMailIcon,
+  HomeShieldIcon,
+  HomeSparkleIcon,
+  HomeWalletIcon,
+} from "@/presentation/components/ui/home-icons";
+import {
+  DEFAULT_AVATARS,
+  getAvatarOption,
+} from "@/presentation/constants/avatars";
+import {
+  OttoColors,
+  OttoFonts,
+  OttoTypography,
+} from "@/presentation/constants/theme";
 
-export function HomePage() {
-  const router = useRouter();
-  const { signOut } = useAuthSession();
-  const { resetDraft } = useAuthDraft();
-  const [loading, setLoading] = useState(false);
+const AVATAR_SIZE = 44;
+const MAIL_STROKE = "#373A36";
 
-  async function handleLogout() {
-    setLoading(true);
-    try {
-      await signOut();
-      resetDraft();
-      // Stack.Protected no root troca para as telas de login ao limpar a sessão.
-    } catch {
-      Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
-    } finally {
-      setLoading(false);
+function greetingForHour(hour: number) {
+  if (hour >= 5 && hour < 12) {
+    return "Bom dia,";
+  }
+  if (hour >= 12 && hour < 18) {
+    return "Boa tarde,";
+  }
+  return "Boa noite,";
+}
+
+function displayNameFromSession(
+  fullName?: string | null,
+  displayName?: string | null,
+  userName?: string | null,
+) {
+  const normalizedName = (name?: string | null) => {
+    if (!name) return undefined;
+
+    if (name.includes(" ")) {
+      const [firstName, lastName] = name.split(" ");
+
+      let capitalizedFirstName =
+        firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+
+      if (!lastName) return capitalizedFirstName;
+
+      let capitalizedLastName =
+        lastName.charAt(0).toUpperCase() + lastName.slice(1).toLowerCase();
+
+      return `${capitalizedFirstName} ${capitalizedLastName}`;
+    }
+
+    return name.trim();
+  };
+
+  return (
+    normalizedName(fullName) ||
+    normalizedName(displayName) ||
+    normalizedName(userName) ||
+    "você"
+  );
+}
+
+function OttoInsightBanner() {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  function onLayout(event: LayoutChangeEvent) {
+    const { width, height } = event.nativeEvent.layout;
+    if (width !== size.width || height !== size.height) {
+      setSize({ width, height });
     }
   }
 
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Home</Text>
-          <Button
-            label="Logout"
-            variant="stroke"
-            loading={loading}
-            onPress={handleLogout}
+    <View onLayout={onLayout} style={styles.insightBanner}>
+      {size.width > 0 ? (
+        <Svg
+          pointerEvents="none"
+          width={size.width}
+          height={size.height}
+          style={StyleSheet.absoluteFill}
+        >
+          <Defs>
+            <LinearGradient id={`base${uid}`} x1="0" y1="0" x2="1" y2="0">
+              <Stop offset="0" stopColor="#121311" />
+              <Stop offset="0.5" stopColor="#1A1D1A" />
+              <Stop offset="1" stopColor="#0A0B0A" />
+            </LinearGradient>
+            <LinearGradient id={`green${uid}`} x1="0" y1="0" x2="1" y2="0">
+              <Stop
+                offset="0"
+                stopColor={OttoColors.primary}
+                stopOpacity={0.053}
+              />
+              <Stop
+                offset="1"
+                stopColor={OttoColors.primary}
+                stopOpacity={0.053}
+              />
+            </LinearGradient>
+          </Defs>
+          <Rect
+            width={size.width}
+            height={size.height}
+            rx={16}
+            fill={`url(#base${uid})`}
           />
+          <Rect
+            width={size.width}
+            height={size.height}
+            rx={16}
+            fill={`url(#green${uid})`}
+          />
+        </Svg>
+      ) : null}
+
+      <View style={styles.insightBadge}>
+        <Text style={styles.insightBadgeText}>OTTO IA INSIGHT</Text>
+      </View>
+      <Text style={styles.insightBody}>
+        Olá! Conecte seu banco para começar a receber{" "}
+        <Text style={styles.insightHighlight}>insights personalizados</Text>{" "}
+        sobre seus hábitos de consumo e dicas reais de economia.
+      </Text>
+    </View>
+  );
+}
+
+export function HomePage() {
+  const router = useRouter();
+  const { profile, user } = useAuthSession();
+  const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
+  const name = useMemo(
+    () =>
+      displayNameFromSession(
+        profile?.fullName,
+        profile?.displayName,
+        user?.name,
+      ),
+    [profile?.displayName, profile?.fullName, user?.name],
+  );
+  const avatar = useMemo(
+    () => getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]),
+    [profile?.avatarKey],
+  );
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View style={styles.userInfo}>
+            <View style={styles.avatarFrame}>
+              <Image
+                source={avatar.source}
+                style={styles.avatarImage}
+                contentFit="cover"
+                accessibilityLabel="Foto de perfil"
+              />
+            </View>
+            <View style={styles.textStack}>
+              <Text style={styles.greeting}>{greeting}</Text>
+              <Text style={styles.userName} numberOfLines={1}>
+                {name}
+              </Text>
+            </View>
+          </View>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Mensagens"
+            style={({ pressed }) => [
+              styles.mailButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <HomeMailIcon size={24} color={MAIL_STROKE} />
+          </Pressable>
+        </View>
+
+        <View style={styles.connectCard}>
+          <View style={styles.connectHeader}>
+            <View style={styles.connectIconHolder}>
+              <HomeWalletIcon size={24} />
+            </View>
+            <View style={styles.connectTitleBlock}>
+              <Text style={styles.connectTitle}>
+                Conecte sua conta bancária
+              </Text>
+              <Text style={styles.connectSubtitle}>
+                Ative o controle automático
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.connectBody}>
+            Conecte seu banco para visualizar seus gastos, saldo e transações
+            automaticamente sem precisar digitar nada.
+          </Text>
           <Button
-            label="Ir para Atividades"
+            label="Conectar banco"
             variant="filled"
-            onPress={() => router.replace('/(tabs)/activities')}
+            rightIcon={<HomeChevronIcon size={16} />}
+            onPress={() => router.push("/bank-connection")}
           />
         </View>
-      </SafeAreaView>
-    </View>
+
+        <OttoInsightBanner />
+
+        <View style={styles.benefits}>
+          <Text style={styles.benefitsTitle}>Por que conectar?</Text>
+          <View style={styles.benefitsRow}>
+            <View style={styles.benefitCard}>
+              <View style={styles.benefitIconHolder}>
+                <HomeShieldIcon size={16} />
+              </View>
+              <View style={styles.benefitCopy}>
+                <Text style={styles.benefitTitle}>Segurança Open Finance</Text>
+                <Text style={styles.benefitBody}>
+                  Tecnologia e padrões de segurança oficiais dos maiores bancos
+                  do país.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.benefitCard}>
+              <View style={styles.benefitIconHolder}>
+                <HomeSparkleIcon size={16} />
+              </View>
+              <View style={styles.benefitCopy}>
+                <Text style={styles.benefitTitle}>Monitoramento 24h</Text>
+                <Text style={styles.benefitBody}>
+                  Otto monitora seu saldo e descobre economias invisíveis
+                  enquanto você vive.
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 export function HomeLoading() {
   return (
-    <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea}>
+    <View style={styles.loadingRoot}>
+      <SafeAreaView style={styles.loadingSafeArea}>
         <ActivityIndicator color={OttoColors.primary} />
       </SafeAreaView>
     </View>
@@ -66,24 +271,180 @@ export function HomeLoading() {
 }
 
 const styles = StyleSheet.create({
-  root: {
+  safeArea: {
     flex: 1,
     backgroundColor: OttoColors.background,
   },
-  safeArea: {
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    gap: 20,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  userInfo: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingRight: 12,
   },
-  content: {
-    alignItems: 'center',
-    gap: 24,
-    paddingHorizontal: 24,
-    width: '100%',
-    maxWidth: 400,
+  avatarFrame: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    overflow: "hidden",
+    borderWidth: 0.55,
+    borderColor: OttoColors.borderSoft,
+    backgroundColor: OttoColors.surface,
   },
-  title: {
+  avatarImage: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+  },
+  textStack: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  greeting: {
+    ...OttoTypography.bodySmall,
+    color: OttoColors.textMid,
+  },
+  userName: {
     ...OttoTypography.h3,
     color: OttoColors.text,
+  },
+  mailButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 24,
+    backgroundColor: OttoColors.buttonFilled,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  pressed: {
+    opacity: 0.85,
+  },
+  connectCard: {
+    backgroundColor: OttoColors.surface,
+    borderWidth: 1,
+    borderColor: OttoColors.borderStrong,
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+  },
+  connectHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  connectIconHolder: {
+    backgroundColor: OttoColors.borderSoft,
+    borderRadius: 12,
+    padding: 8,
+  },
+  connectTitleBlock: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
+  },
+  connectTitle: {
+    ...OttoTypography.h3,
+    color: OttoColors.text,
+  },
+  connectSubtitle: {
+    ...OttoTypography.captionSmall,
+    color: OttoColors.textSoft,
+  },
+  connectBody: {
+    ...OttoTypography.bodySmall,
+    color: OttoColors.textMid,
+  },
+  insightBanner: {
+    alignSelf: "stretch",
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+    overflow: "hidden",
+    backgroundColor: OttoColors.surface,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  insightBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  insightBadgeText: {
+    ...OttoTypography.captionSmall,
+    color: OttoColors.primarySoft,
+  },
+  insightBody: {
+    ...OttoTypography.bodySmall,
+    color: OttoColors.text,
+  },
+  insightHighlight: {
+    fontFamily: OttoFonts.semiBold,
+    color: OttoColors.primarySoft,
+  },
+  benefits: {
+    gap: 12,
+  },
+  benefitsTitle: {
+    ...OttoTypography.bodySmall,
+    fontFamily: OttoFonts.semiBold,
+    color: OttoColors.text,
+  },
+  benefitsRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 12,
+  },
+  benefitCard: {
+    flex: 1,
+    minWidth: 0,
+    backgroundColor: OttoColors.surface,
+    borderWidth: 1,
+    borderColor: OttoColors.borderStrong,
+    borderRadius: 16,
+    padding: 12,
+    gap: 8,
+  },
+  benefitIconHolder: {
+    alignSelf: "flex-start",
+    backgroundColor: OttoColors.borderSoft,
+    borderRadius: 8,
+    padding: 6,
+  },
+  benefitCopy: {
+    gap: 2,
+  },
+  benefitTitle: {
+    ...OttoTypography.bodySmall,
+    fontFamily: OttoFonts.semiBold,
+    color: OttoColors.textMid,
+  },
+  benefitBody: {
+    ...OttoTypography.captionSmall,
+    color: OttoColors.textSoft,
+  },
+  loadingRoot: {
+    flex: 1,
+    backgroundColor: OttoColors.background,
+  },
+  loadingSafeArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

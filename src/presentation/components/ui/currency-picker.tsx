@@ -40,6 +40,7 @@ export type CurrencyPickerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onChange: (code: string) => void;
+  label?: string;
 };
 
 function windowStartForOffset(offset: number) {
@@ -92,6 +93,7 @@ export function CurrencyPicker({
   open,
   onOpenChange,
   onChange,
+  label,
 }: CurrencyPickerProps) {
   const selected = getCurrency(value);
   const listRef = useRef<ScrollView>(null);
@@ -165,9 +167,16 @@ export function CurrencyPicker({
 
   return (
     <View>
+      {label ? (
+        <View style={styles.labelRow} pointerEvents="none">
+          <View style={styles.labelBackground}>
+            <Text style={styles.floatingLabel}>{label}</Text>
+          </View>
+        </View>
+      ) : null}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Selecionar moeda"
+        accessibilityLabel={label ?? 'Selecionar moeda'}
         accessibilityState={{ expanded: open }}
         onPress={() => onOpenChange(!open)}
         style={[styles.field, open && styles.fieldOpen]}
@@ -226,6 +235,20 @@ export function CurrencyPicker({
 }
 
 const styles = StyleSheet.create({
+  labelRow: {
+    position: 'absolute',
+    top: -8,
+    left: 13,
+    zIndex: 2,
+  },
+  labelBackground: {
+    backgroundColor: OttoColors.background,
+    paddingHorizontal: 4,
+  },
+  floatingLabel: {
+    ...OttoTypography.captionSmall,
+    color: OttoColors.text,
+  },
   field: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -55,11 +55,13 @@ export function ReviewStarIcon({ size = 12, color = '#2FB70D' }: IconProps) {
 export function PlanRadioIcon({
   size = 20,
   selected = false,
+  selectedColor = '#95FF52',
 }: {
   size?: number;
   selected?: boolean;
+  selectedColor?: string;
 }) {
-  const outer = selected ? '#95FF52' : '#585D56';
+  const outer = selected ? selectedColor : '#585D56';
   const innerR = selected ? size * 0.2 : size * 0.325;
 
   return (

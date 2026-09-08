@@ -25,6 +25,16 @@ import {
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const;
 
+const WEEKDAYS_LONG = [
+  'Domingo',
+  'Segunda-Feira',
+  'Terça-Feira',
+  'Quarta-Feira',
+  'Quinta-Feira',
+  'Sexta-Feira',
+  'Sábado',
+] as const;
+
 const MONTHS_LONG = [
   'Janeiro',
   'Fevereiro',
@@ -98,6 +108,10 @@ function addMonths(date: Date, amount: number) {
   return new Date(date.getFullYear(), date.getMonth() + amount, 1);
 }
 
+function addDays(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount);
+}
+
 export function isSameDay(left: Date, right: Date) {
   return (
     left.getFullYear() === right.getFullYear() &&
@@ -121,6 +135,31 @@ function dateKey(date: Date) {
 
 export function formatLongDate(date: Date) {
   return `${date.getDate()} de ${MONTHS_LONG[date.getMonth()]} de ${date.getFullYear()}`;
+}
+
+export function formatTransactionDetailsDate(date: Date) {
+  return `${WEEKDAYS_LONG[date.getDay()]}, ${formatLongDate(date)}`;
+}
+
+export function formatActivityDay(date: Date) {
+  return `${date.getDate()} de ${MONTHS_SHORT[date.getMonth()]}`;
+}
+
+export function formatActivitySection(date: Date, today = new Date()) {
+  const selected = startOfDay(date);
+  const current = startOfDay(today);
+  const yesterday = addDays(current, -1);
+
+  if (selected.getTime() === current.getTime()) {
+    return 'Hoje';
+  }
+  if (selected.getTime() === yesterday.getTime()) {
+    return 'Ontem';
+  }
+  if (selected.getFullYear() === current.getFullYear()) {
+    return `${selected.getDate()} de ${MONTHS_LONG[selected.getMonth()]}`;
+  }
+  return formatLongDate(selected);
 }
 
 function formatMonthYear(date: Date) {
