@@ -118,6 +118,7 @@ export type RegisterInput = {
 export type CompleteOnboardingInput = {
   phone: string;
   verificationToken: string;
+  password: string;
   fullName: string;
   birthDate: string;
   cpf: string;

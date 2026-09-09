@@ -16,7 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getErrorMessage } from '@/infra/http/get-error-message';
 import {
   getAuthStep,
-  isOauthMethod,
   paramString,
   parseAuthMethod,
 } from '@/presentation/auth/auth-flow';
@@ -127,18 +126,6 @@ export function LoginEmailCodePage() {
             method: 'phone',
             phone: result.phone,
             avatarKey: result.avatarKey ?? '',
-          },
-        });
-        return;
-      }
-
-      if (isOauthMethod(method)) {
-        router.push({
-          pathname: '/login-email-data',
-          params: {
-            method,
-            email,
-            phone: result.phone,
           },
         });
         return;

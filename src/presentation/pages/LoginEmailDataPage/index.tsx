@@ -123,19 +123,17 @@ export function LoginEmailDataPage() {
     isCompleteBirthDate(birthDate) &&
     isCompleteCpf(cpf) &&
     Boolean(draft.verificationToken) &&
-    (isOauthOnboarding || Boolean(draft.password));
+    Boolean(draft.password);
 
   async function handleCreateAccount() {
     if (!canContinue || loading) {
       return;
     }
 
-    if (!draft.verificationToken || (!isOauthOnboarding && !draft.password)) {
+    if (!draft.verificationToken || !draft.password) {
       Alert.alert(
         "Sessão incompleta",
-        isOauthOnboarding
-          ? "Volte e conclua a verificação do código enviado por SMS."
-          : "Volte e conclua a verificação do código e a senha.",
+        "Volte e conclua a verificação do código e a senha.",
       );
       return;
     }
@@ -146,6 +144,7 @@ export function LoginEmailDataPage() {
         ? await api.modules.auth.completeOnboarding({
             phone,
             verificationToken: draft.verificationToken,
+            password: draft.password,
             fullName: fullName.trim(),
             birthDate,
             cpf: cpf.replace(/\D/g, ""),

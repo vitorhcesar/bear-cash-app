@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   getAuthStep,
+  isOauthMethod,
   isValidEmail,
   paramString,
   parseAuthMethod,
@@ -36,6 +37,7 @@ export function LoginEmailProfilePage() {
     method?: string;
   }>();
   const method = parseAuthMethod(params.method);
+  const isOauth = isOauthMethod(method);
   const phone = paramString(params.phone) || draft.phone;
   const emailParam = paramString(params.email) || draft.email;
   const step = getAuthStep(method, "profile");
@@ -96,7 +98,9 @@ export function LoginEmailProfilePage() {
               <View style={styles.headerCopy}>
                 <Text style={styles.title}>Comece por aqui</Text>
                 <Text style={styles.subtitle}>
-                  Só mais alguns dados e você está dentro
+                  {isOauth
+                    ? "Defina uma senha para entrar também com e-mail"
+                    : "Só mais alguns dados e você está dentro"}
                 </Text>
               </View>
 
@@ -112,6 +116,7 @@ export function LoginEmailProfilePage() {
                   autoComplete="email"
                   textContentType="emailAddress"
                   returnKeyType="next"
+                  editable={!isOauth}
                 />
                 <PasswordField
                   label="Digite sua senha"

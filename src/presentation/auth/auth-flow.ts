@@ -25,14 +25,15 @@ const PHONE_STEPS: Record<Exclude<AuthScreen, 'phone'>, number> = {
 const SOCIAL_STEPS: Record<AuthScreen, number> = {
   phone: 1,
   code: 2,
-  profile: 2,
-  data: 3,
+  profile: 3,
+  data: 4,
 };
 
 export const SOCIAL_ONBOARDING_PATHS = [
   '/login-email-phone',
   '/login-email-whatsapp',
   '/login-email-code',
+  '/login-email-profile',
   '/login-email-data',
 ] as const;
 
@@ -64,7 +65,7 @@ export function getAuthStep(method: AuthMethod, screen: AuthScreen): AuthStep {
   if (isOauthMethod(method)) {
     return {
       current: SOCIAL_STEPS[screen],
-      total: 3,
+      total: 4,
     };
   }
 
