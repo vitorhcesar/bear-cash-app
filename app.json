@@ -24,7 +24,11 @@
       },
       "backgroundColor": "#0a0b0a",
       "predictiveBackGestureEnabled": false,
-      "package": "com.bearcash.app"
+      "package": "com.bearcash.app",
+      "permissions": [
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
     "web": {
       "output": "static",
@@ -59,8 +63,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "72d334d0-1eaf-441e-a5ca-d197a7540ba0"
+        "projectId": "3e9bd49c-c462-4202-89d4-32b53d9a8ed7"
       }
-    }
+    },
+    "owner": "vitorhcesar"
   }
 }
