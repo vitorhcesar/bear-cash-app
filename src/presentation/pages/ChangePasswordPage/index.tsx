@@ -18,7 +18,7 @@ import { BackButton } from '@/presentation/components/ui/back-button';
 import { Button } from '@/presentation/components/ui/button';
 import { PasswordField } from '@/presentation/components/ui/password-field';
 import { VerifiedBadgeIcon } from '@/presentation/components/ui/profile-icons';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -127,7 +127,7 @@ export function ChangePasswordPage() {
                 showToggle={false}
                 trailing={
                   passwordValid ? (
-                    <VerifiedBadgeIcon size={16} color={OttoColors.primary} />
+                    <VerifiedBadgeIcon size={16} color={BearCashColors.primary} />
                   ) : undefined
                 }
               />
@@ -173,7 +173,7 @@ export function ChangePasswordPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -193,12 +193,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   fields: {
     alignSelf: 'stretch',
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   hintText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
 });

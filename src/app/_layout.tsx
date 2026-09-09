@@ -25,21 +25,21 @@ import {
 import { SessionTransitionProvider } from '@/presentation/auth/session-transition';
 import { BiometricLockGate } from '@/presentation/biometrics/biometric-lock-gate';
 import { AnimatedSplashOverlay } from '@/presentation/components/animated-icon';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 import { HomeLoading } from '@/presentation/pages/HomePage';
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ duration: 0, fade: false });
 
-const OttoNavigationTheme: Theme = {
+const BearCashNavigationTheme: Theme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    background: OttoColors.background,
-    card: OttoColors.background,
-    border: OttoColors.borderSoft,
-    primary: OttoColors.primary,
-    text: OttoColors.text,
+    background: BearCashColors.background,
+    card: BearCashColors.background,
+    border: BearCashColors.borderSoft,
+    primary: BearCashColors.primary,
+    text: BearCashColors.text,
   },
 };
 
@@ -131,12 +131,12 @@ function RootNavigator() {
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
-            name="otto-ia"
+            name="bear-cash-ia"
             options={{ animation: 'fade' }}
             dangerouslySingular
           />
           <Stack.Screen
-            name="otto-ia-history"
+            name="bear-cash-ia-history"
             options={{ animation: 'slide_from_right' }}
           />
           <Stack.Screen
@@ -186,7 +186,7 @@ export default function RootLayout() {
 
   return (
     <View style={styles.root}>
-      <ThemeProvider value={OttoNavigationTheme}>
+      <ThemeProvider value={BearCashNavigationTheme}>
         <AuthDraftProvider>
           <SessionTransitionProvider>
             <AuthSessionProvider>
@@ -204,9 +204,9 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   screen: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
 });

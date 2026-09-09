@@ -5,8 +5,8 @@ type IconProps = {
   color?: string;
 };
 
-/** Otto bear mascot from the app logo */
-export function OttoMascotIcon({ size = 80, color = '#E0E2DF' }: IconProps) {
+/** BearCash bear mascot from the app logo */
+export function BearCashMascotIcon({ size = 80, color = '#E0E2DF' }: IconProps) {
   const height = (28.0003 / 27.4251) * size;
   return (
     <Svg width={size} height={height} viewBox="0 0 27.4251 28.0003" fill="none">

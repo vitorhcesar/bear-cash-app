@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { SvgXml } from "react-native-svg";
 
 import { CATEGORY_ICON_XML } from "@/presentation/components/ui/activities-category-icon-xml";
-import { OttoColors } from "@/presentation/constants/theme";
+import { BearCashColors } from "@/presentation/constants/theme";
 
 const PARENT_GLYPH = "#212220";
 const CLIP_FILL = /fill="(?:white|#fff(?:fff)?)"/gi;
@@ -106,6 +106,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   childBox: {
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
   },
 });

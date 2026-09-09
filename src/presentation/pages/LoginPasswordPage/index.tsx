@@ -24,7 +24,7 @@ import { AuthScene, authFadeIn } from '@/presentation/auth/auth-switch-transitio
 import { useGoogleSignIn } from '@/presentation/auth/use-google-sign-in';
 import { useAppleSignIn } from '@/presentation/auth/use-apple-sign-in';
 import { BackButton } from '@/presentation/components/ui/back-button';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export function LoginPasswordPage() {
@@ -154,7 +154,7 @@ export function LoginPasswordPage() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,

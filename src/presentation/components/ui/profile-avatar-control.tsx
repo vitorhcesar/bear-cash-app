@@ -9,7 +9,7 @@ import {
   DEFAULT_AVATARS,
   type IAvatarOption,
 } from '@/presentation/constants/avatars';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 const ACTION_SIZE = 28;
 const EDIT_ACTION_SIZE = 24;
@@ -41,7 +41,7 @@ export function ProfileAvatarControl({
             width: size,
             height: size,
             borderRadius: size / 2,
-            backgroundColor: OttoColors.borderStrong,
+            backgroundColor: BearCashColors.borderStrong,
           }}
           contentFit="cover"
           accessibilityLabel="Foto de perfil"
@@ -58,7 +58,7 @@ export function ProfileAvatarControl({
           {action === 'edit' ? (
             <SettingsEditIcon size={16} />
           ) : (
-            <RefreshIcon size={12} color={OttoColors.buttonFilledText} />
+            <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
           )}
         </Pressable>
       </View>
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     width: ACTION_SIZE,
     height: ACTION_SIZE,
     borderRadius: ACTION_SIZE / 2,
-    backgroundColor: OttoColors.text,
+    backgroundColor: BearCashColors.text,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -90,6 +90,6 @@ const styles = StyleSheet.create({
     width: EDIT_ACTION_SIZE,
     height: EDIT_ACTION_SIZE,
     borderRadius: EDIT_ACTION_SIZE / 2,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
   },
 });

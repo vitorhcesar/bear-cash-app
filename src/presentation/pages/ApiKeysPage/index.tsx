@@ -19,7 +19,7 @@ import { BackButton } from '@/presentation/components/ui/back-button';
 import { CreateApiKeySheet } from '@/presentation/components/ui/create-api-key-sheet';
 import { DeleteApiKeySheet } from '@/presentation/components/ui/delete-api-key-sheet';
 import { TrashIcon } from '@/presentation/components/ui/profile-icons';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export function ApiKeysPage() {
@@ -126,11 +126,11 @@ export function ApiKeysPage() {
           </View>
 
           <View style={styles.searchField}>
-            <SearchIcon size={16} color={OttoColors.primary} />
+            <SearchIcon size={16} color={BearCashColors.primary} />
             <TextInput
               style={styles.searchInput}
               placeholder="Procurar por suas chaves"
-              placeholderTextColor={OttoColors.textSoft}
+              placeholderTextColor={BearCashColors.textSoft}
               value={query}
               onChangeText={setQuery}
               autoCorrect={false}
@@ -145,7 +145,7 @@ export function ApiKeysPage() {
               keys.map((item) => (
                 <View key={item.id} style={styles.card}>
                   <View style={styles.cardIcon}>
-                    <ApiKeyGlyphIcon size={16} color={OttoColors.textMid} />
+                    <ApiKeyGlyphIcon size={16} color={BearCashColors.textMid} />
                   </View>
                   <View style={styles.cardCopy}>
                     <Text style={styles.cardTitle}>{item.name}</Text>
@@ -155,11 +155,11 @@ export function ApiKeysPage() {
                     value={item.isActive}
                     onValueChange={(value) => handleToggle(item, value)}
                     trackColor={{
-                      false: OttoColors.borderStrong,
-                      true: OttoColors.primary,
+                      false: BearCashColors.borderStrong,
+                      true: BearCashColors.primary,
                     }}
-                    thumbColor={OttoColors.text}
-                    ios_backgroundColor={OttoColors.borderStrong}
+                    thumbColor={BearCashColors.text}
+                    ios_backgroundColor={BearCashColors.borderStrong}
                   />
                   <Pressable
                     accessibilityRole="button"
@@ -167,7 +167,7 @@ export function ApiKeysPage() {
                     hitSlop={8}
                     onPress={() => setDeleteTarget(item)}
                   >
-                    <TrashIcon size={16} color={OttoColors.danger} />
+                    <TrashIcon size={16} color={BearCashColors.danger} />
                   </Pressable>
                 </View>
               ))
@@ -181,7 +181,7 @@ export function ApiKeysPage() {
           style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
           onPress={() => setCreateOpen(true)}
         >
-          <PlusIcon size={24} color={OttoColors.buttonFilledText} />
+          <PlusIcon size={24} color={BearCashColors.buttonFilledText} />
         </Pressable>
       </View>
 
@@ -220,7 +220,7 @@ export function ApiKeysPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   root: {
     flex: 1,
@@ -238,27 +238,27 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   searchField: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   searchInput: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
     flex: 1,
     padding: 0,
     margin: 0,
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   emptyText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     paddingVertical: 24,
   },
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: OttoColors.neutralBlackSoft,
+    backgroundColor: BearCashColors.neutralBlackSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -293,14 +293,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   cardTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 24,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   cardPrefix: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   fab: {
     position: 'absolute',
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: OttoColors.buttonFilled,
+    backgroundColor: BearCashColors.buttonFilled,
     alignItems: 'center',
     justifyContent: 'center',
   },

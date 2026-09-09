@@ -79,14 +79,14 @@ export async function getBiometricCapability(): Promise<BiometricCapability> {
 
   const subtitle =
     kind === 'face' && Platform.OS === 'ios'
-      ? 'Configure como o Face ID é usado no Otto'
+      ? 'Configure como o Face ID é usado no BearCash'
       : kind === 'fingerprint' && Platform.OS === 'ios'
-        ? 'Configure como o Touch ID é usado no Otto'
+        ? 'Configure como o Touch ID é usado no BearCash'
         : kind === 'fingerprint'
-          ? 'Configure como a impressão digital é usada no Otto'
+          ? 'Configure como a impressão digital é usada no BearCash'
           : kind === 'face'
-            ? 'Configure como o reconhecimento facial é usado no Otto'
-            : 'Configure como a biometria é usada no Otto';
+            ? 'Configure como o reconhecimento facial é usado no BearCash'
+            : 'Configure como a biometria é usada no BearCash';
 
   const toggleTitle = 'Habilitar Biometria';
 

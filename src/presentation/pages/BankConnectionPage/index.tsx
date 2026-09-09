@@ -15,11 +15,11 @@ import {
   BankDashboardIcon,
   BankShieldIcon,
   BankSparkleIcon,
-  OttoMascotIcon,
+  BearCashMascotIcon,
 } from '@/presentation/components/ui/bank-connection-icons';
 import { Button } from '@/presentation/components/ui/button';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 type FeatureCardProps = {
   title: string;
@@ -82,7 +82,7 @@ export function BankConnectionPage() {
         <BackButton />
 
         <View style={styles.hero}>
-          <OttoMascotIcon size={80} color={OttoColors.buttonFilled} />
+          <BearCashMascotIcon size={80} color={BearCashColors.buttonFilled} />
           <View style={styles.heroCopy}>
             <Text style={styles.title}>Olá, {firstName}!</Text>
             <Text style={styles.subtitle}>
@@ -98,7 +98,7 @@ export function BankConnectionPage() {
           rightIcon={
             <SettingsChevronIcon
               size={16}
-              color={OttoColors.buttonFilledText}
+              color={BearCashColors.buttonFilledText}
             />
           }
           onPress={() => router.push('/bank-select')}
@@ -110,14 +110,14 @@ export function BankConnectionPage() {
               title="Segurança bancária"
               description="Tecnologia oficial Open Finance - O mesmo padrão de grandes bancos"
               icon={
-                <BankShieldIcon size={20} color={OttoColors.textMid} />
+                <BankShieldIcon size={20} color={BearCashColors.textMid} />
               }
             />
             <FeatureCard
               title="Inteligência 24h"
-              description="Otto monitora suas finanças enquanto você vive, encontrando economia invisíveis"
+              description="BearCash monitora suas finanças enquanto você vive, encontrando economia invisíveis"
               icon={
-                <BankSparkleIcon size={20} color={OttoColors.textMid} />
+                <BankSparkleIcon size={20} color={BearCashColors.textMid} />
               }
             />
           </View>
@@ -127,14 +127,14 @@ export function BankConnectionPage() {
               description="Patrimônio completo, ritmo de gastos e parcelas futuras em gráficos inteligentes"
               badge="Novo"
               icon={
-                <BankDashboardIcon size={20} color={OttoColors.textMid} />
+                <BankDashboardIcon size={20} color={BearCashColors.textMid} />
               }
             />
             <FeatureCard
               title="Você no comando"
               description="Seus dados só são acessados com sua permissão. Desconecte quando quiser"
               icon={
-                <BankCrownIcon size={20} color={OttoColors.textMid} />
+                <BankCrownIcon size={20} color={BearCashColors.textMid} />
               }
             />
           </View>
@@ -147,7 +147,7 @@ export function BankConnectionPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -165,13 +165,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
     textAlign: 'center',
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
   },
   grid: {
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
     gap: 10,
@@ -197,32 +197,32 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: OttoColors.neutralBlackSoft,
+    backgroundColor: BearCashColors.neutralBlackSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badge: {
-    backgroundColor: OttoColors.primary,
+    backgroundColor: BearCashColors.primary,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
   badgeText: {
-    ...OttoTypography.captionSmall,
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.background,
+    ...BearCashTypography.captionSmall,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.background,
   },
   cardCopy: {
     gap: 2,
   },
   cardTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   cardDescription: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
 });

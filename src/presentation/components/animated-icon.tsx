@@ -5,7 +5,7 @@ import { Dimensions, StyleSheet, View } from "react-native";
 import Animated, { Easing, Keyframe } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { OttoColors } from "@/presentation/constants/theme";
+import { BearCashColors } from "@/presentation/constants/theme";
 
 const INITIAL_SCALE_FACTOR = Dimensions.get("screen").height / 90;
 const DURATION = 600;
@@ -38,7 +38,7 @@ export function AnimatedSplashOverlay() {
   const image = (
     <Image
       style={styles.image}
-      source={require("@/assets/images/otto-logo.png")}
+      source={require("@/assets/images/bear-cash-logo.png")}
     />
   );
 
@@ -127,7 +127,7 @@ export function AnimatedIcon() {
       >
         <Image
           style={styles.image}
-          source={require("@/assets/images/otto-logo.png")}
+          source={require("@/assets/images/bear-cash-logo.png")}
         />
       </Animated.View>
     </View>
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   },
   splashOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,

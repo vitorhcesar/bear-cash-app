@@ -2,20 +2,20 @@ import {
   SubscriptionOfferScreen,
   type SubscriptionOfferContent,
 } from '@/presentation/components/ui/subscription-offer-screen';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 const PLAN_BADGE = '#2FB70D';
 
 const PRO_CONTENT = {
   hero: require('@/assets/images/subscription/hero-paws.png'),
-  heroLabel: 'Otto Pro',
-  title: 'Conheça o Otto Pro',
-  titleColor: OttoColors.text,
+  heroLabel: 'BearCash Pro',
+  title: 'Conheça o BearCash Pro',
+  titleColor: BearCashColors.text,
   subtitle:
     'Mais bancos, respostas ilimitadas e mais clareza sobre seu dinheiro',
-  accent: OttoColors.primarySoft,
+  accent: BearCashColors.primarySoft,
   ctaLabel: 'Testar grátis por 7 dias',
-  ctaColor: OttoColors.primary,
+  ctaColor: BearCashColors.primary,
   yearly: {
     title: 'Anual',
     description: 'Melhor custo benefício - R$ 399,45 (cobrança única)',

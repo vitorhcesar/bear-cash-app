@@ -1,6 +1,6 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 export type StepGroupProps = {
   total: number;
@@ -39,9 +39,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   itemActive: {
-    backgroundColor: OttoColors.primary,
+    backgroundColor: BearCashColors.primary,
   },
   itemInactive: {
-    backgroundColor: OttoColors.stepInactive,
+    backgroundColor: BearCashColors.stepInactive,
   },
 });

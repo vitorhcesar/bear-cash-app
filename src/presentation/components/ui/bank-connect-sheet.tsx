@@ -5,12 +5,12 @@ import {
   BankConnectBuildingIcon,
   BankConnectClockIcon,
   BankConnectSwapIcon,
-  OttoConnectLogo,
+  BearCashConnectLogo,
 } from '@/presentation/components/ui/bank-connect-icons';
 import { Button } from '@/presentation/components/ui/button';
 import { SettingsBiometricsIcon } from '@/presentation/components/ui/settings-icons';
 import { Sheet } from '@/presentation/components/ui/sheet';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 type BankLogoProps = {
   size?: number;
@@ -87,7 +87,7 @@ export function BankConnectSheet({
           </View>
           <BankConnectSwapIcon size={24} />
           <View style={styles.logoFrame}>
-            <OttoConnectLogo size={LOGO_SIZE} />
+            <BearCashConnectLogo size={LOGO_SIZE} />
           </View>
         </View>
 
@@ -95,14 +95,14 @@ export function BankConnectSheet({
           <View style={styles.cards}>
             <InfoCard
               icon={
-                <SettingsBiometricsIcon size={12} color={OttoColors.buttonFilled} />
+                <SettingsBiometricsIcon size={12} color={BearCashColors.buttonFilled} />
               }
               title={userName}
               subtitle={cpfLabel}
             />
             <InfoCard
               icon={
-                <BankConnectBuildingIcon size={12} color={OttoColors.buttonFilled} />
+                <BankConnectBuildingIcon size={12} color={BearCashColors.buttonFilled} />
               }
               title={name}
               subtitle="Cadastro, conta, cartão de crédito, cambio e investimento (Sem prazo)"
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
   },
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconWrap: {
-    backgroundColor: OttoColors.neutralBlackSoft,
+    backgroundColor: BearCashColors.neutralBlackSoft,
     borderRadius: 8,
     padding: 6,
   },
@@ -180,14 +180,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   cardTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.textMid,
+    color: BearCashColors.textMid,
   },
   cardSubtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   actions: {
     gap: 12,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   hintText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
 });

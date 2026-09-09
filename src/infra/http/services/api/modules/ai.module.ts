@@ -30,26 +30,26 @@ export type AiConversationDetail = {
   updatedAt: string;
 };
 
-export type ChatWithOttoInput = {
+export type ChatWithBearCashInput = {
   conversationId?: string;
   message: string;
 };
 
-export type ChatWithOttoResponse = {
+export type ChatWithBearCashResponse = {
   conversationId: string;
   title: string;
   message: AiMessage;
 };
 
 export interface IAiModule {
-  chat(input: ChatWithOttoInput): Promise<ChatWithOttoResponse>;
+  chat(input: ChatWithBearCashInput): Promise<ChatWithBearCashResponse>;
   listConversations(query?: string): Promise<AiConversationListResponse>;
   getConversation(id: string): Promise<AiConversationDetail>;
 }
 
 export class AiModule extends BaseApiModule implements IAiModule {
-  chat(input: ChatWithOttoInput) {
-    return this.http.post<ChatWithOttoResponse>('/api/v1/ai/chat', input);
+  chat(input: ChatWithBearCashInput) {
+    return this.http.post<ChatWithBearCashResponse>('/api/v1/ai/chat', input);
   }
 
   listConversations(query?: string) {

@@ -23,7 +23,7 @@ import {
   SantanderLogo,
 } from '@/presentation/components/ui/bank-logos';
 import { EmailIcon } from '@/presentation/components/ui/brand-icons';
-import { OttoPremiumBanner } from '@/presentation/components/ui/otto-premium-banner';
+import { BearCashPremiumBanner } from '@/presentation/components/ui/bear-cash-premium-banner';
 import { ProfileAvatarControl } from '@/presentation/components/ui/profile-avatar-control';
 import { ReportProblemSheet } from '@/presentation/components/ui/report-problem-sheet';
 import {
@@ -45,7 +45,7 @@ import {
   getAvatarOption,
   type IAvatarOption,
 } from '@/presentation/constants/avatars';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 const BANK_STACK = [
   { id: 'santander', Logo: SantanderLogo },
@@ -174,7 +174,7 @@ export function SettingsPage() {
           <Text style={styles.name}>{displayName}</Text>
 
           <View style={styles.topActions}>
-            <OttoPremiumBanner
+            <BearCashPremiumBanner
               onPress={() => router.push('/subscription-premium')}
             />
 
@@ -213,7 +213,7 @@ export function SettingsPage() {
                           {
                             marginLeft: index === 0 ? 0 : -5,
                             zIndex: BANK_STACK.length - index,
-                            borderColor: OttoColors.surface,
+                            borderColor: BearCashColors.surface,
                           },
                         ]}
                       >
@@ -239,9 +239,9 @@ export function SettingsPage() {
             </View>
 
             <NavRow
-              label="Avalie o Otto"
+              label="Avalie o BearCash"
               icon={<SettingsStarIcon size={16} />}
-              onPress={() => comingSoon('Avalie o Otto')}
+              onPress={() => comingSoon('Avalie o BearCash')}
             />
 
             {!user?.emailVerified && user?.email ? (
@@ -256,7 +256,7 @@ export function SettingsPage() {
               >
                 <View style={styles.verifyBannerLeft}>
                   <View style={styles.verifyBannerIcon}>
-                    <EmailIcon size={16} color={OttoColors.warningText} />
+                    <EmailIcon size={16} color={BearCashColors.warningText} />
                   </View>
                   <View style={styles.verifyBannerCopy}>
                     <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
@@ -265,7 +265,7 @@ export function SettingsPage() {
                     </Text>
                   </View>
                 </View>
-                <SettingsChevronIcon size={16} color={OttoColors.warningText} />
+                <SettingsChevronIcon size={16} color={BearCashColors.warningText} />
               </Pressable>
             ) : null}
           </View>
@@ -349,7 +349,7 @@ export function SettingsPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -369,8 +369,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   name: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   featureCard: {
     flex: 1,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
     gap: 6,
@@ -394,14 +394,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   featureTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 26,
-    color: OttoColors.textMid,
+    color: BearCashColors.textMid,
   },
   featureSubtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   bankStack: {
     flexDirection: 'row',
@@ -416,19 +416,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   bankMore: {
-    backgroundColor: OttoColors.text,
+    backgroundColor: BearCashColors.text,
     borderColor: '#212220',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bankMoreText: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.background,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.background,
   },
   navRow: {
     alignSelf: 'stretch',
     height: 50,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
     flexDirection: 'row',
@@ -448,15 +448,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   navLabel: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 26,
-    color: OttoColors.textMid,
+    color: BearCashColors.textMid,
   },
   verifyBanner: {
     alignSelf: 'stretch',
     minHeight: 58,
-    backgroundColor: OttoColors.warning,
+    backgroundColor: BearCashColors.warning,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -484,14 +484,14 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   verifyBannerTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 22,
-    color: OttoColors.warningText,
+    color: BearCashColors.warningText,
   },
   verifyBannerSubtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.warningText,
+    ...BearCashTypography.caption,
+    color: BearCashColors.warningText,
     opacity: 0.72,
   },
   section: {
@@ -499,10 +499,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   sectionList: {
     gap: 12,
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   logoutButton: {
     alignSelf: 'stretch',
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -520,12 +520,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   logoutLabel: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   version: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   pressed: {
     opacity: 0.85,

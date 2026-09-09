@@ -22,14 +22,14 @@ import type { AiMessage } from "@/infra/http/services/api/modules/ai.module";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { HomeSparkleIcon } from "@/presentation/components/ui/home-icons";
 import {
-  OttoIaChatIcon,
-  OttoIaCloseIcon,
-  OttoIaSendIcon,
-} from "@/presentation/components/ui/otto-ia-icons";
-import { OttoColors, OttoFonts, OttoTypography } from "@/presentation/constants/theme";
+  BearCashIaChatIcon,
+  BearCashIaCloseIcon,
+  BearCashIaSendIcon,
+} from "@/presentation/components/ui/bear-cash-ia-icons";
+import { BearCashColors, BearCashFonts, BearCashTypography } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
-const OTTO_AVATAR = require("@/assets/images/otto-ia/avatar.png");
+const BEAR_CASH_AVATAR = require("@/assets/images/bear-cash-ia/avatar.png");
 const INPUT_BG = "#212220";
 const SEND_SIZE = 40;
 const COMPOSER_GAP = 12;
@@ -51,7 +51,7 @@ const FOOD_TOTAL = 482.9;
 
 type ChatMessage = {
   id: string;
-  role: "otto" | "user";
+  role: "bear-cash" | "user";
   kind: "text" | "insight";
   text?: string;
 };
@@ -91,13 +91,13 @@ function firstParam(value?: string | string[]) {
 function toChatMessages(items: AiMessage[]): ChatMessage[] {
   return items.map((item) => ({
     id: item.id,
-    role: item.role === "user" ? "user" : "otto",
+    role: item.role === "user" ? "user" : "bear-cash",
     kind: "text",
     text: item.content,
   }));
 }
 
-export function OttoIaChatPage() {
+export function BearCashIaChatPage() {
   const router = useRouter();
   const api = useApiService();
   const insets = useSafeAreaInsets();
@@ -120,11 +120,11 @@ export function OttoIaChatPage() {
   );
 
   const welcomeText = firstName
-    ? `Olá, ${firstName}! Sou o Otto, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?`
-    : "Olá! Sou o Otto, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?";
+    ? `Olá, ${firstName}! Sou o BearCash, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?`
+    : "Olá! Sou o BearCash, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?";
 
   const welcomeMessage = useMemo<ChatMessage>(
-    () => ({ id: "welcome", role: "otto", kind: "text", text: welcomeText }),
+    () => ({ id: "welcome", role: "bear-cash", kind: "text", text: welcomeText }),
     [welcomeText],
   );
 
@@ -225,7 +225,7 @@ export function OttoIaChatPage() {
     scrollToEnd(false);
   }, [loadingConversation, conversationId, messages.length, scrollToEnd]);
 
-  function closeOttoIa() {
+  function closeBearCashIa() {
     if (router.canDismiss()) {
       router.dismissTo("/(tabs)");
       return;
@@ -261,7 +261,7 @@ export function OttoIaChatPage() {
 
       const assistantMessage: ChatMessage = {
         id: response.message.id,
-        role: "otto",
+        role: "bear-cash",
         kind: "text",
         text: response.message.content,
       };
@@ -280,7 +280,7 @@ export function OttoIaChatPage() {
       );
       setDraft(text);
       setError(
-        getErrorMessage(sendError, "Não foi possível falar com o Otto IA."),
+        getErrorMessage(sendError, "Não foi possível falar com o BearCash IA."),
       );
     } finally {
       setSending(false);
@@ -302,15 +302,15 @@ export function OttoIaChatPage() {
           <View style={styles.userInfo}>
             <View style={styles.headerAvatar}>
               <Image
-                source={OTTO_AVATAR}
+                source={BEAR_CASH_AVATAR}
                 style={styles.headerAvatarImage}
                 contentFit="cover"
-                accessibilityLabel="Otto IA"
+                accessibilityLabel="BearCash IA"
               />
             </View>
             <View style={styles.textStack}>
               <View style={styles.nameRow}>
-                <Text style={styles.name}>Otto IA</Text>
+                <Text style={styles.name}>BearCash IA</Text>
                 <View style={styles.onlineDot} />
               </View>
               <Text style={styles.role}>Assistente de Finanças</Text>
@@ -320,24 +320,24 @@ export function OttoIaChatPage() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Conversas anteriores"
-              onPress={() => router.push("/otto-ia-history")}
+              onPress={() => router.push("/bear-cash-ia-history")}
               style={({ pressed }) => [
                 styles.closeButton,
                 pressed && styles.pressed,
               ]}
             >
-              <OttoIaChatIcon size={24} />
+              <BearCashIaChatIcon size={24} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Fechar"
-              onPress={closeOttoIa}
+              onPress={closeBearCashIa}
               style={({ pressed }) => [
                 styles.closeButton,
                 pressed && styles.pressed,
               ]}
             >
-              <OttoIaCloseIcon size={24} />
+              <BearCashIaCloseIcon size={24} />
             </Pressable>
           </View>
         </View>
@@ -354,7 +354,7 @@ export function OttoIaChatPage() {
         >
           {loadingConversation ? (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator color={OttoColors.primarySoft} />
+              <ActivityIndicator color={BearCashColors.primarySoft} />
             </View>
           ) : (
             messages.map((message) => {
@@ -373,15 +373,15 @@ export function OttoIaChatPage() {
                 );
               }
               return (
-                <View key={message.id} style={styles.ottoBlock}>
+                <View key={message.id} style={styles.bearCashBlock}>
                   <View style={styles.bubbleAvatar}>
                     <Image
-                      source={OTTO_AVATAR}
+                      source={BEAR_CASH_AVATAR}
                       style={styles.bubbleAvatarImage}
                       contentFit="cover"
                     />
                   </View>
-                  <View style={styles.ottoBubble}>
+                  <View style={styles.bearCashBubble}>
                     <Text style={styles.bubbleText}>{message.text ?? ""}</Text>
                   </View>
                 </View>
@@ -390,17 +390,17 @@ export function OttoIaChatPage() {
           )}
 
           {sending ? (
-            <View style={styles.ottoBlock}>
+            <View style={styles.bearCashBlock}>
               <View style={styles.bubbleAvatar}>
                 <Image
-                  source={OTTO_AVATAR}
+                  source={BEAR_CASH_AVATAR}
                   style={styles.bubbleAvatarImage}
                   contentFit="cover"
                 />
               </View>
               <View
-                style={styles.ottoTypingBubble}
-                accessibilityLabel="Otto está digitando"
+                style={styles.bearCashTypingBubble}
+                accessibilityLabel="BearCash está digitando"
               >
                 <TypingDots />
               </View>
@@ -519,14 +519,14 @@ function Composer({
           value={value}
           onChangeText={onChangeText}
           placeholder="Digite sua mensagem..."
-          placeholderTextColor={OttoColors.textSoft}
+          placeholderTextColor={BearCashColors.textSoft}
           onSubmitEditing={onSend}
           returnKeyType="send"
           editable={!sending}
-          accessibilityLabel="Mensagem para o Otto IA"
+          accessibilityLabel="Mensagem para o BearCash IA"
         />
         <View style={styles.sparkleSlot}>
-          <HomeSparkleIcon size={16} color={OttoColors.buttonFilled} />
+          <HomeSparkleIcon size={16} color={BearCashColors.buttonFilled} />
         </View>
       </View>
       <Pressable
@@ -541,9 +541,9 @@ function Composer({
         ]}
       >
         {sending ? (
-          <ActivityIndicator color={OttoColors.buttonFilledText} size="small" />
+          <ActivityIndicator color={BearCashColors.buttonFilledText} size="small" />
         ) : (
-          <OttoIaSendIcon size={16} />
+          <BearCashIaSendIcon size={16} />
         )}
       </Pressable>
     </View>
@@ -552,10 +552,10 @@ function Composer({
 
 function InsightBlock({ monthLabel }: { monthLabel: string }) {
   return (
-    <View style={styles.ottoBlock}>
+    <View style={styles.bearCashBlock}>
       <View style={styles.bubbleAvatar}>
         <Image
-          source={OTTO_AVATAR}
+          source={BEAR_CASH_AVATAR}
           style={styles.bubbleAvatarImage}
           contentFit="cover"
         />
@@ -593,7 +593,7 @@ function InsightBlock({ monthLabel }: { monthLabel: string }) {
           ))}
         </View>
         <Text style={styles.insightTip}>
-          Dica do Otto: Você economizou bastante evitando deliveries à noite.
+          Dica do BearCash: Você economizou bastante evitando deliveries à noite.
           Continue assim para atingir sua meta!
         </Text>
       </View>
@@ -604,7 +604,7 @@ function InsightBlock({ monthLabel }: { monthLabel: string }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: OttoColors.borderSoft,
+    borderBottomColor: BearCashColors.borderSoft,
   },
   userInfo: {
     flex: 1,
@@ -631,7 +631,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     overflow: "hidden",
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   headerAvatarImage: {
     width: 44,
@@ -648,18 +648,18 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   name: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
   },
   onlineDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: OttoColors.primary,
+    backgroundColor: BearCashColors.primary,
   },
   role: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   headerActions: {
     flexDirection: "row",
@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 24,
-    backgroundColor: OttoColors.buttonFilled,
+    backgroundColor: BearCashColors.buttonFilled,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -689,11 +689,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.error,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.error,
     marginBottom: 8,
   },
-  ottoBlock: {
+  bearCashBlock: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
@@ -703,29 +703,29 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     overflow: "hidden",
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   bubbleAvatarImage: {
     width: 32,
     height: 32,
   },
-  ottoBubble: {
+  bearCashBubble: {
     flex: 1,
     minWidth: 0,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 16,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     padding: 16,
   },
-  ottoTypingBubble: {
+  bearCashTypingBubble: {
     alignSelf: "flex-start",
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 16,
     borderBottomLeftRadius: 16,
@@ -742,18 +742,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: OttoColors.textMid,
+    backgroundColor: BearCashColors.textMid,
   },
   bubbleText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   suggestions: {
     gap: 8,
   },
   suggestionsLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   suggestionsGrid: {
     flexDirection: "row",
@@ -761,23 +761,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   suggestionPill: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
   suggestionText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textMid,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
   },
   userBlock: {
     alignItems: "flex-end",
   },
   userBubble: {
     maxWidth: 260,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     borderBottomLeftRadius: 16,
@@ -787,9 +787,9 @@ const styles = StyleSheet.create({
   insightBubble: {
     flex: 1,
     minWidth: 0,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 16,
     borderBottomLeftRadius: 16,
@@ -801,12 +801,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   insightKicker: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   insightAmount: {
-    ...OttoTypography.h1,
-    color: OttoColors.primarySoft,
+    ...BearCashTypography.h1,
+    color: BearCashColors.primarySoft,
   },
   insightDeltaRow: {
     flexDirection: "row",
@@ -814,21 +814,21 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   insightDelta: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.income,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.income,
   },
   insightDeltaRest: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   insightDivider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
   },
   insightSectionTitle: {
-    ...OttoTypography.caption,
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.textMid,
+    ...BearCashTypography.caption,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.textMid,
   },
   breakdownList: {
     gap: 12,
@@ -842,31 +842,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   categoryLabel: {
-    ...OttoTypography.caption,
-    color: OttoColors.text,
+    ...BearCashTypography.caption,
+    color: BearCashColors.text,
   },
   categoryValue: {
-    ...OttoTypography.caption,
-    color: OttoColors.text,
+    ...BearCashTypography.caption,
+    color: BearCashColors.text,
   },
   track: {
     height: 6,
     borderRadius: 3,
     overflow: "hidden",
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
   },
   trackFill: {
     height: 6,
     borderRadius: 3,
   },
   insightTip: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   footer: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     borderTopWidth: 1,
-    borderTopColor: OttoColors.borderSoft,
+    borderTopColor: BearCashColors.borderSoft,
     paddingTop: 12,
     paddingHorizontal: 16,
   },
@@ -883,7 +883,7 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: INPUT_BG,
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -892,8 +892,8 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     padding: 0,
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   sparkleSlot: {
     width: 16,
@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
     width: SEND_SIZE,
     height: SEND_SIZE,
     borderRadius: 999,
-    backgroundColor: OttoColors.primarySoft,
+    backgroundColor: BearCashColors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },

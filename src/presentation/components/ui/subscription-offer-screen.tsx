@@ -18,7 +18,7 @@ import {
   PlanRadioIcon,
   ReviewStarIcon,
 } from '@/presentation/components/ui/subscription-icons';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 const HERO_HEIGHT = 209;
 const REVIEW_CARD_WIDTH = 250;
@@ -171,7 +171,7 @@ export function SubscriptionOfferScreen({
           <View style={styles.heroFade} pointerEvents="none" />
           <BackButton
             fallbackHref="/subscription"
-            color={OttoColors.background}
+            color={BearCashColors.background}
             size={24}
             style={[styles.heroBack, { top: insets.top + 16 }]}
           />
@@ -265,7 +265,7 @@ export function SubscriptionOfferScreen({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 999,
-    backgroundColor: OttoColors.buttonFilledDisabled,
+    backgroundColor: BearCashColors.buttonFilledDisabled,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -307,11 +307,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    ...OttoTypography.h1,
+    ...BearCashTypography.h1,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   planCard: {
     alignSelf: 'stretch',
@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   planCardSelected: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   planCardIdle: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   planCardMain: {
     flex: 1,
@@ -345,10 +345,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   planCardTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 26,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   badge: {
     borderRadius: 999,
@@ -356,20 +356,20 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   badgeText: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.background,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.background,
   },
   planCardDescription: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
   },
   planCardPrice: {
     alignItems: 'flex-end',
     gap: 2,
   },
   planCardStrike: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
     textDecorationLine: 'line-through',
   },
   planCardAmountRow: {
@@ -378,16 +378,16 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   planCardCurrency: {
-    ...OttoTypography.caption,
-    color: OttoColors.text,
+    ...BearCashTypography.caption,
+    color: BearCashColors.text,
   },
   planCardAmount: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   planCardPeriod: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   features: {
     alignSelf: 'stretch',
@@ -399,8 +399,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   featureText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
     flex: 1,
   },
   reviewsSection: {
@@ -408,8 +408,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   reviewsHeading: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
   },
   reviewsScroller: {
     marginHorizontal: -16,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
   },
   reviewCard: {
     width: REVIEW_CARD_WIDTH,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
     gap: 10,
@@ -437,14 +437,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   reviewTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   reviewBody: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
   },
   reviewAuthorRow: {
     flexDirection: 'row',
@@ -452,14 +452,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   reviewMeta: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   reviewDot: {
     width: 2,
     height: 2,
     borderRadius: 999,
-    backgroundColor: OttoColors.textSoft,
+    backgroundColor: BearCashColors.textSoft,
   },
   hintRow: {
     flexDirection: 'row',
@@ -467,8 +467,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   hintText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   footerLinks: {
     flexDirection: 'row',
@@ -477,8 +477,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   footerLink: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   pressed: {
     opacity: 0.85,

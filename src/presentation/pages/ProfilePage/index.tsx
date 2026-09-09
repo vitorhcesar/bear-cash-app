@@ -19,7 +19,7 @@ import {
   VerifiedBadgeIcon,
 } from '@/presentation/components/ui/profile-icons';
 import { TextField } from '@/presentation/components/ui/text-field';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 function formatBirthDateDisplay(value: string | null | undefined) {
   if (!value) {
@@ -88,7 +88,7 @@ export function ProfilePage() {
   const emailVerified = Boolean(user?.emailVerified);
 
   const verifiedBadge = useMemo(
-    () => <VerifiedBadgeIcon size={16} color={OttoColors.primary} />,
+    () => <VerifiedBadgeIcon size={16} color={BearCashColors.primary} />,
     [],
   );
 
@@ -177,7 +177,7 @@ export function ProfilePage() {
         </View>
 
         <View style={styles.securityRow}>
-          <ShieldCheckIcon size={16} color={OttoColors.primary} />
+          <ShieldCheckIcon size={16} color={BearCashColors.primary} />
           <Text style={styles.securityText}>
             Dados seguros pela LGPD com criptografia
           </Text>
@@ -192,7 +192,7 @@ export function ProfilePage() {
           ]}
         >
           <Text style={styles.deleteLabel}>Excluir conta</Text>
-          <TrashIcon size={16} color={OttoColors.textSoft} />
+          <TrashIcon size={16} color={BearCashColors.textSoft} />
         </Pressable>
       </ScrollView>
 
@@ -215,7 +215,7 @@ export function ProfilePage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -231,21 +231,21 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   section: {
     gap: 16,
   },
   sectionTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   fields: {
     gap: 16,
@@ -254,8 +254,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   verifiedHint: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   securityRow: {
     flexDirection: 'row',
@@ -264,8 +264,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   securityText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   deleteButton: {
     marginTop: 'auto',
@@ -276,8 +276,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   deleteLabel: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
   },
   pressed: {
     opacity: 0.85,

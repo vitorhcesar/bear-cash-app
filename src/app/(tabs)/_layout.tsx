@@ -8,7 +8,7 @@ import {
   AppBottomBar,
   type AppTabKey,
 } from "@/presentation/components/app-bottom-bar";
-import { OttoColors } from "@/presentation/constants/theme";
+import { BearCashColors } from "@/presentation/constants/theme";
 
 /** Espaço reservado para AI bar + nav + safe area */
 export const APP_BOTTOM_CHROME_HEIGHT = 148;
@@ -29,7 +29,7 @@ export default function TabsLayout() {
             screenOptions={{
               headerShown: false,
               sceneStyle: {
-                backgroundColor: OttoColors.background,
+                backgroundColor: BearCashColors.background,
                 paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
               },
             }}
@@ -71,7 +71,7 @@ function TabsChromeBar() {
           }
           router.navigate("/(tabs)/community");
         }}
-        onAskAiPress={() => router.push("/otto-ia")}
+        onAskAiPress={() => router.push("/bear-cash-ia")}
         onSettingsPress={() => router.push("/settings")}
       />
     </View>
@@ -81,7 +81,7 @@ function TabsChromeBar() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   blurTarget: {
     flex: 1,

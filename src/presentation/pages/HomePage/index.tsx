@@ -27,9 +27,9 @@ import {
   getAvatarOption,
 } from "@/presentation/constants/avatars";
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from "@/presentation/constants/theme";
 
 const AVATAR_SIZE = 44;
@@ -78,7 +78,7 @@ function displayNameFromSession(
   );
 }
 
-function OttoInsightBanner() {
+function BearCashInsightBanner() {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -107,12 +107,12 @@ function OttoInsightBanner() {
             <LinearGradient id={`green${uid}`} x1="0" y1="0" x2="1" y2="0">
               <Stop
                 offset="0"
-                stopColor={OttoColors.primary}
+                stopColor={BearCashColors.primary}
                 stopOpacity={0.053}
               />
               <Stop
                 offset="1"
-                stopColor={OttoColors.primary}
+                stopColor={BearCashColors.primary}
                 stopOpacity={0.053}
               />
             </LinearGradient>
@@ -133,7 +133,7 @@ function OttoInsightBanner() {
       ) : null}
 
       <View style={styles.insightBadge}>
-        <Text style={styles.insightBadgeText}>OTTO IA INSIGHT</Text>
+        <Text style={styles.insightBadgeText}>BEARCASH IA INSIGHT</Text>
       </View>
       <Text style={styles.insightBody}>
         Olá! Conecte seu banco para começar a receber{" "}
@@ -224,7 +224,7 @@ export function HomePage() {
           />
         </View>
 
-        <OttoInsightBanner />
+        <BearCashInsightBanner />
 
         <View style={styles.benefits}>
           <Text style={styles.benefitsTitle}>Por que conectar?</Text>
@@ -248,7 +248,7 @@ export function HomePage() {
               <View style={styles.benefitCopy}>
                 <Text style={styles.benefitTitle}>Monitoramento 24h</Text>
                 <Text style={styles.benefitBody}>
-                  Otto monitora seu saldo e descobre economias invisíveis
+                  BearCash monitora seu saldo e descobre economias invisíveis
                   enquanto você vive.
                 </Text>
               </View>
@@ -264,7 +264,7 @@ export function HomeLoading() {
   return (
     <View style={styles.loadingRoot}>
       <SafeAreaView style={styles.loadingSafeArea}>
-        <ActivityIndicator color={OttoColors.primary} />
+        <ActivityIndicator color={BearCashColors.primary} />
       </SafeAreaView>
     </View>
   );
@@ -273,7 +273,7 @@ export function HomeLoading() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -299,8 +299,8 @@ const styles = StyleSheet.create({
     borderRadius: AVATAR_SIZE / 2,
     overflow: "hidden",
     borderWidth: 0.55,
-    borderColor: OttoColors.borderSoft,
-    backgroundColor: OttoColors.surface,
+    borderColor: BearCashColors.borderSoft,
+    backgroundColor: BearCashColors.surface,
   },
   avatarImage: {
     width: AVATAR_SIZE,
@@ -312,18 +312,18 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   greeting: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
   },
   userName: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
   },
   mailButton: {
     width: 40,
     height: 40,
     borderRadius: 24,
-    backgroundColor: OttoColors.buttonFilled,
+    backgroundColor: BearCashColors.buttonFilled,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
@@ -332,9 +332,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   connectCard: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
     borderRadius: 16,
     padding: 20,
     gap: 16,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   connectIconHolder: {
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
     borderRadius: 12,
     padding: 8,
   },
@@ -355,16 +355,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   connectTitle: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
   },
   connectSubtitle: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   connectBody: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
   },
   insightBanner: {
     alignSelf: "stretch",
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
     overflow: "hidden",
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
@@ -386,24 +386,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   insightBadgeText: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.primarySoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.primarySoft,
   },
   insightBody: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   insightHighlight: {
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.primarySoft,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.primarySoft,
   },
   benefits: {
     gap: 12,
   },
   benefitsTitle: {
-    ...OttoTypography.bodySmall,
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.text,
   },
   benefitsRow: {
     flexDirection: "row",
@@ -413,16 +413,16 @@ const styles = StyleSheet.create({
   benefitCard: {
     flex: 1,
     minWidth: 0,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
     borderRadius: 16,
     padding: 12,
     gap: 8,
   },
   benefitIconHolder: {
     alignSelf: "flex-start",
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
     borderRadius: 8,
     padding: 6,
   },
@@ -430,17 +430,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   benefitTitle: {
-    ...OttoTypography.bodySmall,
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.textMid,
   },
   benefitBody: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   loadingRoot: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   loadingSafeArea: {
     flex: 1,

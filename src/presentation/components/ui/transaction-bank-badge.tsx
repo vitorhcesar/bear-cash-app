@@ -6,7 +6,7 @@ import {
   NubankLogo,
   SantanderLogo,
 } from '@/presentation/components/ui/bank-logos';
-import { OttoMarkBadge } from '@/presentation/components/ui/figma-tab-icons';
+import { BearCashMarkBadge } from '@/presentation/components/ui/figma-tab-icons';
 
 export function TransactionBankBadge({
   bankName,
@@ -38,5 +38,5 @@ export function TransactionBankBadge({
     return <SantanderLogo size={size} />;
   }
 
-  return <OttoMarkBadge size={size} />;
+  return <BearCashMarkBadge size={size} />;
 }

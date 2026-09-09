@@ -38,7 +38,7 @@ import { PasswordField } from '@/presentation/components/ui/password-field';
 import { VerifiedBadgeIcon } from '@/presentation/components/ui/profile-icons';
 import { PlanRadioIcon } from '@/presentation/components/ui/subscription-icons';
 import { TimerIcon } from '@/presentation/components/ui/timer-icon';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const RESEND_SECONDS = 21;
@@ -329,7 +329,7 @@ export function ForgotPasswordPage() {
                     source={require('@/assets/images/auth/logo.png')}
                     style={styles.logo}
                     contentFit="contain"
-                    accessibilityLabel="Otto"
+                    accessibilityLabel="BearCash"
                   />
 
                   <View style={styles.headerCopy}>
@@ -340,7 +340,7 @@ export function ForgotPasswordPage() {
                   </View>
 
                   {loadingOptions || !options ? (
-                    <ActivityIndicator color={OttoColors.text} />
+                    <ActivityIndicator color={BearCashColors.text} />
                   ) : (
                     <View style={styles.channels}>
                       <ChannelCard
@@ -381,7 +381,7 @@ export function ForgotPasswordPage() {
                     source={require('@/assets/images/auth/logo.png')}
                     style={styles.logo}
                     contentFit="contain"
-                    accessibilityLabel="Otto"
+                    accessibilityLabel="BearCash"
                   />
 
                   <View style={styles.headerCopy}>
@@ -428,7 +428,7 @@ export function ForgotPasswordPage() {
                     </Pressable>
                   ) : (
                     <View style={styles.resendRow}>
-                      <TimerIcon size={16} color={OttoColors.textSoft} />
+                      <TimerIcon size={16} color={BearCashColors.textSoft} />
                       <Text style={styles.resendText}>
                         Reenviar em {secondsLeft}{' '}
                         {secondsLeft === 1 ? 'segundo' : 'segundos'}
@@ -460,7 +460,7 @@ export function ForgotPasswordPage() {
                       showToggle={false}
                       trailing={
                         passwordValid ? (
-                          <VerifiedBadgeIcon size={16} color={OttoColors.primary} />
+                          <VerifiedBadgeIcon size={16} color={BearCashColors.primary} />
                         ) : undefined
                       }
                     />
@@ -553,7 +553,7 @@ function ChannelCard({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,
@@ -588,27 +588,27 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
   highlight: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
     marginTop: 8,
   },
   devHint: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -621,14 +621,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   channelSelected: {
-    borderColor: OttoColors.primarySoft,
+    borderColor: BearCashColors.primarySoft,
   },
   channelDisabled: {
     opacity: 0.45,
@@ -647,20 +647,20 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   channelTitle: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
-    fontFamily: OttoTypography.h3.fontFamily,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
+    fontFamily: BearCashTypography.h3.fontFamily,
   },
   channelMasked: {
-    ...OttoTypography.caption,
-    color: OttoColors.textMid,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
   },
   channelMuted: {
-    color: OttoColors.textSoft,
+    color: BearCashColors.textSoft,
   },
   channelHint: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   resendRow: {
     flexDirection: 'row',
@@ -668,12 +668,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   resendText: {
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
   },
   resendLink: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     textDecorationLine: 'underline',
   },
   fields: {
@@ -687,7 +687,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   hintText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
 });

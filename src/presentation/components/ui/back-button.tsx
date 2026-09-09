@@ -2,7 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BackArrowIcon } from '@/presentation/components/ui/activities-icons';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 export type BackButtonProps = Omit<PressableProps, 'children' | 'onPress'> & {
   onPress?: () => void;
@@ -18,7 +18,7 @@ export function BackButton({
   onPress,
   fallbackHref = '/(tabs)',
   size = 28,
-  color = OttoColors.text,
+  color = BearCashColors.text,
   accessibilityLabel = 'Voltar',
   hitSlop = 8,
   ...rest

@@ -1,6 +1,6 @@
-# Otto App
+# BearCash App
 
-App Expo (React Native) do Otto.
+App Expo (React Native) do BearCash.
 
 ## Stack
 

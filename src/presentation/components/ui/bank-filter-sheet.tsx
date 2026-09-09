@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/presentation/components/ui/button';
 import { Sheet } from '@/presentation/components/ui/sheet';
 import { PlanRadioIcon } from '@/presentation/components/ui/subscription-icons';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 export const BANK_KIND_FILTERS = [
   { id: 'all', label: 'Todos' },
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     flex: 1,
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
   },
   pressed: {
     opacity: 0.85,

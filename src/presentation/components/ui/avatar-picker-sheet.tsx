@@ -6,7 +6,7 @@ import {
   DEFAULT_AVATARS,
   type IAvatarOption,
 } from '@/presentation/constants/avatars';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 import { RefreshIcon } from './auth-icons';
 import { Button } from './button';
@@ -88,7 +88,7 @@ export function AvatarPickerSheet({
           style={styles.previewAction}
           onPress={handleCyclePreview}
         >
-          <RefreshIcon size={12} color={OttoColors.buttonFilledText} />
+          <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
         </Pressable>
       </View>
 
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     width: PREVIEW_SIZE,
     height: PREVIEW_SIZE,
     borderRadius: PREVIEW_SIZE / 2,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
   },
   previewAction: {
     position: 'absolute',
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: OttoColors.text,
+    backgroundColor: BearCashColors.text,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -156,11 +156,11 @@ const styles = StyleSheet.create({
     borderRadius: GRID_ITEM_SIZE / 2,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: OttoColors.neutralBlackSoft,
+    borderColor: BearCashColors.neutralBlackSoft,
   },
   gridItemSelected: {
     borderWidth: 2,
-    borderColor: OttoColors.text,
+    borderColor: BearCashColors.text,
   },
   gridImage: {
     width: '100%',

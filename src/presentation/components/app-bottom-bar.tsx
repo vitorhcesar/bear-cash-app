@@ -11,12 +11,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   AiAskGlyph,
   HomeTabGlyph,
-  OttoMarkGlyph,
+  BearCashMarkGlyph,
   WalletTabGlyph,
 } from "@/presentation/components/ui/figma-tab-icons";
 import { GlassSurface } from "@/presentation/components/ui/glass-surface";
 import { springPill } from "@/presentation/components/ui/pill-motion";
-import { OttoColors, OttoTypography } from "@/presentation/constants/theme";
+import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
 
 export type AppTabKey = "home" | "activities" | "community";
 
@@ -28,8 +28,8 @@ type AppBottomBarProps = {
   communityBadgeCount?: number;
 };
 
-const INACTIVE_ICON = OttoColors.textMid;
-const ACTIVE_ICON = OttoColors.text;
+const INACTIVE_ICON = BearCashColors.textMid;
+const ACTIVE_ICON = BearCashColors.text;
 const PILL_PAD = 4;
 const PILL_RADIUS = 24;
 const TAB_INDEX: Record<AppTabKey, number> = {
@@ -89,7 +89,7 @@ export function AppBottomBar({
     <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, 8) }]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Pergunte ao Otto IA"
+        accessibilityLabel="Pergunte ao BearCash IA"
         onPress={onAskAiPress}
       >
         <GlassSurface
@@ -97,9 +97,9 @@ export function AppBottomBar({
           style={styles.aiBar}
           contentStyle={styles.aiBarContent}
         >
-          <Text style={styles.aiPlaceholder}>Pergunte ao Otto IA</Text>
+          <Text style={styles.aiPlaceholder}>Pergunte ao BearCash IA</Text>
           <View style={styles.aiIconWrap}>
-            <AiAskGlyph size={24} color={OttoColors.primarySoft} />
+            <AiAskGlyph size={24} color={BearCashColors.primarySoft} />
           </View>
         </GlassSurface>
       </Pressable>
@@ -235,7 +235,7 @@ export function AppBottomBar({
             style={styles.logoButton}
             contentStyle={styles.logoButtonContent}
           >
-            <OttoMarkGlyph />
+            <BearCashMarkGlyph />
           </GlassSurface>
         </Pressable>
       </View>
@@ -263,9 +263,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   aiPlaceholder: {
-    ...OttoTypography.bodySmall,
+    ...BearCashTypography.bodySmall,
     lineHeight: 22.4,
-    color: OttoColors.textMid,
+    color: BearCashColors.textMid,
     zIndex: 1,
   },
   aiIconWrap: {
@@ -328,9 +328,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     borderWidth: 0.25,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     position: "absolute",
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   miniAvatarImage: {
     width: 45,
@@ -361,15 +361,15 @@ const styles = StyleSheet.create({
     minWidth: 16,
     height: 16,
     borderRadius: 999,
-    backgroundColor: OttoColors.danger,
+    backgroundColor: BearCashColors.danger,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 2,
     zIndex: 4,
   },
   badgeText: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
     textAlign: "center",
     width: 12,
   },

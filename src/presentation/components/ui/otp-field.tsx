@@ -11,7 +11,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { OttoColors, OttoFonts } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts } from '@/presentation/constants/theme';
 
 export type OtpFieldProps = {
   length?: number;
@@ -155,7 +155,7 @@ export function OtpField({
                 selectTextOnFocus
                 style={styles.input}
                 placeholder="0"
-                placeholderTextColor={OttoColors.textSoft}
+                placeholderTextColor={BearCashColors.textSoft}
                 caretHidden
                 accessibilityLabel={`Dígito ${index + 1} de ${length}`}
               />
@@ -182,15 +182,15 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     height: CELL_HEIGHT,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   shellFocused: {
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   shellError: {
-    borderColor: OttoColors.error,
+    borderColor: BearCashColors.error,
   },
   cell: {
     flex: 1,
@@ -200,24 +200,24 @@ const styles = StyleSheet.create({
   },
   cellDivider: {
     borderRightWidth: 1,
-    borderRightColor: OttoColors.borderSoft,
+    borderRightColor: BearCashColors.borderSoft,
   },
   input: {
     width: '100%',
     height: '100%',
     fontSize: 18,
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
     textAlign: 'center',
     textAlignVertical: 'center',
-    color: OttoColors.text,
+    color: BearCashColors.text,
     padding: 0,
     margin: 0,
   },
   errorHint: {
     fontSize: 12,
     lineHeight: 19,
-    fontFamily: OttoFonts.regular,
-    color: OttoColors.errorSoft,
+    fontFamily: BearCashFonts.regular,
+    color: BearCashColors.errorSoft,
   },
 });

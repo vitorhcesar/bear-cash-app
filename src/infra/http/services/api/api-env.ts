@@ -60,7 +60,7 @@ function resolveApiBaseUrl(): string {
 }
 
 /**
- * Base URL da API Otto.
+ * Base URL da API BearCash.
  * Em Android/iOS no Expo, deriva o IP do Metro quando .env usa localhost.
  */
 export const API_BASE_URL = resolveApiBaseUrl();

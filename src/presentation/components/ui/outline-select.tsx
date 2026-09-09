@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 export type OutlineSelectProps = {
   label: string;
@@ -55,16 +55,16 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   labelBackground: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     paddingHorizontal: 4,
   },
   floatingLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
   },
   shell: {
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -74,15 +74,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   shellOpen: {
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   value: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
   },
   placeholder: {
-    color: OttoColors.textSoft,
+    color: BearCashColors.textSoft,
   },
   trailing: {
     width: 16,

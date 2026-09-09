@@ -6,7 +6,7 @@ import {
   BANK_CONNECT_BUILDING_XML,
   BANK_CONNECT_CLOCK_XML,
   BANK_CONNECT_SWAP_XML,
-  OTTO_CONNECT_LOGO_XML,
+  BEAR_CASH_CONNECT_LOGO_XML,
 } from '@/presentation/components/ui/bank-connect-icon-xml';
 
 type IconProps = {
@@ -51,10 +51,10 @@ export function BankConnectClockIcon({ size = 16, color }: IconProps) {
   return <FigmaIcon xml={BANK_CONNECT_CLOCK_XML} size={size} color={color} />;
 }
 
-export function OttoConnectLogo({ size = 64 }: { size?: number }) {
+export function BearCashConnectLogo({ size = 64 }: { size?: number }) {
   return (
     <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={OTTO_CONNECT_LOGO_XML} width={size} height={size} />
+      <SvgXml xml={BEAR_CASH_CONNECT_LOGO_XML} width={size} height={size} />
     </View>
   );
 }

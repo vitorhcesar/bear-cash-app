@@ -32,9 +32,9 @@ import {
 import { Button } from "@/presentation/components/ui/button";
 import { Sheet } from "@/presentation/components/ui/sheet";
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from "@/presentation/constants/theme";
 
 const PERIODS = [
@@ -203,7 +203,7 @@ export function ActivitiesFilterSheet({
         return {
           id,
           label: group?.chipLabel ?? id,
-          color: group?.color ?? OttoColors.textMid,
+          color: group?.color ?? BearCashColors.textMid,
           iconKey: group?.parentIconKey ?? "parent-food",
         };
       }),
@@ -440,7 +440,7 @@ export function ActivitiesFilterSheet({
                       iconKey={category.iconKey}
                       color={
                         selected
-                          ? OttoColors.buttonFilledText
+                          ? BearCashColors.buttonFilledText
                           : category.color
                       }
                       size={12}
@@ -538,9 +538,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionTitle: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
-    fontFamily: OttoFonts.semiBold,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
+    fontFamily: BearCashFonts.semiBold,
   },
   chipWrap: {
     flexDirection: "row",
@@ -554,21 +554,21 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
     borderRadius: 40,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     paddingHorizontal: 10,
     paddingVertical: 6,
     minHeight: 34,
   },
   chipSelected: {
-    backgroundColor: OttoColors.text,
+    backgroundColor: BearCashColors.text,
   },
   chipText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
     lineHeight: 22,
   },
   chipTextSelected: {
-    color: OttoColors.buttonFilledText,
+    color: BearCashColors.buttonFilledText,
   },
   selectedChip: {
     flexDirection: "row",
@@ -576,14 +576,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 4,
     borderRadius: 40,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     paddingHorizontal: 10,
     paddingVertical: 6,
     minHeight: 34,
   },
   selectedChipText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
     lineHeight: 22,
   },
   bankList: {
@@ -595,8 +595,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   bankLabel: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
     flex: 1,
   },
   checkboxOuter: {
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 4,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     width: 13,
     height: 13,
     borderRadius: 2.6,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   ghostRow: {
     flexDirection: "row",
@@ -629,8 +629,8 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   ghostLabel: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   toggleCard: {
     flexDirection: "row",
@@ -644,30 +644,30 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   toggleTitle: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
-    fontFamily: OttoFonts.semiBold,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
+    fontFamily: BearCashFonts.semiBold,
   },
   toggleDescription: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
   },
   toggleTrack: {
     width: 32,
     height: 20,
     borderRadius: 10,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
     padding: 2,
     justifyContent: "center",
   },
   toggleTrackOn: {
-    backgroundColor: OttoColors.primary,
+    backgroundColor: BearCashColors.primary,
   },
   toggleThumb: {
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: OttoColors.text,
+    backgroundColor: BearCashColors.text,
   },
   toggleThumbOn: {
     alignSelf: "flex-end",

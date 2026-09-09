@@ -28,7 +28,7 @@ import { OtpField } from '@/presentation/components/ui/otp-field';
 import { VerifiedBadgeIcon } from '@/presentation/components/ui/profile-icons';
 import { StepGroup } from '@/presentation/components/ui/step-group';
 import { TimerIcon } from '@/presentation/components/ui/timer-icon';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const RESEND_SECONDS = 21;
@@ -218,7 +218,7 @@ export function VerifyEmailPage() {
               {phase === 'prompt' ? (
                 <>
                   <View style={styles.mailBadge}>
-                    <EmailIcon size={28} color={OttoColors.warningText} />
+                    <EmailIcon size={28} color={BearCashColors.warningText} />
                   </View>
 
                   <View style={styles.headerCopy}>
@@ -247,7 +247,7 @@ export function VerifyEmailPage() {
                     source={require('@/assets/images/auth/logo.png')}
                     style={styles.logo}
                     contentFit="contain"
-                    accessibilityLabel="Otto"
+                    accessibilityLabel="BearCash"
                   />
 
                   <View style={styles.headerCopy}>
@@ -294,7 +294,7 @@ export function VerifyEmailPage() {
                     </Pressable>
                   ) : (
                     <View style={styles.resendRow}>
-                      <TimerIcon size={16} color={OttoColors.textSoft} />
+                      <TimerIcon size={16} color={BearCashColors.textSoft} />
                       <Text style={styles.resendText}>
                         Reenviar em {secondsLeft}{' '}
                         {secondsLeft === 1 ? 'segundo' : 'segundos'}
@@ -306,7 +306,7 @@ export function VerifyEmailPage() {
 
               {phase === 'success' ? (
                 <>
-                  <VerifiedBadgeIcon size={72} color={OttoColors.primary} />
+                  <VerifiedBadgeIcon size={72} color={BearCashColors.primary} />
 
                   <View style={styles.headerCopy}>
                     <Text style={styles.title}>E-mail confirmado</Text>
@@ -331,7 +331,7 @@ export function VerifyEmailPage() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: OttoColors.warning,
+    backgroundColor: BearCashColors.warning,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -386,27 +386,27 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
   highlight: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
     marginTop: 8,
   },
   devHint: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -416,12 +416,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   resendText: {
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
   },
   resendLink: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     textDecorationLine: 'underline',
   },
   successAction: {

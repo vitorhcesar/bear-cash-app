@@ -11,9 +11,9 @@ import { getCurrencySymbol } from '@/presentation/components/ui/currencies';
 import { TransactionPencilIcon } from '@/presentation/components/ui/new-transaction-icons';
 import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from '@/presentation/constants/theme';
 
 function formatAbsoluteAmount(amount: number) {
@@ -39,7 +39,7 @@ export function TransactionListItem({
     'Sem categoria';
   const isCredit = item.type === 'CREDIT';
   const symbol = getCurrencySymbol(item.currencyCode);
-  const accountLabel = item.bankName?.trim() || 'Otto';
+  const accountLabel = item.bankName?.trim() || 'BearCash';
 
   return (
     <Pressable
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   categoryBox: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 8,
     marginRight: -11,
@@ -140,10 +140,10 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 12,
     lineHeight: 19,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   metaRow: {
     flexDirection: 'row',
@@ -152,14 +152,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   meta: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   dot: {
     width: 2,
     height: 2,
     borderRadius: 1,
-    backgroundColor: OttoColors.textSoft,
+    backgroundColor: BearCashColors.textSoft,
   },
   amount: {
     flexDirection: 'row',
@@ -168,14 +168,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   amountText: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 12,
     lineHeight: 19,
   },
   income: {
-    color: OttoColors.income,
+    color: BearCashColors.income,
   },
   expense: {
-    color: OttoColors.dangerBase,
+    color: BearCashColors.dangerBase,
   },
 });

@@ -11,7 +11,7 @@ import { getErrorMessage } from '@/infra/http/get-error-message';
 import { PROBLEM_REPORT_MAX_LENGTH } from '@/infra/http/services/api/modules/support.module';
 import { Button } from '@/presentation/components/ui/button';
 import { Sheet } from '@/presentation/components/ui/sheet';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export type ReportProblemSheetProps = {
@@ -69,11 +69,11 @@ export function ReportProblemSheet({
       onClose={onClose}
       onOpen={handleOpen}
       title="Reportar um problema"
-      closeIconColor={OttoColors.primary}
+      closeIconColor={BearCashColors.primary}
     >
       <Text style={styles.disclaimer}>
         Esse não é um canal de comunicação direto com o time de atendimento do
-        Otto, você não será respondido ou contatado a partir desse formulário
+        BearCash, você não será respondido ou contatado a partir desse formulário
       </Text>
 
       <View style={styles.fieldWrap}>
@@ -99,7 +99,7 @@ export function ReportProblemSheet({
             placeholder={
               showFloatingLabel ? undefined : 'Por favor, conte-nos mais'
             }
-            placeholderTextColor={OttoColors.textSoft}
+            placeholderTextColor={BearCashColors.textSoft}
             multiline
             textAlignVertical="top"
             maxLength={PROBLEM_REPORT_MAX_LENGTH}
@@ -126,8 +126,8 @@ export function ReportProblemSheet({
 
 const styles = StyleSheet.create({
   disclaimer: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   fieldWrap: {
     alignSelf: 'stretch',
@@ -140,12 +140,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   labelBackground: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     paddingHorizontal: 4,
   },
   floatingLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
   },
   inputShell: {
     borderWidth: 1,
@@ -156,21 +156,21 @@ const styles = StyleSheet.create({
     minHeight: 140,
   },
   inputShellIdle: {
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
   },
   inputShellActive: {
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   input: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     minHeight: 96,
     padding: 0,
     margin: 0,
   },
   counter: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
     alignSelf: 'flex-end',
     marginTop: 8,
   },

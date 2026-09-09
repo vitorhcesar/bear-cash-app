@@ -24,8 +24,8 @@ export const Colors = {
   },
 } as const;
 
-/** Design tokens from Otto Figma (Autenticação) */
-export const OttoColors = {
+/** Design tokens from BearCash Figma (Autenticação) */
+export const BearCashColors = {
   background: "#0a0b0a",
   surface: "#121311",
   text: "#f5f5f4",
@@ -54,41 +54,41 @@ export const OttoColors = {
   greenUseHighlight: "#95FF52",
 } as const;
 
-export const OttoFonts = {
+export const BearCashFonts = {
   regular: "Poppins_400Regular",
   semiBold: "Poppins_600SemiBold",
 } as const;
 
-export const OttoTypography = {
+export const BearCashTypography = {
   h1: {
     fontSize: 24,
     lineHeight: 29,
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
   },
   h3: {
     fontSize: 18,
     lineHeight: 22,
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
   },
   body: {
     fontSize: 16,
     lineHeight: 26,
-    fontFamily: OttoFonts.regular,
+    fontFamily: BearCashFonts.regular,
   },
   bodySmall: {
     fontSize: 14,
     lineHeight: 22,
-    fontFamily: OttoFonts.regular,
+    fontFamily: BearCashFonts.regular,
   },
   caption: {
     fontSize: 12,
     lineHeight: 19,
-    fontFamily: OttoFonts.regular,
+    fontFamily: BearCashFonts.regular,
   },
   captionSmall: {
     fontSize: 10,
     lineHeight: 16,
-    fontFamily: OttoFonts.regular,
+    fontFamily: BearCashFonts.regular,
   },
 } as const;
 

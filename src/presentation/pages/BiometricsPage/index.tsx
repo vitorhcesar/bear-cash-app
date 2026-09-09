@@ -25,7 +25,7 @@ import {
   BiometricsFaceIcon,
   BiometricsFingerprintIcon,
 } from '@/presentation/components/ui/biometrics-icons';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 export function BiometricsPage() {
   const [enabled, setEnabled] = useState(
@@ -83,14 +83,14 @@ export function BiometricsPage() {
     if (capability && !capability.enrolled) {
       Alert.alert(
         'Biometria não configurada',
-        `Configure ${capability.label} nas ajustes do sistema para usar no Otto.`,
+        `Configure ${capability.label} nas ajustes do sistema para usar no BearCash.`,
       );
       return;
     }
 
     try {
       const result = await authenticateWithBiometrics(
-        'Confirme para habilitar a biometria no Otto',
+        'Confirme para habilitar a biometria no BearCash',
       );
 
       if (!result.success) {
@@ -106,7 +106,7 @@ export function BiometricsPage() {
   }
 
   const subtitle =
-    capability?.subtitle ?? 'Configure como a biometria é usada no Otto';
+    capability?.subtitle ?? 'Configure como a biometria é usada no BearCash';
   const toggleTitle = capability?.toggleTitle ?? 'Habilitar Biometria';
   const toggleDescription =
     capability?.toggleDescription ??
@@ -114,9 +114,9 @@ export function BiometricsPage() {
 
   const icon =
     capability?.kind === 'fingerprint' ? (
-      <BiometricsFingerprintIcon size={20} color={OttoColors.textMid} />
+      <BiometricsFingerprintIcon size={20} color={BearCashColors.textMid} />
     ) : (
-      <BiometricsFaceIcon size={20} color={OttoColors.textMid} />
+      <BiometricsFaceIcon size={20} color={BearCashColors.textMid} />
     );
 
   return (
@@ -148,11 +148,11 @@ export function BiometricsPage() {
             value={enabled}
             onValueChange={handleToggle}
             trackColor={{
-              false: OttoColors.borderStrong,
-              true: OttoColors.primary,
+              false: BearCashColors.borderStrong,
+              true: BearCashColors.primary,
             }}
-            thumbColor={OttoColors.text}
-            ios_backgroundColor={OttoColors.borderStrong}
+            thumbColor={BearCashColors.text}
+            ios_backgroundColor={BearCashColors.borderStrong}
           />
         </View>
       </ScrollView>
@@ -163,7 +163,7 @@ export function BiometricsPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   row: {
     flexDirection: 'row',
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   rowActive: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   rowLoading: {
     opacity: 0.7,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: OttoColors.neutralBlackSoft,
+    backgroundColor: BearCashColors.neutralBlackSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -208,13 +208,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   rowTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 26,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   rowDescription: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
 });

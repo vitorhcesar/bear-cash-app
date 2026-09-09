@@ -40,9 +40,9 @@ import {
 import { OutlineSelect } from '@/presentation/components/ui/outline-select';
 import { TextField } from '@/presentation/components/ui/text-field';
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
@@ -160,7 +160,7 @@ export function EditTransactionPage() {
         <View style={styles.screen}>
           <BackButton fallbackHref="/(tabs)/activities" />
           <View style={styles.loading}>
-            <ActivityIndicator color={OttoColors.text} />
+            <ActivityIndicator color={BearCashColors.text} />
           </View>
         </View>
       </SafeAreaView>
@@ -280,7 +280,7 @@ export function EditTransactionPage() {
                     hiddenFromTotals && styles.toggleIconWrapActive,
                   ]}
                 >
-                  <TransactionEyeIcon size={12} color={OttoColors.text} />
+                  <TransactionEyeIcon size={12} color={BearCashColors.text} />
                 </View>
                 <View style={styles.toggleCopy}>
                   <Text style={styles.toggleTitle}>Ocultar do somatório</Text>
@@ -292,11 +292,11 @@ export function EditTransactionPage() {
                   value={hiddenFromTotals}
                   onValueChange={setHiddenFromTotals}
                   trackColor={{
-                    false: OttoColors.borderStrong,
-                    true: OttoColors.primary,
+                    false: BearCashColors.borderStrong,
+                    true: BearCashColors.primary,
                   }}
-                  thumbColor={OttoColors.background}
-                  ios_backgroundColor={OttoColors.borderStrong}
+                  thumbColor={BearCashColors.background}
+                  ios_backgroundColor={BearCashColors.borderStrong}
                 />
               </View>
             </View>
@@ -332,7 +332,7 @@ export function EditTransactionPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -352,8 +352,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   loading: {
     flex: 1,
@@ -366,16 +366,16 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: OttoColors.borderSoft,
+    borderBottomColor: BearCashColors.borderSoft,
   },
   amountText: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   amountInput: {
     flex: 1,
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
     padding: 0,
     margin: 0,
   },
@@ -384,10 +384,10 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   sectionTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   toggleCard: {
     flexDirection: 'row',
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   toggleCardActive: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   toggleIconWrap: {
     backgroundColor: ICON_WRAP_IDLE,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   toggleIconWrapActive: {
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
   },
   toggleCopy: {
     flex: 1,
@@ -413,14 +413,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   toggleTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   toggleDescription: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryIconWrap: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 8,
   },
@@ -442,12 +442,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   categoryLabel: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   categoryValue: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   categoryChevron: {
     padding: 8,

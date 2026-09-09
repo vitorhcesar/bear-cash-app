@@ -20,7 +20,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CloseIcon } from '@/presentation/components/ui/auth-icons';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 const SHEET_RADIUS = 24;
 const ANIM_MS = 280;
@@ -55,7 +55,7 @@ export function Sheet({
   subtitle,
   header,
   showCloseButton = true,
-  closeIconColor = OttoColors.text,
+  closeIconColor = BearCashColors.text,
   closeOnBackdropPress = true,
   contentStyle,
   onOpen,
@@ -230,13 +230,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   sheetSlide: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     borderTopLeftRadius: SHEET_RADIUS,
     borderTopRightRadius: SHEET_RADIUS,
     overflow: 'hidden',
   },
   sheet: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     borderTopLeftRadius: SHEET_RADIUS,
     borderTopRightRadius: SHEET_RADIUS,
     paddingHorizontal: 24,
@@ -257,12 +257,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   closeButton: {
     width: 32,

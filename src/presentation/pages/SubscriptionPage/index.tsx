@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { Button } from '@/presentation/components/ui/button';
 import { GhostIcon } from '@/presentation/components/ui/subscription-icons';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 export function SubscriptionPage() {
   const router = useRouter();
@@ -24,12 +24,12 @@ export function SubscriptionPage() {
         </View>
 
         <View style={styles.empty}>
-          <GhostIcon size={20} color={OttoColors.textSoft} />
+          <GhostIcon size={20} color={BearCashColors.textSoft} />
 
           <View style={styles.emptyCopy}>
             <Text style={styles.emptyTitle}>Sem assinatura ativa</Text>
             <Text style={styles.emptySubtitle}>
-              Assine o Otto Premium ou Pro para desbloquear mais funcionalidades
+              Assine o BearCash Premium ou Pro para desbloquear mais funcionalidades
             </Text>
           </View>
 
@@ -47,7 +47,7 @@ export function SubscriptionPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     paddingHorizontal: 24,
@@ -59,12 +59,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   empty: {
     marginTop: 40,
@@ -78,14 +78,14 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
   emptyTitle: {
-    ...OttoTypography.bodySmall,
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.text,
     textAlign: 'center',
   },
   emptySubtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
   },
 });

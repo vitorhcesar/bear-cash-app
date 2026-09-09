@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-na
 
 import { BrazilFlag } from '@/presentation/components/ui/brazil-flag';
 import { TextField } from '@/presentation/components/ui/text-field';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 export type PhoneFieldProps = {
   value: string;
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     maxWidth: 78,
     minHeight: 46,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   countryCodeText: {
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
   },
   phoneInput: {
     flex: 1,

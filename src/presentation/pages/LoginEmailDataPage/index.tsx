@@ -30,7 +30,7 @@ import {
   DEFAULT_AVATARS,
   type IAvatarOption,
 } from "@/presentation/constants/avatars";
-import { OttoColors, OttoTypography } from "@/presentation/constants/theme";
+import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 /** Formats digits as DD/MM/YYYY */
@@ -233,7 +233,7 @@ export function LoginEmailDataPage() {
               </View>
 
               <View style={styles.securityRow}>
-                <ShieldCheckIcon size={16} color={OttoColors.primary} />
+                <ShieldCheckIcon size={16} color={BearCashColors.primary} />
                 <Text style={styles.securityText}>
                   Dados seguros pela LGPD com criptografia
                 </Text>
@@ -258,7 +258,7 @@ export function LoginEmailDataPage() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: "center",
     alignSelf: "stretch",
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: "center",
     alignSelf: "stretch",
   },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   securityText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
 });

@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 export type TextFieldProps = TextInputProps & {
   label: string;
@@ -28,7 +28,7 @@ export function TextField({
   onFocus,
   onBlur,
   style,
-  placeholderTextColor = OttoColors.textSoft,
+  placeholderTextColor = BearCashColors.textSoft,
   ...rest
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
@@ -90,15 +90,15 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   labelBackground: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     paddingHorizontal: 4,
   },
   floatingLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
   },
   floatingLabelError: {
-    color: OttoColors.errorSoft,
+    color: BearCashColors.errorSoft,
   },
   inputShell: {
     borderWidth: 1,
@@ -111,17 +111,17 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   inputShellIdle: {
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
   },
   inputShellActive: {
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   inputShellError: {
-    borderColor: OttoColors.error,
+    borderColor: BearCashColors.error,
   },
   input: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     padding: 0,
     margin: 0,
     flex: 1,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorHint: {
-    ...OttoTypography.caption,
-    color: OttoColors.errorSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.errorSoft,
   },
 });

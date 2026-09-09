@@ -1,4 +1,4 @@
-# Arquitetura do Otto App
+# Arquitetura do BearCash App
 
 Clean Architecture pragmática para o app Expo (React Native), inspirada no frontend OmegaPay (`presentation`, `domain`, `infra`, `application`, `shared`).
 

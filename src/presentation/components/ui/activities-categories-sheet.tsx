@@ -27,9 +27,9 @@ import { FilterCheckboxOnIcon } from "@/presentation/components/ui/activities-fi
 import { SearchIcon } from "@/presentation/components/ui/activities-icons";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from "@/presentation/constants/theme";
 
 export type ActivitiesCategoriesSheetProps = {
@@ -228,7 +228,7 @@ export function ActivitiesCategoriesSheet({
         <TextInput
           style={styles.searchInput}
           placeholder="Procurar por categorias"
-          placeholderTextColor={OttoColors.textSoft}
+          placeholderTextColor={BearCashColors.textSoft}
           value={query}
           onChangeText={setQuery}
           autoCorrect={false}
@@ -341,8 +341,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   searchField: {
     flexDirection: "row",
@@ -350,15 +350,15 @@ const styles = StyleSheet.create({
     gap: 6,
     marginHorizontal: 16,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   searchInput: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     padding: 0,
   },
   scroll: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -397,14 +397,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   parentLabel: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
-    fontFamily: OttoFonts.semiBold,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
+    fontFamily: BearCashFonts.semiBold,
     flex: 1,
   },
   childLabel: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
     flex: 1,
   },
   checkboxOuter: {
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 4,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -425,6 +425,6 @@ const styles = StyleSheet.create({
     width: 13,
     height: 13,
     borderRadius: 2.6,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
 });

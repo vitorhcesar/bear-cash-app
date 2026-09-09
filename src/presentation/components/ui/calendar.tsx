@@ -18,9 +18,9 @@ import {
   CalendarChevronRightIcon,
 } from '@/presentation/components/ui/calendar-icons';
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from '@/presentation/constants/theme';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const;
@@ -506,7 +506,7 @@ export function Calendar({
 const styles = StyleSheet.create({
   card: {
     alignSelf: 'stretch',
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 24,
@@ -528,10 +528,10 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   monthLabel: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   paneClip: {
     overflow: 'hidden',
@@ -549,8 +549,8 @@ const styles = StyleSheet.create({
   },
   weekday: {
     flex: 1,
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
   },
   weekRow: {
@@ -567,25 +567,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dayText: {
-    ...OttoTypography.bodySmall,
+    ...BearCashTypography.bodySmall,
     textAlign: 'center',
   },
   dayTextOutside: {
-    color: OttoColors.borderStrong,
+    color: BearCashColors.borderStrong,
   },
   dayTextInMonth: {
-    color: OttoColors.textSoft,
+    color: BearCashColors.textSoft,
   },
   dayTextEmphasis: {
-    color: OttoColors.text,
-    fontFamily: OttoFonts.semiBold,
+    color: BearCashColors.text,
+    fontFamily: BearCashFonts.semiBold,
   },
   dayTextOnRange: {
-    color: OttoColors.buttonFilledText,
-    fontFamily: OttoFonts.semiBold,
+    color: BearCashColors.buttonFilledText,
+    fontFamily: BearCashFonts.semiBold,
   },
   rangeFill: {
-    backgroundColor: OttoColors.primarySoft,
+    backgroundColor: BearCashColors.primarySoft,
   },
   rangeStart: {
     overflow: 'hidden',

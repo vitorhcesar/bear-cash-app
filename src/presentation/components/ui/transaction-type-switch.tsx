@@ -12,7 +12,7 @@ import {
   IncomeArrowIcon,
 } from '@/presentation/components/ui/activities-icons';
 import { springPill } from '@/presentation/components/ui/pill-motion';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 const PILL_PAD = 4;
 const PILL_BG = '#212220';
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 40,
     padding: PILL_PAD,
     position: 'relative',
@@ -150,10 +150,10 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   label: {
-    ...OttoTypography.caption,
-    color: OttoColors.textMid,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
   },
   labelSelected: {
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
 });

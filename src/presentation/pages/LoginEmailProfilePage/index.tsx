@@ -23,7 +23,7 @@ import { AuthFlowHeader } from "@/presentation/components/ui/auth-flow-header";
 import { Button } from "@/presentation/components/ui/button";
 import { PasswordField } from "@/presentation/components/ui/password-field";
 import { TextField } from "@/presentation/components/ui/text-field";
-import { OttoColors, OttoTypography } from "@/presentation/constants/theme";
+import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -89,7 +89,7 @@ export function LoginEmailProfilePage() {
               source={require("@/assets/images/auth/logo.png")}
               style={styles.logo}
               contentFit="contain"
-              accessibilityLabel="Otto"
+              accessibilityLabel="BearCash"
             />
 
             <View style={styles.form}>
@@ -149,7 +149,7 @@ export function LoginEmailProfilePage() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,
@@ -189,14 +189,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: "center",
     alignSelf: "stretch",
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: "center",
     alignSelf: "stretch",
   },

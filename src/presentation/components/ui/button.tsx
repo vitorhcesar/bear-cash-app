@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 type ButtonVariant = 'filled' | 'stroke' | 'danger';
 
@@ -55,10 +55,10 @@ export function Button({
         <ActivityIndicator
           color={
             isDanger
-              ? OttoColors.text
+              ? BearCashColors.text
               : isFilled
-                ? OttoColors.buttonFilledText
-                : OttoColors.text
+                ? BearCashColors.buttonFilledText
+                : BearCashColors.text
           }
         />
       ) : (
@@ -93,18 +93,18 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   filled: {
-    backgroundColor: OttoColors.buttonFilled,
+    backgroundColor: BearCashColors.buttonFilled,
   },
   filledDisabled: {
-    backgroundColor: OttoColors.buttonFilledDisabled,
+    backgroundColor: BearCashColors.buttonFilledDisabled,
   },
   stroke: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   danger: {
-    backgroundColor: OttoColors.danger,
+    backgroundColor: BearCashColors.danger,
   },
   pressed: {
     opacity: 0.85,
@@ -123,18 +123,18 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   label: {
-    ...OttoTypography.body,
+    ...BearCashTypography.body,
   },
   filledLabel: {
-    color: OttoColors.buttonFilledText,
+    color: BearCashColors.buttonFilledText,
   },
   filledDisabledLabel: {
-    color: OttoColors.textDisabled,
+    color: BearCashColors.textDisabled,
   },
   strokeLabel: {
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   dangerLabel: {
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
 });

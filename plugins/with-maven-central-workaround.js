@@ -85,7 +85,7 @@ function withMavenCentralWorkaround(config) {
       const initDir = path.join(os.homedir(), '.gradle', 'init.d');
       await fs.promises.mkdir(initDir, { recursive: true });
       await fs.promises.writeFile(
-        path.join(initDir, '00-otto-maven-central-workaround.gradle'),
+        path.join(initDir, '00-bear-cash-maven-central-workaround.gradle'),
         INIT_SCRIPT,
         'utf8',
       );

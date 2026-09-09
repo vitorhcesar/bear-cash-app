@@ -5,10 +5,10 @@ import { SvgXml } from 'react-native-svg';
 import {
   AI_ICON_XML,
   HOME_ICON_XML,
-  OTTO_MARK_XML,
+  BEAR_CASH_MARK_XML,
   WALLET_ICON_XML,
 } from '@/presentation/components/ui/figma-tab-icon-xml';
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 type TintableIconProps = {
   size?: number;
@@ -45,15 +45,15 @@ export function AiAskGlyph({ size = 24, color }: TintableIconProps) {
   return <TintableFigmaIcon xml={AI_ICON_XML} size={size} color={color} />;
 }
 
-export function OttoMarkGlyph() {
+export function BearCashMarkGlyph() {
   return (
     <View style={styles.markWrap}>
-      <SvgXml xml={OTTO_MARK_XML} width={27.425} height={28} />
+      <SvgXml xml={BEAR_CASH_MARK_XML} width={27.425} height={28} />
     </View>
   );
 }
 
-export function OttoMarkBadge({ size = 20 }: { size?: number }) {
+export function BearCashMarkBadge({ size = 20 }: { size?: number }) {
   const scale = size / 28;
 
   return (
@@ -62,16 +62,16 @@ export function OttoMarkBadge({ size = 20 }: { size?: number }) {
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: OttoColors.surface,
+        backgroundColor: BearCashColors.surface,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: OttoColors.borderSoft,
+        borderColor: BearCashColors.borderSoft,
         overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
       <SvgXml
-        xml={OTTO_MARK_XML}
+        xml={BEAR_CASH_MARK_XML}
         width={27.425 * scale}
         height={28 * scale}
       />

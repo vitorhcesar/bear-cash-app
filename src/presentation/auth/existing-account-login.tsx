@@ -11,7 +11,7 @@ import { PasswordField } from '@/presentation/components/ui/password-field';
 import { formatBrazilPhoneDisplay } from '@/presentation/components/ui/phone-field';
 import { TextField } from '@/presentation/components/ui/text-field';
 import { getAvatarOption } from '@/presentation/constants/avatars';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 const AVATAR_SIZE = 72;
 
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
     borderRadius: AVATAR_SIZE / 2,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
   },
   form: {
     alignSelf: 'stretch',
@@ -191,8 +191,8 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
@@ -201,8 +201,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   forgotLink: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
     textDecorationLine: 'underline',
     textAlign: 'right',
     alignSelf: 'stretch',

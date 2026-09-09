@@ -18,9 +18,9 @@ import {
 } from '@/presentation/components/ui/currencies';
 import { TransactionChevronDownIcon } from '@/presentation/components/ui/new-transaction-icons';
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from '@/presentation/constants/theme';
 
 const VISIBLE_ROWS = 5;
@@ -185,7 +185,7 @@ export function CurrencyPicker({
         <View style={styles.chevron}>
           <TransactionChevronDownIcon
             size={16}
-            color={open ? OttoColors.primary : undefined}
+            color={open ? BearCashColors.primary : undefined}
           />
         </View>
       </Pressable>
@@ -242,31 +242,31 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   labelBackground: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     paddingHorizontal: 4,
   },
   floatingLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
   },
   field: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 46,
   },
   fieldOpen: {
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   fieldValue: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
   },
   chevron: {
     width: 16,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
     height: LIST_HEIGHT,
     borderRadius: 8,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     overflow: 'hidden',
   },
   list: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 8,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 8,
     paddingHorizontal: 10,
   },
@@ -303,16 +303,16 @@ const styles = StyleSheet.create({
   },
   rowLabel: {
     flex: 1,
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   rowLabelSelected: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
   },
   scrollbarTrack: {
     width: 4,
     borderRadius: 16,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     overflow: 'hidden',
   },
   scrollbarThumb: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 4,
-    backgroundColor: OttoColors.borderStrong,
+    backgroundColor: BearCashColors.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
     width: 13,
     height: 13,
     borderRadius: 2.6,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     shadowColor: '#1B1C1D',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,

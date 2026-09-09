@@ -37,9 +37,9 @@ import {
 } from '@/presentation/components/ui/new-transaction-icons';
 import { TransactionTypeSwitch } from '@/presentation/components/ui/transaction-type-switch';
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
@@ -69,9 +69,9 @@ export function NewTransactionPage() {
 
   const amountColor = useMemo(() => {
     if (amountCents <= 0) {
-      return OttoColors.textMid;
+      return BearCashColors.textMid;
     }
-    return type === 'CREDIT' ? OttoColors.income : OttoColors.dangerBase;
+    return type === 'CREDIT' ? BearCashColors.income : BearCashColors.dangerBase;
   }, [amountCents, type]);
 
   function handleAmountChange(text: string) {
@@ -153,7 +153,7 @@ export function NewTransactionPage() {
                 <TextInput
                   style={styles.nameInput}
                   placeholder="Nome da transação"
-                  placeholderTextColor={OttoColors.textSoft}
+                  placeholderTextColor={BearCashColors.textSoft}
                   value={name}
                   onChangeText={setName}
                   onFocus={() => setCurrencyOpen(false)}
@@ -253,7 +253,7 @@ export function NewTransactionPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   amountRow: {
     flexDirection: 'row',
@@ -281,14 +281,14 @@ const styles = StyleSheet.create({
     gap: 6,
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: OttoColors.borderSoft,
+    borderBottomColor: BearCashColors.borderSoft,
   },
   amountText: {
-    ...OttoTypography.h1,
+    ...BearCashTypography.h1,
   },
   amountInput: {
     flex: 1,
-    ...OttoTypography.h1,
+    ...BearCashTypography.h1,
     padding: 0,
     margin: 0,
   },
@@ -296,17 +296,17 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   inputShell: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -314,15 +314,15 @@ const styles = StyleSheet.create({
   },
   nameInput: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     padding: 0,
     margin: 0,
   },
   inputValue: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
   },
   trailingIcon: {
     width: 16,
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryIconWrap: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 8,
   },
@@ -349,12 +349,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   categoryLabel: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   categoryValue: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   categoryChevron: {
     padding: 8,

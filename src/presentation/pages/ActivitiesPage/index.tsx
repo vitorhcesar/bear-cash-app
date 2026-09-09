@@ -38,9 +38,9 @@ import { formatActivitySection } from "@/presentation/components/ui/calendar";
 import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
@@ -261,7 +261,7 @@ export function ActivitiesPage() {
                 <TextInput
                   style={styles.searchInput}
                   placeholder="Buscar atividades"
-                  placeholderTextColor={OttoColors.textSoft}
+                  placeholderTextColor={BearCashColors.textSoft}
                   value={query}
                   onChangeText={setQuery}
                   autoCorrect={false}
@@ -314,7 +314,7 @@ export function ActivitiesPage() {
         {loading && items.length === 0 ? (
           <View style={styles.loading}>
             <ActivityIndicator
-              color={OttoColors.text}
+              color={BearCashColors.text}
               accessibilityLabel="Carregando atividades"
             />
           </View>
@@ -385,7 +385,7 @@ export function ActivitiesPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -413,13 +413,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 24,
-    backgroundColor: OttoColors.primarySoft,
+    backgroundColor: BearCashColors.primarySoft,
     alignItems: "center",
     justifyContent: "center",
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   searchRow: {
     flexDirection: "row",
@@ -432,15 +432,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   searchInput: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     padding: 0,
   },
   filtersWrap: {
@@ -457,22 +457,22 @@ const styles = StyleSheet.create({
   },
   chip: {
     borderRadius: 40,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     paddingHorizontal: 10,
     paddingVertical: 6,
     alignSelf: "center",
     justifyContent: "center",
   },
   chipSelected: {
-    backgroundColor: OttoColors.text,
+    backgroundColor: BearCashColors.text,
   },
   chipText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
     lineHeight: 22,
   },
   chipTextSelected: {
-    color: OttoColors.buttonFilledText,
+    color: BearCashColors.buttonFilledText,
   },
   summaryRow: {
     flexDirection: "row",
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 8,
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -503,8 +503,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   summaryLabel: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   summaryValueRow: {
     flexDirection: "row",
@@ -512,8 +512,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   summaryValue: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textMid,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textMid,
   },
   emptyState: {
     flex: 1,
@@ -528,14 +528,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyTitle: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
     textAlign: "center",
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
   },
   emptySubtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: "center",
   },
   loading: {
@@ -549,9 +549,9 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   sectionTitle: {
-    ...OttoTypography.body,
-    fontFamily: OttoFonts.semiBold,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.text,
   },
   sectionList: {
     gap: 16,

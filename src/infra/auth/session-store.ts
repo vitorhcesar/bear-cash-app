@@ -1,8 +1,8 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-const SESSION_TOKEN_KEY = 'otto.session.token';
-const SESSION_EXPIRES_KEY = 'otto.session.expiresAt';
+const SESSION_TOKEN_KEY = 'bear-cash.session.token';
+const SESSION_EXPIRES_KEY = 'bear-cash.session.expiresAt';
 
 async function setItem(key: string, value: string) {
   if (Platform.OS === 'web') {

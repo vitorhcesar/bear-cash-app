@@ -22,8 +22,8 @@ export const authClient = createAuthClient({
   baseURL: API_BASE_URL,
   plugins: [
     expoClient({
-      scheme: 'otto',
-      storagePrefix: 'otto',
+      scheme: 'bear-cash',
+      storagePrefix: 'bear-cash',
       storage: Platform.OS === 'web' ? webStorage : SecureStore,
     }) as unknown as BetterAuthClientPlugin,
   ],

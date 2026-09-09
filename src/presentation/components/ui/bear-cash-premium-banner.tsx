@@ -9,16 +9,16 @@ import {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { SettingsCrownIcon } from '@/presentation/components/ui/settings-icons';
-import { OttoColors, OttoFonts } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts } from '@/presentation/constants/theme';
 
-const GOLD = OttoColors.premiumGold;
-const GOLD_MUTED = OttoColors.premiumGoldMuted;
+const GOLD = BearCashColors.premiumGold;
+const GOLD_MUTED = BearCashColors.premiumGoldMuted;
 
-type OttoPremiumBannerProps = {
+type BearCashPremiumBannerProps = {
   onPress?: () => void;
 };
 
-export function OttoPremiumBanner({ onPress }: OttoPremiumBannerProps) {
+export function BearCashPremiumBanner({ onPress }: BearCashPremiumBannerProps) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -32,7 +32,7 @@ export function OttoPremiumBanner({ onPress }: OttoPremiumBannerProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Otto Premium. Desbloqueie todos os recursos. Conheça."
+      accessibilityLabel="BearCash Premium. Desbloqueie todos os recursos. Conheça."
       onPress={onPress}
       style={({ pressed }) => [styles.shadow, pressed && styles.pressed]}
     >
@@ -75,7 +75,7 @@ export function OttoPremiumBanner({ onPress }: OttoPremiumBannerProps) {
             <SettingsCrownIcon size={20} />
           </View>
           <View style={styles.copy}>
-            <Text style={styles.title}>Otto Premium</Text>
+            <Text style={styles.title}>BearCash Premium</Text>
             <Text style={styles.subtitle}>Desbloqueie todos os recursos</Text>
           </View>
         </View>
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 18,
     lineHeight: 22,
     color: GOLD,
   },
   subtitle: {
-    fontFamily: OttoFonts.regular,
+    fontFamily: BearCashFonts.regular,
     fontSize: 13,
     lineHeight: 17,
     color: GOLD_MUTED,
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   ctaLabel: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 12,
     lineHeight: 16,
     color: GOLD,

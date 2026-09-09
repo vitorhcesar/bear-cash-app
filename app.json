@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Otto",
-    "slug": "otto",
+    "name": "BearCash",
+    "slug": "bear-cash",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/otto-app-icon.png",
-    "scheme": "otto",
+    "icon": "./assets/images/bear-cash-app-icon.png",
+    "scheme": "bear-cash",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a0b0a",
     "ios": {
-      "bundleIdentifier": "com.fansyfans.otto",
-      "icon": "./assets/images/otto-app-icon.png",
+      "bundleIdentifier": "com.fansyfans.bearcash",
+      "icon": "./assets/images/bear-cash-app-icon.png",
       "backgroundColor": "#0a0b0a",
       "usesAppleSignIn": true,
       "infoPlist": {
@@ -20,15 +20,15 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0a0b0a",
-        "foregroundImage": "./assets/images/otto-logo.png"
+        "foregroundImage": "./assets/images/bear-cash-logo.png"
       },
       "backgroundColor": "#0a0b0a",
       "predictiveBackGestureEnabled": false,
-      "package": "com.fansyfans.otto"
+      "package": "com.fansyfans.bearcash"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/otto-app-icon.png"
+      "favicon": "./assets/images/bear-cash-app-icon.png"
     },
     "plugins": [
       "expo-router",
@@ -38,7 +38,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#0a0b0a",
-          "image": "./assets/images/otto-logo.png",
+          "image": "./assets/images/bear-cash-logo.png",
           "imageWidth": 76
         }
       ],
@@ -47,7 +47,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "O Otto usa o Face ID para desbloquear o app e confirmar ações sensíveis."
+          "faceIDPermission": "O BearCash usa o Face ID para desbloquear o app e confirmar ações sensíveis."
         }
       ],
       "./plugins/with-maven-central-workaround"

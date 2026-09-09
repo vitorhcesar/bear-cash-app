@@ -20,7 +20,7 @@ import { Button } from '@/presentation/components/ui/button';
 import { OtpField } from '@/presentation/components/ui/otp-field';
 import { formatBrazilPhoneDisplay } from '@/presentation/components/ui/phone-field';
 import { TimerIcon } from '@/presentation/components/ui/timer-icon';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const RESEND_SECONDS = 21;
@@ -196,7 +196,7 @@ export function ChangePasswordOtpPage() {
             </Pressable>
           ) : (
             <View style={styles.resendRow}>
-              <TimerIcon size={16} color={OttoColors.textSoft} />
+              <TimerIcon size={16} color={BearCashColors.textSoft} />
               <Text style={styles.resendText}>
                 Reenviar em {secondsLeft} {secondsLeft === 1 ? 'segundo' : 'segundos'}
               </Text>
@@ -211,7 +211,7 @@ export function ChangePasswordOtpPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -231,21 +231,21 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   phone: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     marginTop: 8,
   },
   devHint: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     marginTop: 8,
   },
   resendRow: {
@@ -254,12 +254,12 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   resendText: {
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
   },
   resendLink: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     textDecorationLine: 'underline',
   },
 });

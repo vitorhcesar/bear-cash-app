@@ -19,7 +19,7 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 
-import { OttoColors } from '@/presentation/constants/theme';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 type SessionTransitionKind = 'enter' | 'leave';
 
@@ -201,7 +201,7 @@ function SessionCover({
             source={require('@/assets/images/auth/logo.png')}
             style={styles.mark}
             contentFit="contain"
-            accessibilityLabel="Otto"
+            accessibilityLabel="BearCash"
           />
         </Animated.View>
       </View>
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   overlayFill: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   markCenter: {
     ...StyleSheet.absoluteFill,

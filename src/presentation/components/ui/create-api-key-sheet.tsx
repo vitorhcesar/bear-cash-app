@@ -18,7 +18,7 @@ import {
 } from '@/presentation/components/ui/api-keys-icons';
 import { Button } from '@/presentation/components/ui/button';
 import { Sheet } from '@/presentation/components/ui/sheet';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export type CreateApiKeySheetProps = {
@@ -120,7 +120,7 @@ export function CreateApiKeySheet({
           <View style={styles.leadingIcon}>
             <ApiKeyGlyphIcon
               size={16}
-              color={created ? OttoColors.textMid : OttoColors.primary}
+              color={created ? BearCashColors.textMid : BearCashColors.primary}
             />
           </View>
 
@@ -135,7 +135,7 @@ export function CreateApiKeySheet({
               placeholder={
                 showFloatingLabel ? undefined : 'Identifique a chave'
               }
-              placeholderTextColor={OttoColors.textSoft}
+              placeholderTextColor={BearCashColors.textSoft}
               style={styles.input}
               autoCapitalize="words"
               maxLength={80}
@@ -148,7 +148,7 @@ export function CreateApiKeySheet({
 
       {created ? (
         <View style={styles.metaRow}>
-          <CalendarIcon size={16} color={OttoColors.textSoft} />
+          <CalendarIcon size={16} color={BearCashColors.textSoft} />
           <Text style={styles.metaText}>
             Criada em {formatCreatedAt(created.createdAt)}
           </Text>
@@ -167,7 +167,7 @@ export function CreateApiKeySheet({
         variant="filled"
         loading={loading}
         disabled={!created && !trimmed}
-        rightIcon={<CopyIcon size={16} color={OttoColors.buttonFilledText} />}
+        rightIcon={<CopyIcon size={16} color={BearCashColors.buttonFilledText} />}
         onPress={handlePrimaryAction}
       />
     </Sheet>
@@ -186,12 +186,12 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   labelBackground: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     paddingHorizontal: 4,
   },
   floatingLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
   },
   inputShell: {
     borderWidth: 1,
@@ -204,10 +204,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   inputShellIdle: {
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
   },
   inputShellActive: {
-    borderColor: OttoColors.borderStrong,
+    borderColor: BearCashColors.borderStrong,
   },
   inputShellCreated: {
     minHeight: 64,
@@ -219,15 +219,15 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   input: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     flex: 1,
     padding: 0,
     margin: 0,
   },
   secretText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textMid,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
     flex: 1,
   },
   metaRow: {
@@ -236,8 +236,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   metaText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     flex: 1,
   },
 });

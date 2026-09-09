@@ -31,7 +31,7 @@ import {
   SantanderLogo,
 } from '@/presentation/components/ui/bank-logos';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
-import { OttoColors, OttoFonts, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
 type BankLogoProps = {
   size?: number;
@@ -120,7 +120,7 @@ function BankRow({
         </View>
         <Text style={styles.bankName}>{name}</Text>
       </View>
-      <SettingsChevronIcon size={16} color={OttoColors.text} />
+      <SettingsChevronIcon size={16} color={BearCashColors.text} />
     </Pressable>
   );
 }
@@ -199,7 +199,7 @@ export function BankSelectPage() {
               <TextInput
                 style={styles.searchInput}
                 placeholder="Buscar bancos"
-                placeholderTextColor={OttoColors.textSoft}
+                placeholderTextColor={BearCashColors.textSoft}
                 value={query}
                 onChangeText={setQuery}
                 autoCorrect={false}
@@ -289,7 +289,7 @@ export function BankSelectPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   body: {
     flex: 1,
@@ -305,12 +305,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   searchBlock: {
     gap: 10,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -340,17 +340,17 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   floatingLabelBackground: {
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
     paddingHorizontal: 4,
   },
   floatingLabel: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.text,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
   },
   searchInput: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     padding: 0,
   },
   filterButton: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: OttoColors.primarySoft,
+    backgroundColor: BearCashColors.primarySoft,
   },
   filterHint: {
     flexDirection: 'row',
@@ -373,8 +373,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   filterHintText: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   listContent: {
     gap: 16,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
     overflow: 'hidden',
@@ -410,17 +410,17 @@ const styles = StyleSheet.create({
   },
   bankName: {
     flex: 1,
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 26,
-    color: OttoColors.textMid,
+    color: BearCashColors.textMid,
   },
   pressed: {
     opacity: 0.85,
   },
   emptyText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     paddingVertical: 24,
   },

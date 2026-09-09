@@ -17,13 +17,13 @@ import type { AiConversationSummary } from "@/infra/http/services/api/modules/ai
 import { SearchIcon } from "@/presentation/components/ui/activities-icons";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import {
-  OttoIaChatIcon,
-  OttoIaPlusIcon,
-} from "@/presentation/components/ui/otto-ia-icons";
-import { OttoColors, OttoFonts, OttoTypography } from "@/presentation/constants/theme";
+  BearCashIaChatIcon,
+  BearCashIaPlusIcon,
+} from "@/presentation/components/ui/bear-cash-ia-icons";
+import { BearCashColors, BearCashFonts, BearCashTypography } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
-const OTTO_AVATAR = require("@/assets/images/otto-ia/avatar.png");
+const BEAR_CASH_AVATAR = require("@/assets/images/bear-cash-ia/avatar.png");
 
 function formatConversationTime(iso: string, now = new Date()) {
   const date = new Date(iso);
@@ -55,7 +55,7 @@ function formatConversationTime(iso: string, now = new Date()) {
   }).format(date);
 }
 
-export function OttoIaHistoryPage() {
+export function BearCashIaHistoryPage() {
   const router = useRouter();
   const api = useApiService();
   const [query, setQuery] = useState("");
@@ -97,14 +97,14 @@ export function OttoIaHistoryPage() {
 
   function openNewChat() {
     router.replace({
-      pathname: "/otto-ia",
+      pathname: "/bear-cash-ia",
       params: { conversationId: undefined },
     });
   }
 
   function openChat(conversationId: string) {
     router.replace({
-      pathname: "/otto-ia",
+      pathname: "/bear-cash-ia",
       params: { conversationId },
     });
   }
@@ -113,24 +113,24 @@ export function OttoIaHistoryPage() {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.headerArea}>
         <View style={styles.navRow}>
-          <BackButton fallbackHref="/otto-ia" />
+          <BackButton fallbackHref="/bear-cash-ia" />
           <Text style={styles.navTitle}>Conversas anteriores</Text>
           <View style={styles.navIcon} accessibilityElementsHidden>
-            <OttoIaChatIcon size={24} color={OttoColors.buttonFilled} />
+            <BearCashIaChatIcon size={24} color={BearCashColors.buttonFilled} />
           </View>
         </View>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Nova conversa com Otto"
+          accessibilityLabel="Nova conversa com BearCash"
           onPress={openNewChat}
           style={({ pressed }) => [
             styles.newChatButton,
             pressed && styles.pressed,
           ]}
         >
-          <OttoIaPlusIcon size={16} />
-          <Text style={styles.newChatLabel}>Nova conversa com Otto</Text>
+          <BearCashIaPlusIcon size={16} />
+          <Text style={styles.newChatLabel}>Nova conversa com BearCash</Text>
         </Pressable>
       </View>
 
@@ -140,7 +140,7 @@ export function OttoIaHistoryPage() {
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar conversas passadas..."
-            placeholderTextColor={OttoColors.textSoft}
+            placeholderTextColor={BearCashColors.textSoft}
             value={query}
             onChangeText={setQuery}
             autoCorrect={false}
@@ -157,7 +157,7 @@ export function OttoIaHistoryPage() {
       >
         {loading ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator color={OttoColors.primarySoft} />
+            <ActivityIndicator color={BearCashColors.primarySoft} />
           </View>
         ) : error ? (
           <Text style={styles.emptyText}>{error}</Text>
@@ -177,7 +177,7 @@ export function OttoIaHistoryPage() {
               >
                 <View style={styles.avatar}>
                   <Image
-                    source={OTTO_AVATAR}
+                    source={BEAR_CASH_AVATAR}
                     style={styles.avatarImage}
                     contentFit="cover"
                   />
@@ -212,7 +212,7 @@ export function OttoIaHistoryPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -228,8 +228,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   navTitle: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
   },
   navIcon: {
     width: 28,
@@ -240,16 +240,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: OttoColors.primarySoft,
+    backgroundColor: BearCashColors.primarySoft,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   newChatLabel: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.buttonFilledText,
+    color: BearCashColors.buttonFilledText,
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -260,15 +260,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     borderWidth: 1,
-    borderColor: OttoColors.borderSoft,
+    borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   searchInput: {
     flex: 1,
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     padding: 0,
   },
   listContent: {
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     overflow: "hidden",
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
   },
   avatarImage: {
     width: 44,
@@ -311,14 +311,14 @@ const styles = StyleSheet.create({
   itemTitle: {
     flex: 1,
     minWidth: 0,
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   itemTime: {
-    ...OttoTypography.captionSmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
   },
   itemPreviewRow: {
     flexDirection: "row",
@@ -330,16 +330,16 @@ const styles = StyleSheet.create({
     minWidth: 0,
     fontSize: 12,
     lineHeight: 19,
-    fontFamily: OttoFonts.regular,
-    color: OttoColors.textMid,
+    fontFamily: BearCashFonts.regular,
+    color: BearCashColors.textMid,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: OttoColors.borderSoft,
+    backgroundColor: BearCashColors.borderSoft,
   },
   emptyText: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
     paddingHorizontal: 16,
     paddingTop: 24,
     textAlign: "center",

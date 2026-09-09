@@ -26,7 +26,7 @@ import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { AuthFlowHeader } from '@/presentation/components/ui/auth-flow-header';
 import { Button } from '@/presentation/components/ui/button';
 import { getPhoneDigits, PhoneField } from '@/presentation/components/ui/phone-field';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 function getUsernameFromEmail(email?: string) {
@@ -123,7 +123,7 @@ export function LoginEmailPhonePage() {
               source={require('@/assets/images/auth/logo.png')}
               style={styles.logo}
               contentFit="contain"
-              accessibilityLabel="Otto"
+              accessibilityLabel="BearCash"
             />
 
             <View style={styles.form}>
@@ -182,7 +182,7 @@ export function LoginEmailPhonePage() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,
@@ -222,14 +222,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
@@ -241,12 +241,12 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   footerText: {
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
   },
   footerLink: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     textDecorationLine: 'underline',
   },
 });

@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
-const PREFERENCES_KEY = 'otto.preferences';
+const PREFERENCES_KEY = 'bear-cash.preferences';
 
 export type AppPreferences = {
   soundsEnabled: boolean;

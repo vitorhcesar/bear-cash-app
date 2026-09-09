@@ -31,9 +31,9 @@ import {
 import { SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
 import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
-  OttoColors,
-  OttoFonts,
-  OttoTypography,
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
 } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
@@ -194,7 +194,7 @@ export function TransactionDetailsPage() {
         <View style={styles.screen}>
           <BackButton fallbackHref="/(tabs)/activities" />
           <View style={styles.loading}>
-            <ActivityIndicator color={OttoColors.text} />
+            <ActivityIndicator color={BearCashColors.text} />
           </View>
         </View>
       </SafeAreaView>
@@ -214,7 +214,7 @@ export function TransactionDetailsPage() {
 
   const isCredit = item.type === 'CREDIT';
   const symbol = getCurrencySymbol(item.currencyCode);
-  const accountLabel = item.bankName?.trim() || 'Otto';
+  const accountLabel = item.bankName?.trim() || 'BearCash';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -302,7 +302,7 @@ export function TransactionDetailsPage() {
               <FactRow
                 icon={
                   <View style={styles.categoryBox}>
-                    <TransactionCardIcon size={24} color={OttoColors.text} />
+                    <TransactionCardIcon size={24} color={BearCashColors.text} />
                   </View>
                 }
                 label="Forma de Pagamento"
@@ -324,11 +324,11 @@ export function TransactionDetailsPage() {
                 }}
                 disabled={savingRecurring}
                 trackColor={{
-                  false: OttoColors.borderStrong,
-                  true: OttoColors.primary,
+                  false: BearCashColors.borderStrong,
+                  true: BearCashColors.primary,
                 }}
-                thumbColor={OttoColors.background}
-                ios_backgroundColor={OttoColors.borderStrong}
+                thumbColor={BearCashColors.background}
+                ios_backgroundColor={BearCashColors.borderStrong}
               />
             </View>
           </View>
@@ -338,7 +338,7 @@ export function TransactionDetailsPage() {
           <Button
             label="Editar Registro"
             rightIcon={
-              <SettingsEditIcon size={16} color={OttoColors.buttonFilledText} />
+              <SettingsEditIcon size={16} color={BearCashColors.buttonFilledText} />
             }
             onPress={() =>
               router.push({
@@ -350,7 +350,7 @@ export function TransactionDetailsPage() {
           <Button
             label="Excluir Registro"
             variant="stroke"
-            rightIcon={<TransactionTrashIcon size={16} color={OttoColors.text} />}
+            rightIcon={<TransactionTrashIcon size={16} color={BearCashColors.text} />}
             onPress={() => setDeleteSheetOpen(true)}
           />
         </View>
@@ -374,7 +374,7 @@ export function TransactionDetailsPage() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   flex: {
     flex: 1,
@@ -394,8 +394,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   title: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   loading: {
     flex: 1,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   categoryBox: {
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 8,
   },
@@ -426,8 +426,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   name: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
   },
   amountRow: {
     flexDirection: 'row',
@@ -435,12 +435,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   amountText: {
-    ...OttoTypography.h1,
-    color: OttoColors.text,
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   date: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.textSoft,
   },
   facts: {
     gap: 16,
@@ -456,18 +456,18 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   factLabel: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   factValue: {
-    ...OttoTypography.bodySmall,
-    color: OttoColors.text,
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.text,
   },
   recurringCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 24,
-    backgroundColor: OttoColors.surface,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
   },
@@ -477,14 +477,14 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   recurringTitle: {
-    fontFamily: OttoFonts.semiBold,
+    fontFamily: BearCashFonts.semiBold,
     fontSize: 14,
     lineHeight: 22,
-    color: OttoColors.text,
+    color: BearCashColors.text,
   },
   recurringDescription: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   actions: {
     gap: 16,

@@ -44,7 +44,7 @@ import {
   PhoneField,
 } from "@/presentation/components/ui/phone-field";
 import { TextField } from "@/presentation/components/ui/text-field";
-import { OttoColors, OttoTypography } from "@/presentation/constants/theme";
+import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 type AuthPhase = "identify" | "password";
@@ -341,7 +341,7 @@ export function LoginEmailPage() {
                     source={require("@/assets/images/auth/logo.png")}
                     style={styles.logo}
                     contentFit="contain"
-                    accessibilityLabel="Otto"
+                    accessibilityLabel="BearCash"
                   />
 
                   <View style={styles.form}>
@@ -472,7 +472,7 @@ export function LoginEmailPage() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   safeArea: {
     flex: 1,
@@ -520,8 +520,8 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: "center",
     alignSelf: "stretch",
   },
@@ -535,13 +535,13 @@ const styles = StyleSheet.create({
     maxWidth: 301,
   },
   termsText: {
-    ...OttoTypography.body,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.body,
+    color: BearCashColors.textSoft,
     textAlign: "center",
   },
   termsLink: {
-    ...OttoTypography.body,
-    color: OttoColors.text,
+    ...BearCashTypography.body,
+    color: BearCashColors.text,
     textDecorationLine: "underline",
   },
 });

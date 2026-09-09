@@ -15,7 +15,7 @@ import {
   BiometricsFaceIcon,
   BiometricsFingerprintIcon,
 } from '@/presentation/components/ui/biometrics-icons';
-import { OttoColors, OttoTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 import { HomeLoading } from '@/presentation/pages/HomePage';
 
 type Gate = 'pending' | 'open' | 'locked';
@@ -55,7 +55,7 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
     promptingRef.current = true;
     try {
       const result = await authenticateWithBiometrics(
-        `Desbloqueie o Otto com ${bio.label}`,
+        `Desbloqueie o BearCash com ${bio.label}`,
       );
       if (result.success) {
         setGate('open');
@@ -142,9 +142,9 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
   const cover = lockEnabled && gate !== 'open';
   const icon =
     capability?.kind === 'fingerprint' ? (
-      <BiometricsFingerprintIcon size={32} color={OttoColors.textMid} />
+      <BiometricsFingerprintIcon size={32} color={BearCashColors.textMid} />
     ) : (
-      <BiometricsFaceIcon size={32} color={OttoColors.textMid} />
+      <BiometricsFaceIcon size={32} color={BearCashColors.textMid} />
     );
 
   const lockUi =
@@ -157,11 +157,11 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
             source={require('@/assets/images/auth/logo.png')}
             style={styles.logo}
             contentFit="contain"
-            accessibilityLabel="Otto"
+            accessibilityLabel="BearCash"
           />
           <View style={styles.iconWrap}>{icon}</View>
           <View style={styles.copy}>
-            <Text style={styles.title}>Desbloquear Otto</Text>
+            <Text style={styles.title}>Desbloquear BearCash</Text>
             <Text style={styles.subtitle}>
               {capability
                 ? `Use ${capability.label} para entrar no app`
@@ -228,11 +228,11 @@ const styles = StyleSheet.create({
   },
   coverWindow: {
     flex: 1,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   coverHost: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: OttoColors.background,
+    backgroundColor: BearCashColors.background,
   },
   lockSafe: {
     flex: 1,
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 14,
-    backgroundColor: OttoColors.neutralBlackSoft,
+    backgroundColor: BearCashColors.neutralBlackSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -261,13 +261,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    ...OttoTypography.h3,
-    color: OttoColors.text,
+    ...BearCashTypography.h3,
+    color: BearCashColors.text,
     textAlign: 'center',
   },
   subtitle: {
-    ...OttoTypography.caption,
-    color: OttoColors.textSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
     textAlign: 'center',
   },
   actions: {
