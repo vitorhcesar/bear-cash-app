@@ -2,14 +2,14 @@
   "expo": {
     "name": "BearCash",
     "slug": "bear-cash",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/bear-cash-app-icon.png",
     "scheme": "bear-cash",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0a0b0a",
     "ios": {
-      "bundleIdentifier": "com.fansyfans.bearcash",
+      "bundleIdentifier": "com.bearcash.app",
       "icon": "./assets/images/bear-cash-app-icon.png",
       "backgroundColor": "#0a0b0a",
       "usesAppleSignIn": true,
@@ -24,7 +24,7 @@
       },
       "backgroundColor": "#0a0b0a",
       "predictiveBackGestureEnabled": false,
-      "package": "com.fansyfans.bearcash"
+      "package": "com.bearcash.app"
     },
     "web": {
       "output": "static",
