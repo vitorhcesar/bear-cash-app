@@ -16,6 +16,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { setupNotificationHandler } from '@/infra/notifications/push-notifications';
 import { isSocialOnboardingPath } from '@/presentation/auth/auth-flow';
 import { AuthDraftProvider } from '@/presentation/auth/auth-draft-context';
 import {
@@ -26,10 +27,12 @@ import { SessionTransitionProvider } from '@/presentation/auth/session-transitio
 import { BiometricLockGate } from '@/presentation/biometrics/biometric-lock-gate';
 import { AnimatedSplashOverlay } from '@/presentation/components/animated-icon';
 import { BearCashColors } from '@/presentation/constants/theme';
+import { usePushRegistration } from '@/presentation/hooks/use-push-registration';
 import { HomeLoading } from '@/presentation/pages/HomePage';
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ duration: 0, fade: false });
+setupNotificationHandler();
 
 const BearCashNavigationTheme: Theme = {
   ...DarkTheme,
@@ -47,6 +50,7 @@ function RootNavigator() {
   const { isLoading, isAuthenticated, hasCompletedOnboarding, user } = useAuthSession();
   const pathname = usePathname();
   const canUseApp = isAuthenticated && hasCompletedOnboarding;
+  usePushRegistration(canUseApp);
 
   useEffect(() => {
     if (isLoading || !isAuthenticated || hasCompletedOnboarding) {

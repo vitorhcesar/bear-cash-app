@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { authClient } from '@/infra/auth/auth-client';
 import { clearSession, getSessionToken, saveSession } from '@/infra/auth/session-store';
 import type { AuthProfile, AuthResult, AuthUser } from '@/infra/http/services/api/modules/auth.module';
+import { unregisterPushForCurrentUser } from '@/infra/notifications/push-notifications';
 import type { AuthMethod } from '@/presentation/auth/auth-flow';
 import { isOauthMethod } from '@/presentation/auth/auth-flow';
 import { useSessionTransition } from '@/presentation/auth/session-transition';
@@ -99,6 +100,8 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    await unregisterPushForCurrentUser(api.modules.push);
+
     const logoutRequest = api.modules.auth.logout().catch(() => {
       // ignore network errors on logout
     });
@@ -119,9 +122,10 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
         setTimeout(resolve, 2500);
       }),
     ]);
-  }, [api.modules.auth, playLeave]);
+  }, [api.modules.auth, api.modules.push, playLeave]);
 
   const deleteAccount = useCallback(async () => {
+    await unregisterPushForCurrentUser(api.modules.push);
     await api.modules.auth.deleteAccount();
 
     await playLeave(async () => {
@@ -133,7 +137,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       router.replace('/');
     });
-  }, [api.modules.auth, playLeave]);
+  }, [api.modules.auth, api.modules.push, playLeave]);
 
   const value = useMemo(
     () => ({

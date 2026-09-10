@@ -27,7 +27,8 @@
       "package": "com.bearcash.app",
       "permissions": [
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -52,6 +53,14 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "O BearCash usa o Face ID para desbloquear o app e confirmar ações sensíveis."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/bear-cash-logo.png",
+          "color": "#0a0b0a",
+          "defaultChannel": "default"
         }
       ],
       "./plugins/with-maven-central-workaround"

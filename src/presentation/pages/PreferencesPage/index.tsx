@@ -15,13 +15,19 @@ import {
   savePreferences,
   type AppPreferences,
 } from '@/infra/preferences/preferences-store';
+import {
+  registerPushForCurrentUser,
+  unregisterPushForCurrentUser,
+} from '@/infra/notifications/push-notifications';
 import { RefreshIcon } from '@/presentation/components/ui/auth-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import {
+  BellIcon,
   SoundNoteIcon,
   VibrationPhoneIcon,
 } from '@/presentation/components/ui/preferences-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { useApiService } from '@/presentation/hooks/use-api-service';
 
 type PreferenceRowProps = {
   title: string;
@@ -60,6 +66,7 @@ function PreferenceRow({
 }
 
 export function PreferencesPage() {
+  const api = useApiService();
   const [preferences, setPreferences] = useState<AppPreferences>(
     DEFAULT_PREFERENCES,
   );
@@ -94,12 +101,27 @@ export function PreferencesPage() {
     await persist({ ...preferences, vibrationsEnabled: value });
   }
 
+  async function handleTogglePush(value: boolean) {
+    await persist({ ...preferences, pushEnabled: value });
+    if (value) {
+      await registerPushForCurrentUser(api.modules.push);
+      return;
+    }
+    await unregisterPushForCurrentUser(api.modules.push);
+  }
+
   async function handleRestore() {
-    await persist({
+    const next = {
       ...DEFAULT_PREFERENCES,
       activitiesIncomeVisible: preferences.activitiesIncomeVisible,
       activitiesExpenseVisible: preferences.activitiesExpenseVisible,
-    });
+    };
+    await persist(next);
+    if (next.pushEnabled) {
+      await registerPushForCurrentUser(api.modules.push);
+      return;
+    }
+    await unregisterPushForCurrentUser(api.modules.push);
   }
 
   return (
@@ -143,6 +165,13 @@ export function PreferencesPage() {
             icon={<VibrationPhoneIcon size={20} color={BearCashColors.textMid} />}
             value={preferences.vibrationsEnabled}
             onValueChange={handleToggleVibrations}
+          />
+          <PreferenceRow
+            title="Notificações push"
+            description="Receba avisos do BearCash mesmo com o app fechado."
+            icon={<BellIcon size={20} color={BearCashColors.textMid} />}
+            value={preferences.pushEnabled}
+            onValueChange={handleTogglePush}
           />
         </View>
       </ScrollView>

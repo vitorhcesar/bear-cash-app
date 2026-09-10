@@ -72,3 +72,23 @@ export function VibrationPhoneIcon({ size = 20, color = '#CBCECA' }: IconProps) 
     </Svg>
   );
 }
+
+export function BellIcon({ size = 20, color = '#CBCECA' }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
+      <Path
+        d="M15.5 14.5H4.5L5.7 13.3C5.9 13.1 6 12.8 6 12.5V9C6 6.8 7.8 5 10 5C12.2 5 14 6.8 14 9V12.5C14 12.8 14.1 13.1 14.3 13.3L15.5 14.5Z"
+        stroke={color}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M8.5 14.5V15C8.5 15.8 9.2 16.5 10 16.5C10.8 16.5 11.5 15.8 11.5 15V14.5"
+        stroke={color}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}

@@ -7,6 +7,10 @@ import {
 } from '@/infra/http/services/api/modules/api-keys.module';
 import { AuthModule, type IAuthModule } from '@/infra/http/services/api/modules/auth.module';
 import {
+  PushModule,
+  type IPushModule,
+} from '@/infra/http/services/api/modules/push.module';
+import {
   SupportModule,
   type ISupportModule,
 } from '@/infra/http/services/api/modules/support.module';
@@ -20,6 +24,7 @@ export interface IApiServiceModules {
   auth: IAuthModule;
   support: ISupportModule;
   apiKeys: IApiKeysModule;
+  push: IPushModule;
   transactions: ITransactionsModule;
 }
 
@@ -36,6 +41,7 @@ export class ApiService implements IApiService {
       auth: new AuthModule(httpClient),
       support: new SupportModule(httpClient),
       apiKeys: new ApiKeysModule(httpClient),
+      push: new PushModule(httpClient),
       transactions: new TransactionsModule(httpClient),
     };
   }

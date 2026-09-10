@@ -5,6 +5,7 @@ export type HttpRequestConfig = {
   headers?: Record<string, string>;
   signal?: AbortSignal;
   params?: Record<string, string | number | boolean | undefined>;
+  data?: unknown;
   /** Skip attaching Bearer token */
   skipAuth?: boolean;
 };
@@ -51,7 +52,7 @@ export class HttpClient implements IHttpClient {
   }
 
   async delete<T>(url: string, config?: HttpRequestConfig): Promise<T> {
-    return this.request<T>('DELETE', url, undefined, config);
+    return this.request<T>('DELETE', url, config?.data, config);
   }
 
   private async request<T>(

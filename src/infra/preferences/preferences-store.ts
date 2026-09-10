@@ -7,6 +7,7 @@ export type AppPreferences = {
   soundsEnabled: boolean;
   vibrationsEnabled: boolean;
   biometricsEnabled: boolean;
+  pushEnabled: boolean;
   activitiesIncomeVisible: boolean;
   activitiesExpenseVisible: boolean;
 };
@@ -15,6 +16,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   soundsEnabled: false,
   vibrationsEnabled: true,
   biometricsEnabled: false,
+  pushEnabled: true,
   activitiesIncomeVisible: true,
   activitiesExpenseVisible: true,
 };
@@ -52,6 +54,10 @@ export async function getPreferences(): Promise<AppPreferences> {
         typeof parsed.biometricsEnabled === 'boolean'
           ? parsed.biometricsEnabled
           : DEFAULT_PREFERENCES.biometricsEnabled,
+      pushEnabled:
+        typeof parsed.pushEnabled === 'boolean'
+          ? parsed.pushEnabled
+          : DEFAULT_PREFERENCES.pushEnabled,
       activitiesIncomeVisible:
         typeof parsed.activitiesIncomeVisible === 'boolean'
           ? parsed.activitiesIncomeVisible
