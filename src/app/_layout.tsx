@@ -47,13 +47,14 @@ const BearCashNavigationTheme: Theme = {
 };
 
 function RootNavigator() {
-  const { isLoading, isAuthenticated, hasCompletedOnboarding, user } = useAuthSession();
+  const { isLoading, isAuthenticated, hasCompletedOnboarding, isAbandoningSession, user } =
+    useAuthSession();
   const pathname = usePathname();
   const canUseApp = isAuthenticated && hasCompletedOnboarding;
   usePushRegistration(canUseApp);
 
   useEffect(() => {
-    if (isLoading || !isAuthenticated || hasCompletedOnboarding) {
+    if (isLoading || isAbandoningSession || !isAuthenticated || hasCompletedOnboarding) {
       return;
     }
 
@@ -68,7 +69,14 @@ function RootNavigator() {
         email: user?.email ?? '',
       },
     });
-  }, [hasCompletedOnboarding, isAuthenticated, isLoading, pathname, user?.email]);
+  }, [
+    hasCompletedOnboarding,
+    isAbandoningSession,
+    isAuthenticated,
+    isLoading,
+    pathname,
+    user?.email,
+  ]);
 
   if (isLoading) {
     return <HomeLoading />;
@@ -146,6 +154,10 @@ function RootNavigator() {
           <Stack.Screen
             name="bank-select"
             options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="open-finance/callback"
+            options={{ animation: 'none' }}
           />
           <Stack.Screen
             name="new-transaction"

@@ -35,6 +35,18 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   CONVERSATION_NOT_FOUND: 'Conversa não encontrada.',
   AI_MESSAGE_EMPTY: 'Digite uma mensagem para o BearCash.',
   AI_MESSAGE_TOO_LONG: 'A mensagem é longa demais. Tente um texto mais curto.',
+  OPEN_FINANCE_NOT_CONFIGURED:
+    'A conexão bancária ainda não está configurada. Tente novamente em instantes.',
+  OPEN_FINANCE_CPF_REQUIRED: 'Complete seu CPF no perfil para conectar um banco.',
+  OPEN_FINANCE_INSTITUTION_NOT_FOUND: 'Instituição não encontrada.',
+  OPEN_FINANCE_INSTITUTION_UNAVAILABLE:
+    'Este banco está temporariamente indisponível. Tente outro ou volte mais tarde.',
+  OPEN_FINANCE_INSTITUTION_UNSUPPORTED:
+    'Ainda não conectamos instituições empresariais.',
+  OPEN_FINANCE_CONSENT_NOT_FOUND: 'Conexão bancária não encontrada.',
+  OPEN_FINANCE_CONSENT_TAKEN: 'Esta conexão bancária já está em uso.',
+  POLP_RATE_LIMITED: 'Muitas tentativas. Aguarde um momento e tente novamente.',
+  POLP_REQUEST_FAILED: 'Não foi possível falar com o Open Finance. Tente novamente.',
 };
 
 /** Mensagem amigável para Alert — inclui falha de rede. */

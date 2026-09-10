@@ -1,4 +1,10 @@
-import Svg, { Path } from 'react-native-svg';
+import { View } from 'react-native';
+import Svg, { Path, SvgXml } from 'react-native-svg';
+
+import {
+  LGPD_CHECK_ICON_XML,
+  OTP_ERROR_ICON_XML,
+} from '@/presentation/components/ui/auth-hint-icon-xml';
 
 type IconProps = {
   size?: number;
@@ -71,5 +77,21 @@ export function ShieldCheckIcon({ size = 16, color = '#49dc14' }: IconProps) {
         strokeLinejoin="round"
       />
     </Svg>
+  );
+}
+
+export function OtpErrorIcon({ size = 16 }: { size?: number }) {
+  return (
+    <View style={{ width: size, height: size, overflow: 'hidden' }}>
+      <SvgXml xml={OTP_ERROR_ICON_XML} width={size} height={size} />
+    </View>
+  );
+}
+
+export function LgpdCheckIcon({ size = 16 }: { size?: number }) {
+  return (
+    <View style={{ width: size, height: size, overflow: 'hidden' }}>
+      <SvgXml xml={LGPD_CHECK_ICON_XML} width={size} height={size} />
+    </View>
   );
 }

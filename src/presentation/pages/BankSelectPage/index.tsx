@@ -1,14 +1,26 @@
-import { useMemo, useState, type ComponentType } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { memo, useCallback, useMemo, useState } from 'react';
 import {
+  Alert,
+  FlatList,
+  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type ListRenderItem,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { getErrorMessage } from '@/infra/http/get-error-message';
+import type { OpenFinanceInstitution } from '@/infra/http/services/api/modules/open-finance.module';
+import {
+  isInstitutionsCacheFresh,
+  peekInstitutionsCache,
+  readInstitutionsCache,
+  writeInstitutionsCache,
+} from '@/infra/open-finance/institutions-cache';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { FilterChipCloseIcon } from '@/presentation/components/ui/activities-filter-icons';
 import {
@@ -22,41 +34,15 @@ import {
   bankKindFilterLabel,
   type BankKindFilter,
 } from '@/presentation/components/ui/bank-filter-sheet';
-import {
-  BancoDoBrasilLogo,
-  C6Logo,
-  CaixaLogo,
-  ItauLogo,
-  NubankLogo,
-  SantanderLogo,
-} from '@/presentation/components/ui/bank-logos';
+import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { useApiService } from '@/presentation/hooks/use-api-service';
+import { connectOpenFinanceInstitution } from '@/presentation/open-finance/connect-bank';
 
-type BankLogoProps = {
-  size?: number;
-};
-
-type BankKind = 'bank' | 'broker';
-
-type BankOption = {
-  id: string;
-  name: string;
-  kind: BankKind;
-  Logo: ComponentType<BankLogoProps>;
-};
-
-const BANKS: BankOption[] = [
-  { id: 'nubank', name: 'Nubank', kind: 'bank', Logo: NubankLogo },
-  { id: 'santander', name: 'Santander', kind: 'bank', Logo: SantanderLogo },
-  { id: 'bb', name: 'Banco do Brasil', kind: 'bank', Logo: BancoDoBrasilLogo },
-  { id: 'c6', name: 'C6 Bank', kind: 'bank', Logo: C6Logo },
-  { id: 'caixa', name: 'Caixa', kind: 'bank', Logo: CaixaLogo },
-  { id: 'itau', name: 'Itaú', kind: 'bank', Logo: ItauLogo },
-];
-
-const LOGO_SIZE = 32;
-const LOGO_BORDER = '#212220';
+const BANK_ROW_HEIGHT = 56;
+const BANK_ROW_GAP = 16;
+const BANK_ITEM_HEIGHT = BANK_ROW_HEIGHT + BANK_ROW_GAP;
 
 function normalizeSearch(value: string) {
   return value
@@ -92,40 +78,41 @@ function displayNameFromSession(
   );
 }
 
-function BankRow({
+const BankRow = memo(function BankRow({
   bank,
   selected,
   onPress,
 }: {
-  bank: BankOption;
+  bank: OpenFinanceInstitution;
   selected: boolean;
-  onPress: () => void;
+  onPress: (bank: OpenFinanceInstitution) => void;
 }) {
-  const { Logo, name } = bank;
-
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Conectar ${name}`}
-      onPress={onPress}
+      accessibilityLabel={
+        bank.available ? `Conectar ${bank.name}` : `${bank.name} indisponível`
+      }
+      onPress={() => onPress(bank)}
       style={({ pressed }) => [
         styles.bankRow,
         selected && styles.bankRowSelected,
+        !bank.available && styles.bankRowDisabled,
         pressed && styles.pressed,
       ]}
     >
       <View style={styles.bankRowLeft}>
-        <View style={styles.logoFrame}>
-          <Logo size={LOGO_SIZE} />
-        </View>
-        <Text style={styles.bankName}>{name}</Text>
+        <InstitutionMark name={bank.name} logoUrl={bank.logoUrl} size={32} />
+        <Text style={styles.bankName} numberOfLines={1}>
+          {bank.name}
+        </Text>
       </View>
       <SettingsChevronIcon size={16} color={BearCashColors.text} />
     </Pressable>
   );
-}
+});
 
-function matchesKindFilter(bank: BankOption, filter: BankKindFilter) {
+function matchesKindFilter(bank: OpenFinanceInstitution, filter: BankKindFilter) {
   if (filter === 'all') {
     return true;
   }
@@ -135,16 +122,60 @@ function matchesKindFilter(bank: BankOption, filter: BankKindFilter) {
   return bank.kind === 'broker';
 }
 
+const FEATURED_HINTS = [
+  'nubank',
+  'itau',
+  'bradesco pessoa fisica',
+  'banco do brasil',
+  'santander pessoa fisica',
+  'caixa',
+  'c6 bank',
+  'inter pf',
+  'picpay',
+  'mercado pago',
+];
+
+function featuredIndex(name: string) {
+  const normalized = normalizeSearch(name);
+  const exact = FEATURED_HINTS.findIndex((hint) => normalized === hint);
+  if (exact !== -1) {
+    return exact;
+  }
+  return FEATURED_HINTS.findIndex((hint) => normalized.includes(hint));
+}
+
+function sortInstitutions(left: OpenFinanceInstitution, right: OpenFinanceInstitution) {
+  const leftFeatured = featuredIndex(left.name);
+  const rightFeatured = featuredIndex(right.name);
+  const leftRank = leftFeatured === -1 ? Number.MAX_SAFE_INTEGER : leftFeatured;
+  const rightRank = rightFeatured === -1 ? Number.MAX_SAFE_INTEGER : rightFeatured;
+  if (leftRank !== rightRank) {
+    return leftRank - rightRank;
+  }
+  if (left.available !== right.available) {
+    return left.available ? -1 : 1;
+  }
+  return left.name.localeCompare(right.name, 'pt-BR');
+}
+
 export function BankSelectPage() {
+  const api = useApiService();
   const { profile, user } = useAuthSession();
   const [query, setQuery] = useState('');
   const [kindFilter, setKindFilter] = useState<BankKindFilter>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selectedBank, setSelectedBank] = useState<BankOption | null>(null);
+  const [selectedBank, setSelectedBank] = useState<OpenFinanceInstitution | null>(null);
+  const [institutions, setInstitutions] = useState<OpenFinanceInstitution[]>(
+    () => peekInstitutionsCache()?.items ?? [],
+  );
+  const [loading, setLoading] = useState(() => !peekInstitutionsCache()?.items.length);
+  const [connecting, setConnecting] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const hasQuery = query.trim().length > 0;
   const filterActive = kindFilter !== 'all';
   const filterLabel = bankKindFilterLabel(kindFilter);
+  const missingCpf = !profile?.cpf?.replace(/\D/g, '');
   const userName = useMemo(
     () =>
       displayNameFromSession(
@@ -156,20 +187,132 @@ export function BankSelectPage() {
   );
   const cpfLabel = useMemo(() => maskCpf(profile?.cpf), [profile?.cpf]);
 
+  const refreshInstitutions = useCallback(
+    async (force = false) => {
+      const cached = await readInstitutionsCache();
+      if (cached?.items.length) {
+        setInstitutions(cached.items);
+        setLoadError(null);
+        setLoading(false);
+        if (!force && isInstitutionsCacheFresh(cached.savedAt)) {
+          return;
+        }
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const response = await api.modules.openFinance.listInstitutions();
+        const items = response.items ?? [];
+        setInstitutions(items);
+        setLoadError(null);
+        await writeInstitutionsCache(items);
+      } catch (error) {
+        if (!cached?.items.length) {
+          setInstitutions([]);
+          setLoadError(getErrorMessage(error, 'Tente novamente.'));
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [api.modules.openFinance],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshInstitutions();
+    }, [refreshInstitutions]),
+  );
+
   const banks = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
-    const byKind = BANKS.filter((bank) =>
-      matchesKindFilter(bank, kindFilter),
-    );
+    const byKind = institutions
+      .filter((bank) => matchesKindFilter(bank, kindFilter))
+      .sort(sortInstitutions);
 
     if (!normalizedQuery) {
       return byKind;
     }
 
-    return byKind.filter((bank) =>
-      normalizeSearch(bank.name).includes(normalizedQuery),
-    );
-  }, [kindFilter, query]);
+    return byKind.filter((bank) => normalizeSearch(bank.name).includes(normalizedQuery));
+  }, [institutions, kindFilter, query]);
+
+  const handlePressBank = useCallback((bank: OpenFinanceInstitution) => {
+    if (!bank.available) {
+      Alert.alert(
+        'Instituição indisponível',
+        'Este banco está temporariamente fora do Open Finance. Tente outro ou volte mais tarde.',
+      );
+      return;
+    }
+    setSelectedBank(bank);
+  }, []);
+
+  const renderBank: ListRenderItem<OpenFinanceInstitution> = useCallback(
+    ({ item }) => (
+      <BankRow
+        bank={item}
+        selected={selectedBank?.id === item.id}
+        onPress={handlePressBank}
+      />
+    ),
+    [handlePressBank, selectedBank?.id],
+  );
+
+  async function handleConnect() {
+    if (!selectedBank) {
+      return;
+    }
+    if (missingCpf) {
+      Alert.alert('CPF necessário', 'Complete seu CPF no perfil para conectar um banco.');
+      return;
+    }
+
+    setConnecting(true);
+    try {
+      const consent = await connectOpenFinanceInstitution(
+        api.modules.openFinance,
+        selectedBank.id,
+      );
+
+      if (consent.status === 'AUTHORISED') {
+        Alert.alert(
+          'Banco conectado',
+          'Estamos sincronizando suas contas e transações. Elas aparecem em instantes.',
+        );
+        setSelectedBank(null);
+        return;
+      }
+
+      if (consent.status === 'REJECTED') {
+        Alert.alert('Conexão recusada', 'A autorização no banco foi recusada. Você pode tentar de novo.');
+        return;
+      }
+
+      Alert.alert(
+        'Quase lá',
+        'Se você já autorizou no banco, a sincronização continua em segundo plano.',
+      );
+      setSelectedBank(null);
+    } catch (error) {
+      Alert.alert('Não foi possível conectar', getErrorMessage(error, 'Tente novamente.'));
+    } finally {
+      setConnecting(false);
+    }
+  }
+
+  const listEmpty = loading && institutions.length === 0 ? (
+    <Text style={styles.emptyText}>Carregando instituições…</Text>
+  ) : loadError && institutions.length === 0 ? (
+    <Pressable onPress={() => void refreshInstitutions(true)}>
+      <Text style={styles.emptyText}>
+        {loadError} Toque para tentar de novo.
+      </Text>
+    </Pressable>
+  ) : (
+    <Text style={styles.emptyText}>Nenhum banco encontrado</Text>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -179,8 +322,9 @@ export function BankSelectPage() {
           <View style={styles.headerCopy}>
             <Text style={styles.title}>Selecione o seu banco</Text>
             <Text style={styles.subtitle}>
-              Escolha uma instituição onde você é cliente para trazer seus dados
-              de contas pessoa física (PF)
+              {institutions.length > 0
+                ? `${institutions.length} instituições Open Finance. Escolha onde você é cliente para trazer os dados de PF.`
+                : 'Escolha uma instituição onde você é cliente para trazer seus dados de contas pessoa física (PF)'}
             </Text>
           </View>
         </View>
@@ -249,24 +393,29 @@ export function BankSelectPage() {
           ) : null}
         </View>
 
-        <ScrollView
-          contentContainerStyle={styles.listContent}
+        <FlatList
+          style={styles.list}
+          data={banks}
+          extraData={selectedBank?.id}
+          keyExtractor={(item) => item.id}
+          renderItem={renderBank}
+          getItemLayout={(_, index) => ({
+            length: BANK_ROW_HEIGHT,
+            offset: BANK_ITEM_HEIGHT * index,
+            index,
+          })}
+          ItemSeparatorComponent={BankRowSeparator}
+          ListEmptyComponent={listEmpty}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
-        >
-          {banks.length === 0 ? (
-            <Text style={styles.emptyText}>Nenhum banco encontrado</Text>
-          ) : (
-            banks.map((bank) => (
-              <BankRow
-                key={bank.id}
-                bank={bank}
-                selected={selectedBank?.id === bank.id}
-                onPress={() => setSelectedBank(bank)}
-              />
-            ))
-          )}
-        </ScrollView>
+          initialNumToRender={12}
+          maxToRenderPerBatch={12}
+          updateCellsBatchingPeriod={40}
+          windowSize={7}
+          removeClippedSubviews={Platform.OS === 'android'}
+          contentContainerStyle={styles.listContent}
+        />
       </View>
 
       <BankFilterSheet
@@ -280,10 +429,23 @@ export function BankSelectPage() {
         bank={selectedBank}
         userName={userName}
         cpfLabel={cpfLabel}
-        onClose={() => setSelectedBank(null)}
+        connecting={connecting}
+        missingCpf={missingCpf}
+        onClose={() => {
+          if (!connecting) {
+            setSelectedBank(null);
+          }
+        }}
+        onConnect={() => {
+          void handleConnect();
+        }}
       />
     </SafeAreaView>
   );
+}
+
+function BankRowSeparator() {
+  return <View style={styles.separator} />;
 }
 
 const styles = StyleSheet.create({
@@ -376,21 +538,31 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
+  list: {
+    flex: 1,
+  },
   listContent: {
-    gap: 16,
     paddingBottom: 8,
+    flexGrow: 1,
+  },
+  separator: {
+    height: BANK_ROW_GAP,
   },
   bankRow: {
+    height: BANK_ROW_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: BearCashColors.surface,
     borderRadius: 12,
-    padding: 12,
+    paddingHorizontal: 12,
     overflow: 'hidden',
   },
   bankRowSelected: {
     backgroundColor: '#171816',
+  },
+  bankRowDisabled: {
+    opacity: 0.45,
   },
   bankRowLeft: {
     flex: 1,
@@ -399,14 +571,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     paddingRight: 8,
-  },
-  logoFrame: {
-    width: LOGO_SIZE,
-    height: LOGO_SIZE,
-    borderRadius: LOGO_SIZE / 2,
-    overflow: 'hidden',
-    borderWidth: 0.4,
-    borderColor: LOGO_BORDER,
   },
   bankName: {
     flex: 1,

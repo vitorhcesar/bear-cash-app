@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, flushSync, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
 
 import { authClient } from '@/infra/auth/auth-client';
@@ -14,6 +14,7 @@ type AuthSessionContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
+  isAbandoningSession: boolean;
   user: AuthUser | null;
   profile: AuthProfile | null;
   applyAuthResult: (result: AuthResult, source?: AuthMethod) => Promise<void>;
@@ -31,6 +32,20 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
+  const [isAbandoningSession, setIsAbandoningSession] = useState(false);
+  const abandoningSessionRef = useRef(false);
+  const userRef = useRef(user);
+  userRef.current = user;
+
+  const beginAbandonSession = useCallback(() => {
+    abandoningSessionRef.current = true;
+    setIsAbandoningSession(true);
+  }, []);
+
+  const endAbandonSession = useCallback(() => {
+    abandoningSessionRef.current = false;
+    setIsAbandoningSession(false);
+  }, []);
 
   const refreshSession = useCallback(async () => {
     const token = await getSessionToken();
@@ -100,29 +115,53 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    await unregisterPushForCurrentUser(api.modules.push);
-
-    const logoutRequest = api.modules.auth.logout().catch(() => {
-      // ignore network errors on logout
-    });
-
-    await playLeave(async () => {
-      await authClient.signOut().catch(() => {
-        // ignore Better Auth cookie cleanup errors
-      });
-      await clearSession();
-      setUser(null);
-      setProfile(null);
+    if (abandoningSessionRef.current && !userRef.current) {
       router.replace('/');
-    });
+      return;
+    }
 
-    void Promise.race([
-      logoutRequest,
-      new Promise<void>((resolve) => {
-        setTimeout(resolve, 2500);
-      }),
-    ]);
-  }, [api.modules.auth, api.modules.push, playLeave]);
+    beginAbandonSession();
+    try {
+      await unregisterPushForCurrentUser(api.modules.push).catch(() => {
+        // ignore push cleanup errors on logout
+      });
+
+      const logoutRequest = api.modules.auth.logout().catch(() => {
+        // ignore network errors on logout
+      });
+
+      await Promise.race([
+        authClient.signOut().catch(() => {
+          // ignore Better Auth cookie cleanup errors
+        }),
+        new Promise<void>((resolve) => {
+          setTimeout(resolve, 1500);
+        }),
+      ]);
+      await clearSession();
+      flushSync(() => {
+        setUser(null);
+        setProfile(null);
+      });
+
+      try {
+        await playLeave(async () => {
+          router.replace('/');
+        });
+      } catch {
+        router.replace('/');
+      }
+
+      void Promise.race([
+        logoutRequest,
+        new Promise<void>((resolve) => {
+          setTimeout(resolve, 2500);
+        }),
+      ]);
+    } finally {
+      endAbandonSession();
+    }
+  }, [api.modules.auth, api.modules.push, beginAbandonSession, endAbandonSession, playLeave]);
 
   const deleteAccount = useCallback(async () => {
     await unregisterPushForCurrentUser(api.modules.push);
@@ -144,6 +183,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: Boolean(user),
       hasCompletedOnboarding: Boolean(profile?.onboardingCompleted),
+      isAbandoningSession,
       user,
       profile,
       applyAuthResult,
@@ -154,6 +194,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     }),
     [
       isLoading,
+      isAbandoningSession,
       user,
       profile,
       applyAuthResult,

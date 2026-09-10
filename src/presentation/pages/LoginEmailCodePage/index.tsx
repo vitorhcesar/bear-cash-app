@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -22,6 +21,7 @@ import {
 import { AuthScene } from '@/presentation/auth/auth-switch-transition';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { AuthFlowHeader } from '@/presentation/components/ui/auth-flow-header';
+import { AuthLogo } from '@/presentation/components/ui/auth-logo';
 import { Button } from '@/presentation/components/ui/button';
 import { OtpField } from '@/presentation/components/ui/otp-field';
 import { formatBrazilPhoneDisplay } from '@/presentation/components/ui/phone-field';
@@ -140,7 +140,7 @@ export function LoginEmailCodePage() {
         },
       });
     } catch (err) {
-      setError(getErrorMessage(err, 'Código inválido'));
+      setError(getErrorMessage(err, 'O código informado não está correto.'));
     } finally {
       setLoading(false);
     }
@@ -161,17 +161,14 @@ export function LoginEmailCodePage() {
             showsVerticalScrollIndicator={false}
           >
             <AuthScene kind="register" style={styles.scene}>
-            <Image
-              source={require('@/assets/images/auth/logo.png')}
-              style={styles.logo}
-              contentFit="contain"
-              accessibilityLabel="BearCash"
-            />
+            <AuthLogo />
 
             <View style={styles.form}>
               <View style={styles.headerCopy}>
-                <Text style={styles.title}>Código por SMS!</Text>
-                <Text style={styles.subtitle}>Enviamos um código de 6 dígitos para:</Text>
+                <View style={styles.titleBlock}>
+                  <Text style={styles.title}>Código do WhatsApp!</Text>
+                  <Text style={styles.subtitle}>Enviamos um código de 6 dígitos para:</Text>
+                </View>
                 <Text style={styles.phone}>{phoneDisplay || '—'}</Text>
                 {draft.otpDevHint ? (
                   <Text style={styles.devHint}>
@@ -235,7 +232,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 48,
+    paddingBottom: 88,
     gap: 32,
     width: '100%',
     maxWidth: 400,
@@ -246,16 +243,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 32,
   },
-  logo: {
-    width: 57,
-    height: 59,
-  },
   form: {
     alignSelf: 'stretch',
     alignItems: 'center',
-    gap: 24,
+    gap: 40,
   },
   headerCopy: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    gap: 12,
+  },
+  titleBlock: {
     alignSelf: 'stretch',
     alignItems: 'center',
     gap: 4,
@@ -277,7 +275,6 @@ const styles = StyleSheet.create({
     color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
-    marginTop: 8,
   },
   devHint: {
     ...BearCashTypography.caption,
@@ -296,7 +293,7 @@ const styles = StyleSheet.create({
   },
   resendLink: {
     ...BearCashTypography.body,
-    color: BearCashColors.text,
+    color: BearCashColors.textMid,
     textDecorationLine: 'underline',
   },
 });

@@ -57,7 +57,7 @@ export function PhoneField({ value, onChangeText, containerStyle }: PhoneFieldPr
   return (
     <View style={[styles.row, containerStyle]}>
       <View style={styles.countryCode}>
-        <BrazilFlag width={16} height={11} />
+        <BrazilFlag width={15.897} height={10.598} />
         <Text style={styles.countryCodeText}>+55</Text>
       </View>
 

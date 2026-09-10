@@ -6,7 +6,7 @@ type TimerIconProps = {
 };
 
 /** Clock icon for resend countdown (matches Figma auth Step 2) */
-export function TimerIcon({ size = 16, color = '#767d73' }: TimerIconProps) {
+export function TimerIcon({ size = 16, color = '#78737d' }: TimerIconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <Path

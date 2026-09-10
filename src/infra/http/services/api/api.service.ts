@@ -7,6 +7,10 @@ import {
 } from '@/infra/http/services/api/modules/api-keys.module';
 import { AuthModule, type IAuthModule } from '@/infra/http/services/api/modules/auth.module';
 import {
+  OpenFinanceModule,
+  type IOpenFinanceModule,
+} from '@/infra/http/services/api/modules/open-finance.module';
+import {
   PushModule,
   type IPushModule,
 } from '@/infra/http/services/api/modules/push.module';
@@ -26,6 +30,7 @@ export interface IApiServiceModules {
   apiKeys: IApiKeysModule;
   push: IPushModule;
   transactions: ITransactionsModule;
+  openFinance: IOpenFinanceModule;
 }
 
 export interface IApiService {
@@ -43,6 +48,7 @@ export class ApiService implements IApiService {
       apiKeys: new ApiKeysModule(httpClient),
       push: new PushModule(httpClient),
       transactions: new TransactionsModule(httpClient),
+      openFinance: new OpenFinanceModule(httpClient),
     };
   }
 }

@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -22,6 +21,7 @@ import { AuthScene } from "@/presentation/auth/auth-switch-transition";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { AuthFlowHeader } from "@/presentation/components/ui/auth-flow-header";
+import { AuthLogo } from "@/presentation/components/ui/auth-logo";
 import { Button } from "@/presentation/components/ui/button";
 import { PasswordField } from "@/presentation/components/ui/password-field";
 import { TextField } from "@/presentation/components/ui/text-field";
@@ -102,16 +102,11 @@ export function LoginEmailProfilePage() {
             showsVerticalScrollIndicator={false}
           >
             <AuthScene kind="register" style={styles.scene}>
-            <Image
-              source={require("@/assets/images/auth/logo.png")}
-              style={styles.logo}
-              contentFit="contain"
-              accessibilityLabel="BearCash"
-            />
+            <AuthLogo />
 
             <View style={styles.form}>
               <View style={styles.headerCopy}>
-                <Text style={styles.title}>Comece por aqui</Text>
+                <Text style={styles.title}>E-mail e Senha</Text>
                 <Text style={styles.subtitle}>
                   {isOauthOnboarding
                     ? "Defina uma senha para entrar também com e-mail"
@@ -184,7 +179,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 48,
+    paddingBottom: 88,
     gap: 32,
     width: "100%",
     maxWidth: 400,
@@ -194,10 +189,6 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     alignItems: "center",
     gap: 32,
-  },
-  logo: {
-    width: 57,
-    height: 59,
   },
   form: {
     alignSelf: "stretch",

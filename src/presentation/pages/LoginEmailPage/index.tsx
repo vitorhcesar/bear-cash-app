@@ -1,4 +1,3 @@
-import { Image } from "expo-image";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -30,6 +29,7 @@ import {
 import { ExistingAccountLogin } from "@/presentation/auth/existing-account-login";
 import { useGoogleSignIn } from "@/presentation/auth/use-google-sign-in";
 import { useAppleSignIn } from "@/presentation/auth/use-apple-sign-in";
+import { AuthLogo } from "@/presentation/components/ui/auth-logo";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import {
   AppleIcon,
@@ -74,7 +74,7 @@ export function LoginEmailPage() {
   const resumedMethod: AuthMethod =
     resumeLogin && parseAuthMethod(params.method) === "phone" ? "phone" : "email";
   const [method, setMethodLocal] = useState<AuthMethod>(
-    resumeLogin ? resumedMethod : "email",
+    resumeLogin ? resumedMethod : "phone",
   );
   const [phase, setPhase] = useState<AuthPhase>(
     resumeLogin ? "password" : "identify",
@@ -337,12 +337,7 @@ export function LoginEmailPage() {
                 />
               ) : (
                 <>
-                  <Image
-                    source={require("@/assets/images/auth/logo.png")}
-                    style={styles.logo}
-                    contentFit="contain"
-                    accessibilityLabel="BearCash"
-                  />
+                  <AuthLogo />
 
                   <View style={styles.form}>
                     <Animated.View
@@ -360,7 +355,7 @@ export function LoginEmailPage() {
                       <Text style={styles.title}>
                         {method === "email"
                           ? "Comece com seu E-mail"
-                          : "Comece com seu número"}
+                          : "Comece com seu WhatsApp"}
                       </Text>
 
                       {method === "email" ? (
@@ -491,7 +486,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
-    paddingVertical: 48,
+    paddingVertical: 88,
     gap: 32,
     width: "100%",
     maxWidth: 400,
@@ -501,10 +496,6 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     alignItems: "center",
     gap: 32,
-  },
-  logo: {
-    width: 57,
-    height: 59,
   },
   form: {
     alignSelf: "stretch",
@@ -535,13 +526,13 @@ const styles = StyleSheet.create({
     maxWidth: 301,
   },
   termsText: {
-    ...BearCashTypography.body,
+    ...BearCashTypography.bodySmall,
     color: BearCashColors.textSoft,
     textAlign: "center",
   },
   termsLink: {
     ...BearCashTypography.body,
-    color: BearCashColors.text,
+    color: BearCashColors.textMid,
     textDecorationLine: "underline",
   },
 });

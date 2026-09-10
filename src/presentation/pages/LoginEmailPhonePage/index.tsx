@@ -1,8 +1,8 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,6 +24,7 @@ import { AuthScene } from '@/presentation/auth/auth-switch-transition';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { AuthFlowHeader } from '@/presentation/components/ui/auth-flow-header';
+import { AuthLogo } from '@/presentation/components/ui/auth-logo';
 import { Button } from '@/presentation/components/ui/button';
 import { getPhoneDigits, PhoneField } from '@/presentation/components/ui/phone-field';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
@@ -42,7 +43,7 @@ export function LoginEmailPhonePage() {
   const router = useRouter();
   const api = useApiService();
   const { signOut, isAuthenticated, profile, user } = useAuthSession();
-  const { setEmail, setPhone, setMethod, setOtpDevHint } = useAuthDraft();
+  const { setEmail, setPhone, setMethod, setOtpDevHint, resetDraft } = useAuthDraft();
   const params = useLocalSearchParams<{
     email?: string;
     method?: string;
@@ -60,6 +61,36 @@ export function LoginEmailPhonePage() {
 
   const username = useMemo(() => getUsernameFromEmail(email), [email]);
   const canContinue = getPhoneDigits(phone).length >= 10;
+
+  async function handleAbandonOauth() {
+    if (signingOut) {
+      return;
+    }
+
+    setSigningOut(true);
+    try {
+      resetDraft();
+      await signOut();
+    } finally {
+      setSigningOut(false);
+    }
+  }
+
+  const abandonOauthRef = useRef(handleAbandonOauth);
+  abandonOauthRef.current = handleAbandonOauth;
+
+  useEffect(() => {
+    if (!isOauthOnboarding) {
+      return;
+    }
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      void abandonOauthRef.current();
+      return true;
+    });
+
+    return () => subscription.remove();
+  }, [isOauthOnboarding]);
 
   async function handleContinue() {
     if (!canContinue || loading) {
@@ -107,7 +138,11 @@ export function LoginEmailPhonePage() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safeArea}>
-        <AuthFlowHeader total={step.total} current={step.current} />
+        <AuthFlowHeader
+          total={step.total}
+          current={step.current}
+          onBack={isOauthOnboarding ? () => void handleAbandonOauth() : undefined}
+        />
 
         <KeyboardAvoidingView
           style={styles.flex}
@@ -119,17 +154,12 @@ export function LoginEmailPhonePage() {
             showsVerticalScrollIndicator={false}
           >
             <AuthScene kind="register" style={styles.scene}>
-            <Image
-              source={require('@/assets/images/auth/logo.png')}
-              style={styles.logo}
-              contentFit="contain"
-              accessibilityLabel="BearCash"
-            />
+            <AuthLogo />
 
             <View style={styles.form}>
               <View style={styles.headerCopy}>
                 <Text style={styles.title}>Boas-vindas, {username}!</Text>
-                <Text style={styles.subtitle}>Qual o seu número de telefone?</Text>
+                <Text style={styles.subtitle}>Qual seu número de WhatsApp?</Text>
               </View>
 
               <PhoneField value={phone} onChangeText={setPhoneLocal} />
@@ -149,12 +179,9 @@ export function LoginEmailPhonePage() {
                   <Text style={styles.footerText}>Quer usar outra conta?</Text>
                   <Pressable
                     accessibilityRole="link"
+                    disabled={signingOut}
                     onPress={() => {
-                      if (signingOut) {
-                        return;
-                      }
-                      setSigningOut(true);
-                      void signOut().finally(() => setSigningOut(false));
+                      void handleAbandonOauth();
                     }}
                   >
                     <Text style={styles.footerLink}>
@@ -196,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 48,
+    paddingBottom: 88,
     gap: 32,
     width: '100%',
     maxWidth: 400,
@@ -206,10 +233,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     alignItems: 'center',
     gap: 32,
-  },
-  logo: {
-    width: 57,
-    height: 59,
   },
   form: {
     alignSelf: 'stretch',
@@ -246,7 +269,7 @@ const styles = StyleSheet.create({
   },
   footerLink: {
     ...BearCashTypography.body,
-    color: BearCashColors.text,
+    color: BearCashColors.textMid,
     textDecorationLine: 'underline',
   },
 });

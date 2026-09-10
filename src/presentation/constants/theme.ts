@@ -24,22 +24,24 @@ export const Colors = {
   },
 } as const;
 
-/** Design tokens from BearCash Figma (Autenticação) */
+/** Design tokens from Otto Figma (Autenticação) */
 export const BearCashColors = {
-  background: "#0a0b0a",
-  surface: "#121311",
-  text: "#f5f5f4",
-  textMid: "#cbceca",
-  textSoft: "#767d73",
-  textDisabled: "#a5a9a2",
-  borderSoft: "#1c1d1b",
-  borderStrong: "#2d302c",
-  buttonFilled: "#e0e2df",
-  buttonFilledDisabled: "#eaebea",
-  buttonFilledText: "#0a0b0a",
+  background: "#0a0a0b",
+  surface: "#121113",
+  text: "#f5f4f5",
+  textMid: "#cccace",
+  textSoft: "#78737d",
+  textDisabled: "#a5a2a9",
+  borderSoft: "#1c1b1d",
+  borderStrong: "#2e2c30",
+  buttonFilled: "#cc9afe",
+  buttonFilledDisabled: "#cc9afe",
+  buttonFilledText: "#0a0a0b",
   primary: "#49dc14",
   primarySoft: "#95ff52",
   stepInactive: "#1c1d1b",
+  neutralBase: "#171618",
+  neutralLight: "#d6d5d8",
   error: "#f04438",
   errorSoft: "#f97066",
   danger: "#c33a22",
@@ -79,6 +81,11 @@ export const BearCashTypography = {
     fontSize: 14,
     lineHeight: 22,
     fontFamily: BearCashFonts.regular,
+  },
+  subheading: {
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: BearCashFonts.semiBold,
   },
   caption: {
     fontSize: 12,

@@ -11,7 +11,8 @@ import {
   type ViewStyle,
 } from 'react-native';
 
-import { BearCashColors, BearCashFonts } from '@/presentation/constants/theme';
+import { OtpErrorIcon } from '@/presentation/components/ui/auth-icons';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 export type OtpFieldProps = {
   length?: number;
@@ -136,7 +137,14 @@ export function OtpField({
           const isLast = index === length - 1;
 
           return (
-            <View key={index} style={[styles.cell, !isLast && styles.cellDivider]}>
+            <View
+              key={index}
+              style={[
+                styles.cell,
+                !isLast && styles.cellDivider,
+                !isLast && hasError && styles.cellDividerError,
+              ]}
+            >
               <TextInput
                 ref={(ref) => {
                   inputRefs.current[index] = ref;
@@ -164,12 +172,17 @@ export function OtpField({
         })}
       </View>
 
-      {hasError ? <Text style={styles.errorHint}>{error}</Text> : null}
+      {hasError ? (
+        <View style={styles.errorRow}>
+          <OtpErrorIcon size={16} />
+          <Text style={styles.errorHint}>{error}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
 
-const CELL_HEIGHT = 56;
+const CELL_HEIGHT = 46;
 
 const styles = StyleSheet.create({
   container: {
@@ -180,7 +193,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     alignSelf: 'stretch',
-    height: CELL_HEIGHT,
+    minHeight: CELL_HEIGHT,
     borderWidth: 1,
     borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
@@ -190,11 +203,12 @@ const styles = StyleSheet.create({
     borderColor: BearCashColors.borderStrong,
   },
   shellError: {
-    borderColor: BearCashColors.error,
+    borderColor: BearCashColors.danger,
   },
   cell: {
     flex: 1,
-    height: CELL_HEIGHT - 2,
+    minHeight: CELL_HEIGHT - 2,
+    minWidth: 46,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -202,11 +216,13 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: BearCashColors.borderSoft,
   },
+  cellDividerError: {
+    borderRightColor: BearCashColors.danger,
+  },
   input: {
     width: '100%',
     height: '100%',
-    fontSize: 18,
-    fontFamily: BearCashFonts.semiBold,
+    ...BearCashTypography.body,
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
     textAlign: 'center',
     textAlignVertical: 'center',
@@ -214,10 +230,15 @@ const styles = StyleSheet.create({
     padding: 0,
     margin: 0,
   },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'stretch',
+  },
   errorHint: {
-    fontSize: 12,
-    lineHeight: 19,
-    fontFamily: BearCashFonts.regular,
-    color: BearCashColors.errorSoft,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
+    flex: 1,
   },
 });

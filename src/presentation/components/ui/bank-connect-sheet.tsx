@@ -1,5 +1,5 @@
-import { useRef, type ComponentType, type ReactNode } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { useRef, type ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 import {
   BankConnectBuildingIcon,
@@ -8,17 +8,15 @@ import {
   BearCashConnectLogo,
 } from '@/presentation/components/ui/bank-connect-icons';
 import { Button } from '@/presentation/components/ui/button';
+import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { SettingsBiometricsIcon } from '@/presentation/components/ui/settings-icons';
 import { Sheet } from '@/presentation/components/ui/sheet';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 
-type BankLogoProps = {
-  size?: number;
-};
-
 export type BankConnectTarget = {
+  id: string;
   name: string;
-  Logo: ComponentType<BankLogoProps>;
+  logoUrl?: string | null;
 };
 
 export type BankConnectSheetProps = {
@@ -26,11 +24,13 @@ export type BankConnectSheetProps = {
   bank: BankConnectTarget | null;
   userName: string;
   cpfLabel: string;
+  connecting?: boolean;
+  missingCpf?: boolean;
   onClose: () => void;
+  onConnect: () => void;
 };
 
 const LOGO_SIZE = 64;
-const LOGO_BORDER = '#212220';
 
 function InfoCard({
   icon,
@@ -59,7 +59,10 @@ export function BankConnectSheet({
   bank,
   userName,
   cpfLabel,
+  connecting = false,
+  missingCpf = false,
   onClose,
+  onConnect,
 }: BankConnectSheetProps) {
   const lastBankRef = useRef(bank);
   if (bank) {
@@ -71,19 +74,19 @@ export function BankConnectSheet({
     return null;
   }
 
-  const { Logo, name } = current;
+  const { name, logoUrl } = current;
 
   return (
     <Sheet
       visible={visible}
-      onClose={onClose}
+      onClose={connecting ? () => undefined : onClose}
       title="Conectar conta"
       contentStyle={styles.sheet}
     >
       <View style={styles.body}>
         <View style={styles.logos}>
           <View style={styles.logoFrame}>
-            <Logo size={LOGO_SIZE} />
+            <InstitutionMark name={name} logoUrl={logoUrl} size={LOGO_SIZE} />
           </View>
           <BankConnectSwapIcon size={24} />
           <View style={styles.logoFrame}>
@@ -105,20 +108,26 @@ export function BankConnectSheet({
                 <BankConnectBuildingIcon size={12} color={BearCashColors.buttonFilled} />
               }
               title={name}
-              subtitle="Cadastro, conta, cartão de crédito, cambio e investimento (Sem prazo)"
+              subtitle="Conta e cartão de crédito, com o seu consentimento Open Finance"
             />
           </View>
 
           <View style={styles.actions}>
             <Button
-              label="Conectar"
+              label={connecting ? 'Conectando…' : 'Conectar'}
               variant="filled"
-              onPress={() => Alert.alert('Em breve')}
+              loading={connecting}
+              disabled={missingCpf}
+              onPress={onConnect}
             />
             <View style={styles.hint}>
               <BankConnectClockIcon size={16} />
               <Text style={styles.hintText}>
-                Você será direcionado para o {name}
+                {missingCpf
+                  ? 'Complete seu CPF no perfil para conectar'
+                  : connecting
+                    ? 'Autorize no banco e volte para o BearCash'
+                    : `Você será direcionado para o ${name}`}
               </Text>
             </View>
           </View>
@@ -147,8 +156,6 @@ const styles = StyleSheet.create({
     height: LOGO_SIZE,
     borderRadius: LOGO_SIZE / 2,
     overflow: 'hidden',
-    borderWidth: 0.8,
-    borderColor: LOGO_BORDER,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -201,5 +208,7 @@ const styles = StyleSheet.create({
   hintText: {
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
+    textAlign: 'center',
+    flex: 1,
   },
 });

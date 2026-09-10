@@ -22,7 +22,8 @@ import { AuthScene } from "@/presentation/auth/auth-switch-transition";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { AuthFlowHeader } from "@/presentation/components/ui/auth-flow-header";
-import { ShieldCheckIcon } from "@/presentation/components/ui/auth-icons";
+import { AuthLogo } from "@/presentation/components/ui/auth-logo";
+import { LgpdCheckIcon } from "@/presentation/components/ui/auth-icons";
 import { Button } from "@/presentation/components/ui/button";
 import { ProfileAvatarControl } from "@/presentation/components/ui/profile-avatar-control";
 import { TextField } from "@/presentation/components/ui/text-field";
@@ -187,6 +188,8 @@ export function LoginEmailDataPage() {
             showsVerticalScrollIndicator={false}
           >
             <AuthScene kind="register" style={styles.scene}>
+            <AuthLogo />
+
             <ProfileAvatarControl
               avatar={selectedAvatar}
               onChange={setSelectedAvatar}
@@ -194,7 +197,7 @@ export function LoginEmailDataPage() {
 
             <View style={styles.form}>
               <View style={styles.headerCopy}>
-                <Text style={styles.title}>Seus dados</Text>
+                <Text style={styles.title}>Dados pessoais</Text>
                 <Text style={styles.subtitle}>
                   Essas informações mantêm sua conta segura
                 </Text>
@@ -232,7 +235,7 @@ export function LoginEmailDataPage() {
               </View>
 
               <View style={styles.securityRow}>
-                <ShieldCheckIcon size={16} color={BearCashColors.primary} />
+                <LgpdCheckIcon size={16} />
                 <Text style={styles.securityText}>
                   Dados seguros pela LGPD com criptografia
                 </Text>
@@ -271,7 +274,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 48,
+    paddingBottom: 88,
     gap: 32,
     width: "100%",
     maxWidth: 400,
@@ -312,7 +315,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 4,
     alignSelf: "stretch",
   },
   securityText: {

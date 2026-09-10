@@ -1,0 +1,7 @@
+/** Hint icons exported from Figma cadastro screens. */
+
+export const OTP_ERROR_ICON_XML =
+  '<svg overflow="visible" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g clip-path="url(#clip_otp_error)">\n<circle opacity="0.5" cx="8" cy="8" r="6.66667" stroke="#C33A22"/>\n<path d="M8 11.3333V7.33333" stroke="#C33A22" stroke-linecap="round"/>\n<circle cx="0.666667" cy="0.666667" r="0.666667" transform="matrix(1 0 0 -1 7.33333 6)" fill="#C33A22"/>\n</g>\n<defs>\n<clipPath id="clip_otp_error">\n<rect width="16" height="16" fill="white"/>\n</clipPath>\n</defs>\n</svg>';
+
+export const LGPD_CHECK_ICON_XML =
+  '<svg overflow="visible" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">\n<path opacity="0.5" d="M2 6.94444C2 4.81271 2 3.74685 2.25168 3.38827C2.50335 3.02969 3.50555 2.68664 5.50994 2.00053L5.89182 1.86981C6.93666 1.51216 7.45907 1.33333 8 1.33333C8.54093 1.33333 9.06335 1.51216 10.1082 1.86981L10.4901 2.00053C12.4945 2.68664 13.4966 3.02969 13.7483 3.38827C14 3.74685 14 4.81271 14 6.94444C14 7.26643 14 7.61561 14 7.99424C14 11.753 11.174 13.577 9.40096 14.3515C8.91999 14.5616 8.67951 14.6667 8 14.6667C7.32049 14.6667 7.08001 14.5616 6.59904 14.3515C4.82597 13.577 2 11.753 2 7.99424C2 7.61561 2 7.26643 2 6.94444Z" stroke="#63E29F"/>\n<path d="M6.33333 8.26667L7.28571 9.33333L9.66667 6.66667" stroke="#63E29F" stroke-linecap="round" stroke-linejoin="round"/>\n</svg>';

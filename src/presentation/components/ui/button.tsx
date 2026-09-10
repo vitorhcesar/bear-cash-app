@@ -46,6 +46,7 @@ export function Button({
         variant === 'stroke' && styles.stroke,
         isDanger && styles.danger,
         isFilled && isDisabled && styles.filledDisabled,
+        variant === 'stroke' && isDisabled && styles.strokeDisabled,
         pressed && !isDisabled && styles.pressed,
         style,
       ]}
@@ -68,7 +69,6 @@ export function Button({
             style={[
               styles.label,
               isFilled && styles.filledLabel,
-              isFilled && isDisabled && styles.filledDisabledLabel,
               variant === 'stroke' && styles.strokeLabel,
               isDanger && styles.dangerLabel,
             ]}
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'stretch',
+    overflow: 'hidden',
   },
   filled: {
     backgroundColor: BearCashColors.buttonFilled,
@@ -99,9 +100,10 @@ const styles = StyleSheet.create({
     backgroundColor: BearCashColors.buttonFilledDisabled,
   },
   stroke: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: BearCashColors.borderStrong,
+    backgroundColor: BearCashColors.surface,
+  },
+  strokeDisabled: {
+    opacity: 0.7,
   },
   danger: {
     backgroundColor: BearCashColors.danger,
@@ -127,9 +129,6 @@ const styles = StyleSheet.create({
   },
   filledLabel: {
     color: BearCashColors.buttonFilledText,
-  },
-  filledDisabledLabel: {
-    color: BearCashColors.textDisabled,
   },
   strokeLabel: {
     color: BearCashColors.text,
