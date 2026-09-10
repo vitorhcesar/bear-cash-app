@@ -21,6 +21,7 @@ import { getErrorMessage } from "@/infra/http/get-error-message";
 import type { AiMessage } from "@/infra/http/services/api/modules/ai.module";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { HomeSparkleIcon } from "@/presentation/components/ui/home-icons";
+import { MarkdownMessage } from "@/presentation/components/ui/markdown-message";
 import {
   BearCashIaChatIcon,
   BearCashIaCloseIcon,
@@ -382,7 +383,7 @@ export function BearCashIaChatPage() {
                     />
                   </View>
                   <View style={styles.bearCashBubble}>
-                    <Text style={styles.bubbleText}>{message.text ?? ""}</Text>
+                    <MarkdownMessage content={message.text ?? ""} />
                   </View>
                 </View>
               );

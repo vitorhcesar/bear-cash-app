@@ -94,7 +94,7 @@ export function TransactionListItem({
       <View style={styles.amount}>
         <Text style={[styles.amountText, isCredit ? styles.income : styles.expense]}>
           {isCredit ? '+' : '-'}
-          {symbol}
+          {symbol}{' '}
         </Text>
         <Text style={[styles.amountText, isCredit ? styles.income : styles.expense]}>
           {formatAbsoluteAmount(item.amount)}

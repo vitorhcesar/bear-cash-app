@@ -197,6 +197,10 @@ export const CURRENCIES: Currency[] = [
 
 export const DEFAULT_CURRENCY_CODE = 'BRL';
 
+const CURRENCY_SYMBOLS: Record<string, string> = {
+  BRL: 'R$',
+};
+
 const currencyByCode = new Map(
   CURRENCIES.map((currency) => [currency.code, currency]),
 );
@@ -209,6 +213,15 @@ export function getCurrency(code: string) {
 
 export function formatCurrencyLabel(currency: Currency) {
   return `${currency.code} — ${currency.name}`;
+}
+
+function resolveCurrencySymbol(code: string, candidate?: string) {
+  const trimmed = candidate?.trim();
+  if (trimmed && trimmed.toUpperCase() !== code.toUpperCase()) {
+    return trimmed;
+  }
+
+  return CURRENCY_SYMBOLS[code] ?? trimmed ?? code;
 }
 
 export function getCurrencySymbol(code: string) {
@@ -226,11 +239,24 @@ export function getCurrencySymbol(code: string) {
       .formatToParts(0)
       .find((item) => item.type === 'currency');
 
-    const symbol = part?.value?.trim() || code;
+    const symbol = resolveCurrencySymbol(code, part?.value);
     symbolCache.set(code, symbol);
     return symbol;
   } catch {
-    symbolCache.set(code, code);
-    return code;
+    const symbol = resolveCurrencySymbol(code);
+    symbolCache.set(code, symbol);
+    return symbol;
   }
+}
+
+export function formatCurrencyAmount(
+  amount: number,
+  currencyCode = DEFAULT_CURRENCY_CODE,
+) {
+  const number = amount.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return `${getCurrencySymbol(currencyCode)} ${number}`;
 }

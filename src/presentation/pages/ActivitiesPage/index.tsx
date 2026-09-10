@@ -35,7 +35,7 @@ import {
 } from "@/presentation/components/ui/activities-icons";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import { formatActivitySection } from "@/presentation/components/ui/calendar";
-import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
+import { formatCurrencyAmount } from "@/presentation/components/ui/currencies";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
   BearCashColors,
@@ -75,7 +75,7 @@ function SummaryCard({
       <View style={styles.summaryCopy}>
         <Text style={styles.summaryLabel}>{label}</Text>
         <View style={styles.summaryValueRow}>
-          <Text style={styles.summaryValue}>{hidden ? "R$*,**" : value}</Text>
+          <Text style={styles.summaryValue}>{hidden ? "R$ *,**" : value}</Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={hidden ? "Mostrar valor" : "Ocultar valor"}
@@ -92,13 +92,6 @@ function SummaryCard({
       </View>
     </View>
   );
-}
-
-function formatTotal(amount: number, currencyCode = "BRL") {
-  return `${getCurrencySymbol(currencyCode)}${amount.toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 }
 
 function dayKey(date: Date) {
@@ -323,14 +316,14 @@ export function ActivitiesPage() {
         <View style={styles.summaryRow}>
           <SummaryCard
             label="Total entrada"
-            value={formatTotal(totals.credit)}
+            value={formatCurrencyAmount(totals.credit)}
             hidden={!incomeVisible}
             onToggleVisibility={toggleIncomeVisibility}
             tone="income"
           />
           <SummaryCard
             label="Total saídas"
-            value={formatTotal(totals.debit)}
+            value={formatCurrencyAmount(totals.debit)}
             hidden={!expenseVisible}
             onToggleVisibility={toggleExpenseVisibility}
             tone="expense"

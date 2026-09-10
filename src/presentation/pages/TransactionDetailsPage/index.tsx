@@ -256,7 +256,7 @@ export function TransactionDetailsPage() {
                 <View style={styles.amountRow}>
                   <Text style={styles.amountText}>
                     {isCredit ? '+' : '-'}
-                    {symbol}
+                    {symbol}{' '}
                   </Text>
                   <Text style={styles.amountText}>
                     {formatAbsoluteAmount(item.amount)}

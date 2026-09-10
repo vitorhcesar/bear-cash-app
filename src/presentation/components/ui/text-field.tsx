@@ -28,10 +28,12 @@ export function TextField({
   onFocus,
   onBlur,
   style,
+  editable = true,
   placeholderTextColor = BearCashColors.textSoft,
   ...rest
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
+  const isDisabled = editable === false;
   const hasValue = Boolean(value && String(value).length > 0);
   const showFloatingLabel = focused || hasValue;
   const hasError = Boolean(error);
@@ -49,16 +51,21 @@ export function TextField({
       ) : null}
 
       <View
+        pointerEvents={isDisabled ? 'none' : 'auto'}
         style={[
           styles.inputShell,
           showFloatingLabel ? styles.inputShellActive : styles.inputShellIdle,
+          isDisabled && styles.inputShellDisabled,
           hasError && styles.inputShellError,
         ]}>
         <TextInput
+          {...rest}
           value={value}
+          editable={editable}
+          selectTextOnFocus={!isDisabled}
           placeholder={showFloatingLabel ? undefined : (placeholder ?? label)}
           placeholderTextColor={placeholderTextColor}
-          style={[styles.input, style]}
+          style={[styles.input, isDisabled && styles.inputDisabled, style]}
           onFocus={(event) => {
             setFocused(true);
             onFocus?.(event);
@@ -67,7 +74,6 @@ export function TextField({
             setFocused(false);
             onBlur?.(event);
           }}
-          {...rest}
         />
         {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
       </View>
@@ -119,12 +125,18 @@ const styles = StyleSheet.create({
   inputShellError: {
     borderColor: BearCashColors.error,
   },
+  inputShellDisabled: {
+    opacity: 0.7,
+  },
   input: {
     ...BearCashTypography.body,
     color: BearCashColors.text,
     padding: 0,
     margin: 0,
     flex: 1,
+  },
+  inputDisabled: {
+    color: BearCashColors.textSoft,
   },
   trailing: {
     width: 16,

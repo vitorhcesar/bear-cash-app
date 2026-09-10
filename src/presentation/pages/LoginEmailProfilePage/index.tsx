@@ -20,6 +20,7 @@ import {
 } from "@/presentation/auth/auth-flow";
 import { AuthScene } from "@/presentation/auth/auth-switch-transition";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
+import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { AuthFlowHeader } from "@/presentation/components/ui/auth-flow-header";
 import { Button } from "@/presentation/components/ui/button";
 import { PasswordField } from "@/presentation/components/ui/password-field";
@@ -31,24 +32,37 @@ const MIN_PASSWORD_LENGTH = 6;
 export function LoginEmailProfilePage() {
   const router = useRouter();
   const { setEmail, setPassword, setPhone, setMethod, draft } = useAuthDraft();
+  const { user, profile, isAuthenticated } = useAuthSession();
   const params = useLocalSearchParams<{
     email?: string;
     phone?: string;
     method?: string;
   }>();
-  const method = parseAuthMethod(params.method);
-  const isOauth = isOauthMethod(method);
+  const methodFromParams = parseAuthMethod(params.method);
+  const isOauthOnboarding =
+    isOauthMethod(methodFromParams) ||
+    isOauthMethod(draft.method) ||
+    (isAuthenticated && !profile?.onboardingCompleted);
+  const method = isOauthOnboarding
+    ? isOauthMethod(methodFromParams)
+      ? methodFromParams
+      : isOauthMethod(draft.method)
+        ? draft.method
+        : "google"
+    : methodFromParams;
   const phone = paramString(params.phone) || draft.phone;
-  const emailParam = paramString(params.email) || draft.email;
+  const providerEmail =
+    paramString(params.email) || draft.email || user?.email || "";
   const step = getAuthStep(method, "profile");
 
-  const [email, setEmailLocal] = useState(emailParam);
+  const [email, setEmailLocal] = useState(providerEmail);
   const [password, setPasswordLocal] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const resolvedEmail = isOauthOnboarding ? providerEmail : email;
   const passwordsMatch = password.length > 0 && password === confirmPassword;
   const canContinue =
-    isValidEmail(email) &&
+    isValidEmail(resolvedEmail) &&
     password.length >= MIN_PASSWORD_LENGTH &&
     passwordsMatch;
 
@@ -57,8 +71,9 @@ export function LoginEmailProfilePage() {
       return;
     }
 
+    const nextEmail = resolvedEmail.trim();
     setMethod(method);
-    setEmail(email.trim());
+    setEmail(nextEmail);
     setPassword(password);
     setPhone(phone);
 
@@ -66,7 +81,7 @@ export function LoginEmailProfilePage() {
       pathname: "/login-email-data",
       params: {
         method,
-        email: email.trim(),
+        email: nextEmail,
         phone,
       },
     });
@@ -98,26 +113,27 @@ export function LoginEmailProfilePage() {
               <View style={styles.headerCopy}>
                 <Text style={styles.title}>Comece por aqui</Text>
                 <Text style={styles.subtitle}>
-                  {isOauth
+                  {isOauthOnboarding
                     ? "Defina uma senha para entrar também com e-mail"
                     : "Só mais alguns dados e você está dentro"}
                 </Text>
               </View>
 
               <View style={styles.fields}>
-                <TextField
-                  label="Digite seu E-mail"
-                  placeholder="Digite seu E-mail"
-                  value={email}
-                  onChangeText={setEmailLocal}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="email"
-                  textContentType="emailAddress"
-                  returnKeyType="next"
-                  editable={!isOauth}
-                />
+                {isOauthOnboarding ? null : (
+                  <TextField
+                    label="Digite seu E-mail"
+                    placeholder="Digite seu E-mail"
+                    value={email}
+                    onChangeText={setEmailLocal}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    returnKeyType="next"
+                  />
+                )}
                 <PasswordField
                   label="Digite sua senha"
                   placeholder="Digite sua senha"

@@ -51,12 +51,17 @@ export function isSocialOnboardingPath(pathname: string) {
   );
 }
 
+function firstParam(value: unknown): unknown {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export function parseAuthMethod(value: unknown): AuthMethod {
-  if (value === 'phone' || value === 'whatsapp') {
+  const normalized = firstParam(value);
+  if (normalized === 'phone' || normalized === 'whatsapp') {
     return 'phone';
   }
-  if (value === 'google' || value === 'apple') {
-    return value;
+  if (normalized === 'google' || normalized === 'apple') {
+    return normalized;
   }
   return 'email';
 }
@@ -87,5 +92,6 @@ export function getAuthStep(method: AuthMethod, screen: AuthScreen): AuthStep {
 }
 
 export function paramString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+  const normalized = firstParam(value);
+  return typeof normalized === 'string' ? normalized : '';
 }
