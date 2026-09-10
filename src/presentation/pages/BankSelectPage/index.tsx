@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
-import type { OpenFinanceInstitution } from '@/infra/http/services/api/modules/open-finance.module';
+import type { OpenFinanceConsent, OpenFinanceInstitution } from '@/infra/http/services/api/modules/open-finance.module';
 import {
   isInstitutionsCacheFresh,
   peekInstitutionsCache,
@@ -29,6 +29,7 @@ import {
 } from '@/presentation/components/ui/activities-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { BankConnectSheet } from '@/presentation/components/ui/bank-connect-sheet';
+import { BankSyncSheet } from '@/presentation/components/ui/bank-sync-sheet';
 import {
   BankFilterSheet,
   bankKindFilterLabel,
@@ -38,7 +39,10 @@ import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
-import { connectOpenFinanceInstitution } from '@/presentation/open-finance/connect-bank';
+import {
+  connectOpenFinanceInstitution,
+  reconnectOpenFinanceConsent,
+} from '@/presentation/open-finance/connect-bank';
 
 const BANK_ROW_HEIGHT = 56;
 const BANK_ROW_GAP = 16;
@@ -170,6 +174,7 @@ export function BankSelectPage() {
   );
   const [loading, setLoading] = useState(() => !peekInstitutionsCache()?.items.length);
   const [connecting, setConnecting] = useState(false);
+  const [syncConsent, setSyncConsent] = useState<OpenFinanceConsent | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const hasQuery = query.trim().length > 0;
@@ -274,28 +279,11 @@ export function BankSelectPage() {
       const consent = await connectOpenFinanceInstitution(
         api.modules.openFinance,
         selectedBank.id,
+        { onUpdate: setSyncConsent },
       );
-
-      if (consent.status === 'AUTHORISED') {
-        Alert.alert(
-          'Banco conectado',
-          'Estamos sincronizando suas contas e transações. Elas aparecem em instantes.',
-        );
-        setSelectedBank(null);
-        return;
-      }
-
-      if (consent.status === 'REJECTED') {
-        Alert.alert('Conexão recusada', 'A autorização no banco foi recusada. Você pode tentar de novo.');
-        return;
-      }
-
-      Alert.alert(
-        'Quase lá',
-        'Se você já autorizou no banco, a sincronização continua em segundo plano.',
-      );
-      setSelectedBank(null);
+      setSyncConsent(consent);
     } catch (error) {
+      setSyncConsent(null);
       Alert.alert('Não foi possível conectar', getErrorMessage(error, 'Tente novamente.'));
     } finally {
       setConnecting(false);
@@ -425,7 +413,7 @@ export function BankSelectPage() {
         onApply={setKindFilter}
       />
       <BankConnectSheet
-        visible={Boolean(selectedBank)}
+        visible={Boolean(selectedBank) && !syncConsent}
         bank={selectedBank}
         userName={userName}
         cpfLabel={cpfLabel}
@@ -438,6 +426,39 @@ export function BankSelectPage() {
         }}
         onConnect={() => {
           void handleConnect();
+        }}
+      />
+      <BankSyncSheet
+        visible={Boolean(syncConsent)}
+        bankName={syncConsent?.institutionName ?? selectedBank?.name}
+        consent={syncConsent}
+        loading={connecting}
+        onClose={() => {
+          setSyncConsent(null);
+          setSelectedBank(null);
+        }}
+        onRecreate={() => {
+          if (!syncConsent) {
+            return;
+          }
+          void (async () => {
+            setConnecting(true);
+            try {
+              const next = await reconnectOpenFinanceConsent(
+                api.modules.openFinance,
+                syncConsent.id,
+                { onUpdate: setSyncConsent },
+              );
+              setSyncConsent(next);
+            } catch (error) {
+              Alert.alert(
+                'Não foi possível reconectar',
+                getErrorMessage(error, 'Tente novamente.'),
+              );
+            } finally {
+              setConnecting(false);
+            }
+          })();
         }}
       />
     </SafeAreaView>

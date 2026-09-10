@@ -8,6 +8,7 @@ export type AppPreferences = {
   vibrationsEnabled: boolean;
   biometricsEnabled: boolean;
   pushEnabled: boolean;
+  lightModeEnabled: boolean;
   activitiesIncomeVisible: boolean;
   activitiesExpenseVisible: boolean;
 };
@@ -17,6 +18,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   vibrationsEnabled: true,
   biometricsEnabled: false,
   pushEnabled: true,
+  lightModeEnabled: false,
   activitiesIncomeVisible: true,
   activitiesExpenseVisible: true,
 };
@@ -58,6 +60,10 @@ export async function getPreferences(): Promise<AppPreferences> {
         typeof parsed.pushEnabled === 'boolean'
           ? parsed.pushEnabled
           : DEFAULT_PREFERENCES.pushEnabled,
+      lightModeEnabled:
+        typeof parsed.lightModeEnabled === 'boolean'
+          ? parsed.lightModeEnabled
+          : DEFAULT_PREFERENCES.lightModeEnabled,
       activitiesIncomeVisible:
         typeof parsed.activitiesIncomeVisible === 'boolean'
           ? parsed.activitiesIncomeVisible

@@ -59,6 +59,37 @@ function firstString(record: Record<string, unknown> | null, keys: string[]) {
   return null;
 }
 
+function firstNumber(record: Record<string, unknown> | null, keys: string[]) {
+  if (!record) {
+    return null;
+  }
+
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim()) {
+      const numeric = Number(value);
+      if (Number.isFinite(numeric)) {
+        return numeric;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getInstallmentLabel(item: TransactionItem) {
+  const card = asRecord(item.creditCardMetadata);
+  const current = firstNumber(card, ['chargeIdentificator', 'charge_identificator']);
+  const total = firstNumber(card, ['chargeNumber', 'charge_number']);
+  if (current == null || total == null || total <= 1) {
+    return null;
+  }
+  return `${current}/${total}`;
+}
+
 function getPaymentMethodLabel(item: TransactionItem) {
   const payment = asRecord(item.paymentData);
   const receiver = asRecord(payment?.receiver);
@@ -215,6 +246,7 @@ export function TransactionDetailsPage() {
   const isCredit = item.type === 'CREDIT';
   const symbol = getCurrencySymbol(item.currencyCode);
   const accountLabel = item.bankName?.trim() || 'BearCash';
+  const installmentLabel = getInstallmentLabel(item);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -308,6 +340,18 @@ export function TransactionDetailsPage() {
                 label="Forma de Pagamento"
                 value={getPaymentMethodLabel(item)}
               />
+
+              {installmentLabel ? (
+                <FactRow
+                  icon={
+                    <View style={styles.categoryBox}>
+                      <TransactionCardIcon size={24} color={BearCashColors.text} />
+                    </View>
+                  }
+                  label="Parcela"
+                  value={installmentLabel}
+                />
+              ) : null}
             </View>
 
             <View style={styles.recurringCard}>

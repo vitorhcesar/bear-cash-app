@@ -44,6 +44,8 @@ fs.writeFileSync(path.join(iconsDir, 'profile.svg'), `${profileXml}\n`);
 const icons = [
   ['profile', 'SETTINGS_PROFILE_XML', 'clip_settings_profile'],
   ['rocket', 'SETTINGS_ROCKET_XML', 'clip_settings_rocket'],
+  ['sparkle', 'SETTINGS_SPARKLE_XML', 'clip_settings_sparkle'],
+  ['bank', 'SETTINGS_BANK_XML', 'clip_settings_bank'],
   ['chevron', 'SETTINGS_CHEVRON_XML', 'clip_settings_chevron'],
   ['edit', 'SETTINGS_EDIT_XML', 'clip_settings_edit'],
   ['star', 'SETTINGS_STAR_XML', 'clip_settings_star'],
@@ -55,6 +57,7 @@ const icons = [
   ['report', 'SETTINGS_REPORT_XML', 'clip_settings_report'],
   ['support', 'SETTINGS_SUPPORT_XML', 'clip_settings_support'],
   ['logout', 'SETTINGS_LOGOUT_XML', 'clip_settings_logout'],
+  ['crown', 'SETTINGS_CROWN_XML', 'clip_settings_crown'],
 ];
 
 let iconOut =

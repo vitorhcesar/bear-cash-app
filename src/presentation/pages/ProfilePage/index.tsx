@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
-import { ShieldCheckIcon } from '@/presentation/components/ui/auth-icons';
+import { LgpdCheckIcon } from '@/presentation/components/ui/auth-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { DeleteAccountSheet } from '@/presentation/components/ui/delete-account-sheet';
 import {
@@ -19,7 +19,7 @@ import {
   VerifiedBadgeIcon,
 } from '@/presentation/components/ui/profile-icons';
 import { TextField } from '@/presentation/components/ui/text-field';
-import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 function formatBirthDateDisplay(value: string | null | undefined) {
   if (!value) {
@@ -138,46 +138,45 @@ export function ProfilePage() {
               label="Nome completo"
               value={fullName}
               editable={false}
+              appearance="static"
             />
             <TextField
               label="Data de nascimento"
               value={birthDate}
               editable={false}
+              appearance="static"
             />
-            <TextField label="CPF" value={cpf} editable={false} />
+            <TextField
+              label="CPF"
+              value={cpf}
+              editable={false}
+              appearance="static"
+            />
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações de contato</Text>
           <View style={styles.fields}>
-            <View style={styles.contactField}>
-              <TextField
-                label="E-mail"
-                value={email}
-                editable={false}
-                trailing={emailVerified ? verifiedBadge : undefined}
-              />
-              {emailVerified ? (
-                <Text style={styles.verifiedHint}>E-mail verificado</Text>
-              ) : null}
-            </View>
-            <View style={styles.contactField}>
-              <TextField
-                label="Telefone"
-                value={phone}
-                editable={false}
-                trailing={phoneVerified ? verifiedBadge : undefined}
-              />
-              {phoneVerified ? (
-                <Text style={styles.verifiedHint}>Telefone verificado</Text>
-              ) : null}
-            </View>
+            <TextField
+              label="E-mail"
+              value={email}
+              editable={false}
+              appearance="static"
+              trailing={emailVerified ? verifiedBadge : undefined}
+            />
+            <TextField
+              label="WhatsApp"
+              value={phone}
+              editable={false}
+              appearance="static"
+              trailing={phoneVerified ? verifiedBadge : undefined}
+            />
           </View>
         </View>
 
         <View style={styles.securityRow}>
-          <ShieldCheckIcon size={16} color={BearCashColors.primary} />
+          <LgpdCheckIcon size={16} />
           <Text style={styles.securityText}>
             Dados seguros pela LGPD com criptografia
           </Text>
@@ -192,7 +191,7 @@ export function ProfilePage() {
           ]}
         >
           <Text style={styles.deleteLabel}>Excluir conta</Text>
-          <TrashIcon size={16} color={BearCashColors.textSoft} />
+          <TrashIcon size={12} color={BearCashColors.textSoft} />
         </Pressable>
       </ScrollView>
 
@@ -219,16 +218,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 32,
-    gap: 32,
+    paddingBottom: 24,
+    gap: 24,
   },
   header: {
-    gap: 16,
+    gap: 8,
   },
   headerCopy: {
-    gap: 4,
+    gap: 8,
   },
   title: {
     ...BearCashTypography.h1,
@@ -242,26 +241,17 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 14,
-    lineHeight: 22,
+    ...BearCashTypography.subheading,
     color: BearCashColors.text,
   },
   fields: {
     gap: 16,
   },
-  contactField: {
-    gap: 6,
-  },
-  verifiedHint: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-  },
   securityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
   },
   securityText: {
     ...BearCashTypography.caption,
@@ -272,11 +262,11 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     paddingVertical: 8,
   },
   deleteLabel: {
-    ...BearCashTypography.bodySmall,
+    ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
   pressed: {

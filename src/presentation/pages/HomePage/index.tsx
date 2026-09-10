@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import { useId, useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useId, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -15,6 +15,9 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { Button } from "@/presentation/components/ui/button";
+import { formatCurrencyAmount } from "@/presentation/components/ui/currencies";
+import { useApiService } from "@/presentation/hooks/use-api-service";
+import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
 import {
   HomeChevronIcon,
   HomeMailIcon,
@@ -146,7 +149,9 @@ function BearCashInsightBanner() {
 
 export function HomePage() {
   const router = useRouter();
+  const api = useApiService();
   const { profile, user } = useAuthSession();
+  const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
   const greeting = useMemo(() => greetingForHour(new Date().getHours()), []);
   const name = useMemo(
     () =>
@@ -160,6 +165,28 @@ export function HomePage() {
   const avatar = useMemo(
     () => getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]),
     [profile?.avatarKey],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void api.modules.openFinance
+        .listConnections()
+        .then((response) => setConnections(response.items))
+        .catch(() => setConnections([]));
+    }, [api.modules.openFinance]),
+  );
+
+  const connected = connections.filter(
+    (item) => !item.revokedAt && item.status === 'AUTHORISED',
+  );
+  const availableBalance = connected
+    .flatMap((item) => item.accounts)
+    .reduce((sum, account) => sum + (account.availableAmount ?? 0), 0);
+  const syncing = connections.some(
+    (item) =>
+      !item.revokedAt &&
+      (item.status === 'AWAITING_AUTHORIZATION' ||
+        item.executionStatus === 'AWAITING_RESOURCES'),
   );
 
   return (
@@ -198,31 +225,58 @@ export function HomePage() {
           </Pressable>
         </View>
 
-        <View style={styles.connectCard}>
-          <View style={styles.connectHeader}>
-            <View style={styles.connectIconHolder}>
-              <HomeWalletIcon size={24} />
+        {connected.length > 0 ? (
+          <View style={styles.connectCard}>
+            <View style={styles.connectHeader}>
+              <View style={styles.connectIconHolder}>
+                <HomeWalletIcon size={24} />
+              </View>
+              <View style={styles.connectTitleBlock}>
+                <Text style={styles.connectTitle}>Saldo nas contas</Text>
+                <Text style={styles.connectSubtitle}>
+                  {syncing
+                    ? 'Sincronizando Open Finance…'
+                    : `${connected.length} ${connected.length === 1 ? 'banco conectado' : 'bancos conectados'}`}
+                </Text>
+              </View>
             </View>
-            <View style={styles.connectTitleBlock}>
-              <Text style={styles.connectTitle}>
-                Conecte sua conta bancária
-              </Text>
-              <Text style={styles.connectSubtitle}>
-                Ative o controle automático
-              </Text>
-            </View>
+            <Text style={styles.balanceValue}>
+              {formatCurrencyAmount(availableBalance)}
+            </Text>
+            <Button
+              label="Gerenciar contas"
+              variant="filled"
+              rightIcon={<HomeChevronIcon size={16} />}
+              onPress={() => router.push("/bank-connection")}
+            />
           </View>
-          <Text style={styles.connectBody}>
-            Conecte seu banco para visualizar seus gastos, saldo e transações
-            automaticamente sem precisar digitar nada.
-          </Text>
-          <Button
-            label="Conectar banco"
-            variant="filled"
-            rightIcon={<HomeChevronIcon size={16} />}
-            onPress={() => router.push("/bank-connection")}
-          />
-        </View>
+        ) : (
+          <View style={styles.connectCard}>
+            <View style={styles.connectHeader}>
+              <View style={styles.connectIconHolder}>
+                <HomeWalletIcon size={24} />
+              </View>
+              <View style={styles.connectTitleBlock}>
+                <Text style={styles.connectTitle}>
+                  Conecte sua conta bancária
+                </Text>
+                <Text style={styles.connectSubtitle}>
+                  {syncing ? 'Aguardando autorização no banco' : 'Ative o controle automático'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.connectBody}>
+              Conecte seu banco para visualizar seus gastos, saldo e transações
+              automaticamente sem precisar digitar nada.
+            </Text>
+            <Button
+              label="Conectar banco"
+              variant="filled"
+              rightIcon={<HomeChevronIcon size={16} />}
+              onPress={() => router.push("/bank-connection")}
+            />
+          </View>
+        )}
 
         <BearCashInsightBanner />
 
@@ -365,6 +419,10 @@ const styles = StyleSheet.create({
   connectBody: {
     ...BearCashTypography.bodySmall,
     color: BearCashColors.textMid,
+  },
+  balanceValue: {
+    ...BearCashTypography.h1,
+    color: BearCashColors.text,
   },
   insightBanner: {
     alignSelf: "stretch",

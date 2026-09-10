@@ -12,7 +12,8 @@ import {
 import { BearCashColors } from '@/presentation/constants/theme';
 
 const ACTION_SIZE = 28;
-const EDIT_ACTION_SIZE = 24;
+const EDIT_BADGE_SIZE = 32;
+const EDIT_BADGE_OVERLAP = 12;
 
 export type ProfileAvatarControlProps = {
   avatar: IAvatarOption;
@@ -31,10 +32,16 @@ export function ProfileAvatarControl({
   action = 'refresh',
 }: ProfileAvatarControlProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const isEdit = action === 'edit';
 
   return (
     <>
-      <View style={{ width: size, height: size }}>
+      <View
+        style={{
+          width: size,
+          height: isEdit ? size + (EDIT_BADGE_SIZE - EDIT_BADGE_OVERLAP) : size,
+        }}
+      >
         <Image
           source={avatar.source}
           style={{
@@ -49,14 +56,21 @@ export function ProfileAvatarControl({
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Trocar foto de perfil"
-          style={[
-            styles.avatarAction,
-            action === 'edit' && styles.avatarActionEdit,
-          ]}
+          style={
+            isEdit
+              ? [
+                  styles.avatarActionEdit,
+                  {
+                    left: (size - EDIT_BADGE_SIZE) / 2,
+                    top: size - EDIT_BADGE_OVERLAP,
+                  },
+                ]
+              : styles.avatarAction
+          }
           onPress={() => setPickerOpen(true)}
         >
-          {action === 'edit' ? (
-            <SettingsEditIcon size={16} />
+          {isEdit ? (
+            <SettingsEditIcon size={16} color={BearCashColors.buttonFilledText} />
           ) : (
             <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
           )}
@@ -87,9 +101,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarActionEdit: {
-    width: EDIT_ACTION_SIZE,
-    height: EDIT_ACTION_SIZE,
-    borderRadius: EDIT_ACTION_SIZE / 2,
-    backgroundColor: BearCashColors.borderStrong,
+    position: 'absolute',
+    width: EDIT_BADGE_SIZE,
+    height: EDIT_BADGE_SIZE,
+    borderRadius: 24,
+    borderWidth: 4,
+    borderColor: BearCashColors.background,
+    backgroundColor: BearCashColors.text,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

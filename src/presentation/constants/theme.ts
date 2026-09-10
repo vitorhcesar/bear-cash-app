@@ -37,6 +37,8 @@ export const BearCashColors = {
   buttonFilled: "#cc9afe",
   buttonFilledDisabled: "#cc9afe",
   buttonFilledText: "#0a0a0b",
+  iconAccent: "#b366ff",
+  bannerMuted: "#38363a",
   primary: "#49dc14",
   primarySoft: "#95ff52",
   stepInactive: "#1c1d1b",

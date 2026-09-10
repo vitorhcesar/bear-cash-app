@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Alert,
   Pressable,
@@ -11,7 +11,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
-import type { OpenFinanceConnection } from '@/infra/http/services/api/modules/open-finance.module';
+import type {
+  OpenFinanceConsent,
+  OpenFinanceConnection,
+} from '@/infra/http/services/api/modules/open-finance.module';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import {
@@ -22,11 +25,18 @@ import {
   BearCashMascotIcon,
 } from '@/presentation/components/ui/bank-connection-icons';
 import { Button } from '@/presentation/components/ui/button';
+import { formatCurrencyAmount } from '@/presentation/components/ui/currencies';
+import { DisconnectBankSheet } from '@/presentation/components/ui/disconnect-bank-sheet';
 import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
+import { BankSyncSheet } from '@/presentation/components/ui/bank-sync-sheet';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
 import { useApiService } from '@/presentation/hooks/use-api-service';
-import { reconnectOpenFinanceConsent } from '@/presentation/open-finance/connect-bank';
+import {
+  isAwaitingAuthorization,
+  isUrlExpired,
+  reconnectOpenFinanceConsent,
+} from '@/presentation/open-finance/connect-bank';
 
 type FeatureCardProps = {
   title: string;
@@ -75,10 +85,13 @@ function consentStatusLabel(connection: OpenFinanceConnection) {
     if (connection.executionStatus === 'AWAITING_RESOURCES') {
       return 'Sincronizando';
     }
+    if (connection.executionStatus === 'PARTIAL_SUCCESS') {
+      return 'Conectada';
+    }
     return 'Conectada';
   }
   if (connection.status === 'AWAITING_AUTHORIZATION') {
-    return 'Aguardando autorização';
+    return isUrlExpired(connection) ? 'Autorização expirada' : 'Aguardando autorização';
   }
   if (connection.status === 'REJECTED') {
     return 'Recusada';
@@ -89,12 +102,34 @@ function consentStatusLabel(connection: OpenFinanceConnection) {
   return connection.status;
 }
 
+function needsReconnect(connection: OpenFinanceConnection) {
+  return (
+    connection.status !== 'AUTHORISED' ||
+    (isAwaitingAuthorization(connection) && isUrlExpired(connection))
+  );
+}
+
+function formatDueDate(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toLocaleDateString('pt-BR');
+}
+
 export function BankConnectionPage() {
   const router = useRouter();
   const api = useApiService();
   const { profile, user } = useAuthSession();
   const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [disconnectTarget, setDisconnectTarget] = useState<OpenFinanceConnection | null>(
+    null,
+  );
+  const [syncConsent, setSyncConsent] = useState<OpenFinanceConsent | null>(null);
   const firstName = useMemo(
     () =>
       firstNameFromSession(
@@ -121,6 +156,21 @@ export function BankConnectionPage() {
   );
 
   const activeConnections = connections.filter((item) => !item.revokedAt);
+  const syncing = activeConnections.some(
+    (item) =>
+      item.status === 'AWAITING_AUTHORIZATION' ||
+      item.executionStatus === 'AWAITING_RESOURCES',
+  );
+
+  useEffect(() => {
+    if (!syncing) {
+      return;
+    }
+    const handle = setInterval(() => {
+      void loadConnections();
+    }, 5000);
+    return () => clearInterval(handle);
+  }, [syncing, loadConnections]);
 
   async function handleReconnect(connection: OpenFinanceConnection) {
     setBusyId(connection.id);
@@ -128,14 +178,12 @@ export function BankConnectionPage() {
       const updated = await reconnectOpenFinanceConsent(
         api.modules.openFinance,
         connection.id,
+        { onUpdate: setSyncConsent },
       );
-      if (updated.status === 'AUTHORISED') {
-        Alert.alert('Banco reconectado', 'A sincronização continua em segundo plano.');
-      } else if (updated.status === 'REJECTED') {
-        Alert.alert('Conexão recusada', 'A autorização no banco foi recusada.');
-      }
+      setSyncConsent(updated);
       await loadConnections();
     } catch (error) {
+      setSyncConsent(null);
       Alert.alert('Não foi possível reconectar', getErrorMessage(error, 'Tente novamente.'));
     } finally {
       setBusyId(null);
@@ -143,33 +191,28 @@ export function BankConnectionPage() {
   }
 
   function handleDisconnect(connection: OpenFinanceConnection) {
-    Alert.alert(
-      'Desconectar banco',
-      `Revogar o acesso a ${connection.institutionName}? As transações ficam ocultas dos totais.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Desconectar',
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              setBusyId(connection.id);
-              try {
-                await api.modules.openFinance.revokeConsent(connection.id);
-                await loadConnections();
-              } catch (error) {
-                Alert.alert(
-                  'Não foi possível desconectar',
-                  getErrorMessage(error, 'Tente novamente.'),
-                );
-              } finally {
-                setBusyId(null);
-              }
-            })();
-          },
-        },
-      ],
-    );
+    setDisconnectTarget(connection);
+  }
+
+  async function confirmDisconnect() {
+    if (!disconnectTarget) {
+      return;
+    }
+
+    const connection = disconnectTarget;
+    setBusyId(connection.id);
+    try {
+      await api.modules.openFinance.revokeConsent(connection.id);
+      setDisconnectTarget(null);
+      await loadConnections();
+    } catch (error) {
+      Alert.alert(
+        'Não foi possível desconectar',
+        getErrorMessage(error, 'Tente novamente.'),
+      );
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -221,8 +264,38 @@ export function BankConnectionPage() {
                     </Text>
                   </View>
                 </View>
+                {connection.accounts.length > 0 || connection.creditCards.length > 0 ? (
+                  <View style={styles.connectionMeta}>
+                    {connection.accounts.map((account) => (
+                      <Text key={account.id} style={styles.connectionMetaText}>
+                        Conta {account.number ?? ''}
+                        {account.availableAmount != null
+                          ? ` · ${formatCurrencyAmount(account.availableAmount, account.currency ?? 'BRL')}`
+                          : ''}
+                        {account.hasReservedBalance ? ' · Caixinhas' : ''}
+                      </Text>
+                    ))}
+                    {connection.creditCards.map((card) => {
+                      const due = formatDueDate(card.currentBill?.dueDate);
+                      const billTotal =
+                        card.currentBill?.totalAmount != null
+                          ? formatCurrencyAmount(
+                              card.currentBill.totalAmount,
+                              card.currentBill.currency ?? 'BRL',
+                            )
+                          : null;
+                      return (
+                        <Text key={card.id} style={styles.connectionMetaText}>
+                          Cartão {card.last4 ? `•••• ${card.last4}` : card.name ?? ''}
+                          {billTotal ? ` · fatura ${billTotal}` : ''}
+                          {due ? ` · vence ${due}` : ''}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                ) : null}
                 <View style={styles.connectionActions}>
-                  {connection.status !== 'AUTHORISED' ? (
+                  {needsReconnect(connection) ? (
                     <Pressable
                       disabled={busyId === connection.id}
                       onPress={() => {
@@ -280,6 +353,31 @@ export function BankConnectionPage() {
           </View>
         </View>
       </ScrollView>
+      <DisconnectBankSheet
+        visible={Boolean(disconnectTarget)}
+        bankName={disconnectTarget?.institutionName}
+        loading={busyId === disconnectTarget?.id}
+        onClose={() => setDisconnectTarget(null)}
+        onConfirm={() => {
+          void confirmDisconnect();
+        }}
+      />
+      <BankSyncSheet
+        visible={Boolean(syncConsent)}
+        bankName={syncConsent?.institutionName}
+        consent={syncConsent}
+        loading={Boolean(busyId)}
+        onClose={() => setSyncConsent(null)}
+        onRecreate={() => {
+          if (!syncConsent) {
+            return;
+          }
+          void handleReconnect(
+            connections.find((item) => item.id === syncConsent.id) ??
+              ({ ...syncConsent, accounts: [], creditCards: [] } as OpenFinanceConnection),
+          );
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -338,6 +436,13 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     gap: 2,
+  },
+  connectionMeta: {
+    gap: 4,
+  },
+  connectionMetaText: {
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   connectionName: {
     fontFamily: BearCashFonts.semiBold,

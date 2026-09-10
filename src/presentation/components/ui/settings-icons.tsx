@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import {
+  SETTINGS_BANK_XML,
   SETTINGS_BIOMETRICS_XML,
   SETTINGS_CARD_XML,
   SETTINGS_CHEVRON_XML,
@@ -15,6 +16,7 @@ import {
   SETTINGS_REPORT_XML,
   SETTINGS_ROCKET_XML,
   SETTINGS_SLIDERS_XML,
+  SETTINGS_SPARKLE_XML,
   SETTINGS_STAR_XML,
   SETTINGS_SUPPORT_XML,
 } from '@/presentation/components/ui/settings-icon-xml';
@@ -25,7 +27,7 @@ type IconProps = {
 };
 
 function tintFigmaIcon(xml: string, color: string) {
-  return xml.replace(/#E0E2DF|#FFD700/gi, color);
+  return xml.replace(/#E0E2DF|#FFD700|#B366FF|#9941F1|#212022|#C33A22/gi, color);
 }
 
 function FigmaIcon({
@@ -59,6 +61,14 @@ export function SettingsEditIcon({ size = 16, color }: IconProps) {
 
 export function SettingsRocketIcon({ size = 16, color }: IconProps) {
   return <FigmaIcon xml={SETTINGS_ROCKET_XML} size={size} color={color} />;
+}
+
+export function SettingsSparkleIcon({ size = 16, color }: IconProps) {
+  return <FigmaIcon xml={SETTINGS_SPARKLE_XML} size={size} color={color} />;
+}
+
+export function SettingsBankIcon({ size = 16, color }: IconProps) {
+  return <FigmaIcon xml={SETTINGS_BANK_XML} size={size} color={color} />;
 }
 
 export function SettingsStarIcon({ size = 16, color }: IconProps) {

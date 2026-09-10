@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
-import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Alert,
   Pressable,
@@ -12,21 +12,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
+import type { OpenFinanceConnection } from '@/infra/http/services/api/modules/open-finance.module';
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { BackButton } from '@/presentation/components/ui/back-button';
-import {
-  BancoDoBrasilLogo,
-  CaixaLogo,
-  ItauLogo,
-  NubankLogo,
-  SantanderLogo,
-} from '@/presentation/components/ui/bank-logos';
 import { EmailIcon } from '@/presentation/components/ui/brand-icons';
-import { BearCashPremiumBanner } from '@/presentation/components/ui/bear-cash-premium-banner';
+import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { ProfileAvatarControl } from '@/presentation/components/ui/profile-avatar-control';
 import { ReportProblemSheet } from '@/presentation/components/ui/report-problem-sheet';
 import {
+  SettingsBankIcon,
   SettingsBiometricsIcon,
   SettingsCardIcon,
   SettingsChevronIcon,
@@ -35,8 +30,8 @@ import {
   SettingsPasswordIcon,
   SettingsProfileIcon,
   SettingsReportIcon,
-  SettingsRocketIcon,
   SettingsSlidersIcon,
+  SettingsSparkleIcon,
   SettingsStarIcon,
   SettingsSupportIcon,
 } from '@/presentation/components/ui/settings-icons';
@@ -46,22 +41,35 @@ import {
   type IAvatarOption,
 } from '@/presentation/constants/avatars';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { useApiService } from '@/presentation/hooks/use-api-service';
 
-const BANK_STACK = [
-  { id: 'santander', Logo: SantanderLogo },
-  { id: 'bb', Logo: BancoDoBrasilLogo },
-  { id: 'nubank', Logo: NubankLogo },
-  { id: 'caixa', Logo: CaixaLogo },
-  { id: 'itau', Logo: ItauLogo },
-] as const;
+const NAV_ICON_COLOR = BearCashColors.iconAccent;
+const MAX_BANK_STACK = 4;
 
 type NavRowProps = {
   label: string;
   icon: ReactNode;
   onPress?: () => void;
+  badge?: number;
 };
 
-function NavRow({ label, icon, onPress }: NavRowProps) {
+function uniqueInstitutions(connections: OpenFinanceConnection[]) {
+  const seen = new Set<string>();
+  const result: OpenFinanceConnection[] = [];
+
+  for (const connection of connections) {
+    const key = connection.institutionId || connection.institutionName;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(connection);
+  }
+
+  return result;
+}
+
+function NavRow({ label, icon, onPress, badge }: NavRowProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -71,8 +79,13 @@ function NavRow({ label, icon, onPress }: NavRowProps) {
       <View style={styles.navRowLeft}>
         <View style={styles.iconSlot}>{icon}</View>
         <Text style={styles.navLabel}>{label}</Text>
+        {badge != null && badge > 0 ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        ) : null}
       </View>
-      <SettingsChevronIcon size={16} />
+      <SettingsChevronIcon size={16} color={BearCashColors.textMid} />
     </Pressable>
   );
 }
@@ -82,6 +95,72 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.sectionList}>{children}</View>
+    </View>
+  );
+}
+
+function SettingsPlanBanner({
+  hasPlan,
+  onPress,
+}: {
+  hasPlan: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <View style={styles.planBanner}>
+      <View style={styles.planBannerCopy}>
+        <View style={styles.planBannerTitleRow}>
+          <SettingsSparkleIcon size={16} />
+          <Text style={styles.planBannerTitle}>
+            {hasPlan ? 'Sua conta é Pro!' : 'Faça upgrade!'}
+          </Text>
+        </View>
+        <Text style={styles.planBannerSubtitle}>
+          {hasPlan
+            ? 'Conheça todos os benefícios para controlar e organizar seus gastos'
+            : 'Desbloqueie mais benefícios e aproveite a experiência completa.'}
+        </Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => [styles.planCta, pressed && styles.pressed]}
+      >
+        <Text style={styles.planCtaLabel}>{hasPlan ? 'Ver plano' : 'Assinar'}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
+  const visible = connections.slice(0, MAX_BANK_STACK);
+  const remaining = connections.length - visible.length;
+
+  return (
+    <View style={styles.bankStack}>
+      {visible.map((connection, index) => (
+        <View
+          key={connection.institutionId || connection.id}
+          style={[
+            styles.bankDot,
+            {
+              marginLeft: index === 0 ? 0 : -5,
+              zIndex: visible.length - index,
+            },
+          ]}
+        >
+          <InstitutionMark
+            name={connection.institutionName}
+            logoUrl={connection.institutionLogoUrl}
+            size={20}
+          />
+        </View>
+      ))}
+      {remaining > 0 ? (
+        <View style={[styles.bankDot, styles.bankMore, { marginLeft: -5, zIndex: 0 }]}>
+          <Text style={styles.bankMoreText}>+{remaining}</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -99,10 +178,12 @@ function appVersionLabel() {
 
 export function SettingsPage() {
   const router = useRouter();
+  const api = useApiService();
   const { profile, user, signOut, updateAvatar } = useAuthSession();
   const { resetDraft } = useAuthDraft();
   const [loggingOut, setLoggingOut] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<IAvatarOption>(() =>
     getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]),
   );
@@ -110,6 +191,21 @@ export function SettingsPage() {
   useEffect(() => {
     setSelectedAvatar(getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]));
   }, [profile?.avatarKey]);
+
+  const loadConnections = useCallback(async () => {
+    try {
+      const response = await api.modules.openFinance.listConnections();
+      setConnections(response.items.filter((item) => !item.revokedAt));
+    } catch {
+      setConnections([]);
+    }
+  }, [api.modules.openFinance]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadConnections();
+    }, [loadConnections]),
+  );
 
   const displayName = useMemo(() => {
     return (
@@ -119,6 +215,13 @@ export function SettingsPage() {
       'Usuário'
     );
   }, [profile?.displayName, profile?.fullName, user?.name]);
+
+  const institutions = useMemo(
+    () => uniqueInstitutions(connections),
+    [connections],
+  );
+  const hasConnections = institutions.length > 0;
+  const hasPlan = false;
 
   async function handleAvatarChange(avatar: IAvatarOption) {
     const previous = selectedAvatar;
@@ -171,151 +274,125 @@ export function SettingsPage() {
         />
 
         <View style={styles.body}>
-          <Text style={styles.name}>{displayName}</Text>
-
-          <View style={styles.topActions}>
-            <BearCashPremiumBanner
-              onPress={() => router.push('/subscription-premium')}
-            />
-
-            <View style={styles.summaryRow}>
+          <View style={[styles.identity, hasConnections && styles.identityConnected]}>
+            <Text style={styles.name}>{displayName}</Text>
+            {hasConnections ? (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => router.push('/subscription')}
+                accessibilityLabel="Conexões"
+                onPress={() => router.push('/bank-connection')}
                 style={({ pressed }) => [
-                  styles.featureCard,
+                  styles.connectionsSummary,
                   pressed && styles.pressed,
                 ]}
               >
-                <SettingsRocketIcon size={16} />
-                <View style={styles.featureCopy}>
-                  <Text style={styles.featureTitle}>Grátis</Text>
-                  <Text style={styles.featureSubtitle}>Plano</Text>
-                </View>
+                <BankStack connections={institutions} />
+                <Text style={styles.connectionsCaption}>Conexões</Text>
               </Pressable>
-
+            ) : (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => comingSoon('Conexões')}
+                onPress={() => router.push('/bank-select')}
                 style={({ pressed }) => [
-                  styles.featureCard,
+                  styles.connectLink,
                   pressed && styles.pressed,
                 ]}
               >
-                <View style={styles.bankStack}>
-                  {BANK_STACK.map((bank, index) => {
-                    const Logo = bank.Logo;
-                    return (
-                      <View
-                        key={bank.id}
-                        style={[
-                          styles.bankDot,
-                          {
-                            marginLeft: index === 0 ? 0 : -5,
-                            zIndex: BANK_STACK.length - index,
-                            borderColor: BearCashColors.surface,
-                          },
-                        ]}
-                      >
-                        <Logo size={20} />
-                      </View>
-                    );
-                  })}
-                  <View
-                    style={[
-                      styles.bankDot,
-                      styles.bankMore,
-                      { marginLeft: -5, zIndex: 0 },
-                    ]}
-                  >
-                    <Text style={styles.bankMoreText}>+1</Text>
-                  </View>
-                </View>
-                <View style={styles.featureCopy}>
-                  <Text style={styles.featureTitle}>6 Bancos</Text>
-                  <Text style={styles.featureSubtitle}>Conexões</Text>
-                </View>
+                <Text style={styles.connectLinkLabel}>Conectar banco</Text>
+                <SettingsChevronIcon size={16} color={BearCashColors.textMid} />
               </Pressable>
-            </View>
-
-            <NavRow
-              label="Avalie o BearCash"
-              icon={<SettingsStarIcon size={16} />}
-              onPress={() => comingSoon('Avalie o BearCash')}
-            />
-
-            {!user?.emailVerified && user?.email ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Verifique seu e-mail"
-                onPress={() => router.push('/verify-email')}
-                style={({ pressed }) => [
-                  styles.verifyBanner,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View style={styles.verifyBannerLeft}>
-                  <View style={styles.verifyBannerIcon}>
-                    <EmailIcon size={16} color={BearCashColors.warningText} />
-                  </View>
-                  <View style={styles.verifyBannerCopy}>
-                    <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
-                    <Text style={styles.verifyBannerSubtitle}>
-                      Confirme sua conta com um código
-                    </Text>
-                  </View>
-                </View>
-                <SettingsChevronIcon size={16} color={BearCashColors.warningText} />
-              </Pressable>
-            ) : null}
+            )}
           </View>
+
+          <SettingsPlanBanner
+            hasPlan={hasPlan}
+            onPress={() =>
+              router.push(hasPlan ? '/subscription' : '/subscription-pro')
+            }
+          />
+
+          {!user?.emailVerified && user?.email ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Verifique seu e-mail"
+              onPress={() => router.push('/verify-email')}
+              style={({ pressed }) => [
+                styles.verifyBanner,
+                pressed && styles.pressed,
+              ]}
+            >
+              <View style={styles.verifyBannerLeft}>
+                <View style={styles.verifyBannerIcon}>
+                  <EmailIcon size={16} color={BearCashColors.warningText} />
+                </View>
+                <View style={styles.verifyBannerCopy}>
+                  <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
+                  <Text style={styles.verifyBannerSubtitle}>
+                    Confirme sua conta com um código
+                  </Text>
+                </View>
+              </View>
+              <SettingsChevronIcon size={16} color={BearCashColors.warningText} />
+            </Pressable>
+          ) : null}
+
+          <Section title="Conexões">
+            <NavRow
+              label="Bancos"
+              icon={<SettingsBankIcon size={16} color={NAV_ICON_COLOR} />}
+              badge={connections.length}
+              onPress={() => router.push('/bank-connection')}
+            />
+          </Section>
 
           <Section title="Geral">
             <NavRow
               label="Perfil"
-              icon={<SettingsProfileIcon size={16} />}
+              icon={<SettingsProfileIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => router.push('/profile')}
             />
             <NavRow
-              label="Preferências"
-              icon={<SettingsSlidersIcon size={16} />}
-              onPress={() => router.push('/preferences')}
-            />
-            <NavRow
               label="Assinatura"
-              icon={<SettingsCardIcon size={16} />}
+              icon={<SettingsCardIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => router.push('/subscription')}
             />
             <NavRow
-              label="API Keys"
-              icon={<SettingsKeyIcon size={16} />}
+              label="Preferências"
+              icon={<SettingsSlidersIcon size={16} color={NAV_ICON_COLOR} />}
+              onPress={() => router.push('/preferences')}
+            />
+            <NavRow
+              label="Chave API"
+              icon={<SettingsKeyIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => router.push('/api-keys')}
+            />
+            <NavRow
+              label="Avalie o BearCash"
+              icon={<SettingsStarIcon size={16} color={NAV_ICON_COLOR} />}
+              onPress={() => comingSoon('Avalie o BearCash')}
             />
           </Section>
 
-          <Section title="Seguranças">
+          <Section title="Segurança e Suporte">
             <NavRow
               label="Alterar senha"
-              icon={<SettingsPasswordIcon size={16} />}
+              icon={<SettingsPasswordIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => router.push('/change-password-code')}
             />
             <NavRow
               label="Biometria"
-              icon={<SettingsBiometricsIcon size={16} />}
+              icon={<SettingsBiometricsIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => router.push('/biometrics')}
             />
             <NavRow
               label="Reportar um problema"
-              icon={<SettingsReportIcon size={16} />}
+              icon={<SettingsReportIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => setReportSheetOpen(true)}
             />
-          </Section>
-
-          <Section title="Suporte">
             <NavRow
-              label="Falar com suporte"
-              icon={<SettingsSupportIcon size={16} />}
-              onPress={() => comingSoon('Falar com suporte')}
+              label="Suporte"
+              icon={<SettingsSupportIcon size={16} color={NAV_ICON_COLOR} />}
+              onPress={() => comingSoon('Suporte')}
             />
           </Section>
 
@@ -331,7 +408,7 @@ export function SettingsPage() {
             <Text style={styles.logoutLabel}>
               {loggingOut ? 'Saindo…' : 'Sair'}
             </Text>
-            <SettingsLogoutIcon size={16} />
+            <SettingsLogoutIcon size={16} color={BearCashColors.danger} />
           </Pressable>
 
           <Text style={styles.version}>{appVersionLabel()}</Text>
@@ -354,8 +431,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 24,
-    gap: 32,
+    paddingBottom: 32,
+    gap: 24,
     alignItems: 'center',
   },
   header: {
@@ -368,40 +445,82 @@ const styles = StyleSheet.create({
     gap: 24,
     alignItems: 'center',
   },
+  identity: {
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    gap: 8,
+  },
+  identityConnected: {
+    gap: 10,
+  },
   name: {
     ...BearCashTypography.h1,
     color: BearCashColors.text,
     textAlign: 'center',
     alignSelf: 'stretch',
   },
-  topActions: {
-    alignSelf: 'stretch',
-    gap: 16,
-  },
-  summaryRow: {
+  connectLink: {
     flexDirection: 'row',
-    gap: 16,
-    alignSelf: 'stretch',
-  },
-  featureCard: {
-    flex: 1,
-    backgroundColor: BearCashColors.surface,
-    borderRadius: 12,
-    padding: 12,
-    gap: 6,
-  },
-  featureCopy: {
+    alignItems: 'center',
     gap: 2,
   },
-  featureTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 16,
-    lineHeight: 26,
+  connectLinkLabel: {
+    ...BearCashTypography.bodySmall,
     color: BearCashColors.textMid,
   },
-  featureSubtitle: {
+  connectionsSummary: {
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'stretch',
+  },
+  connectionsCaption: {
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
+    textAlign: 'center',
+  },
+  planBanner: {
+    alignSelf: 'stretch',
+    backgroundColor: BearCashColors.neutralLight,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 10,
+    overflow: 'hidden',
+  },
+  planBannerCopy: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 150,
+    gap: 4,
+  },
+  planBannerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  planBannerTitle: {
+    ...BearCashTypography.subheading,
+    color: BearCashColors.buttonFilledText,
+  },
+  planBannerSubtitle: {
+    ...BearCashTypography.caption,
+    color: BearCashColors.bannerMuted,
+  },
+  planCta: {
+    height: 34,
+    borderRadius: 24,
+    backgroundColor: BearCashColors.buttonFilled,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  planCtaLabel: {
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.buttonFilledText,
   },
   bankStack: {
     flexDirection: 'row',
@@ -413,24 +532,23 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 999,
     borderWidth: 1,
+    borderColor: BearCashColors.surface,
     overflow: 'hidden',
   },
   bankMore: {
     backgroundColor: BearCashColors.text,
-    borderColor: '#212220',
+    borderColor: '#212022',
     alignItems: 'center',
     justifyContent: 'center',
   },
   bankMoreText: {
     ...BearCashTypography.captionSmall,
-    color: BearCashColors.background,
+    color: BearCashColors.buttonFilledText,
   },
   navRow: {
     alignSelf: 'stretch',
-    height: 50,
-    backgroundColor: BearCashColors.surface,
-    borderRadius: 12,
     padding: 12,
+    borderRadius: 6,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -439,19 +557,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flex: 1,
+    paddingRight: 8,
   },
   iconSlot: {
-    width: 16,
-    height: 16,
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 6,
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
   },
   navLabel: {
     fontFamily: BearCashFonts.semiBold,
     fontSize: 16,
     lineHeight: 26,
     color: BearCashColors.textMid,
+  },
+  badge: {
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 2,
+    borderRadius: 999,
+    backgroundColor: BearCashColors.iconAccent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.buttonFilledText,
+    textAlign: 'center',
   },
   verifyBanner: {
     alignSelf: 'stretch',
@@ -496,21 +630,18 @@ const styles = StyleSheet.create({
   },
   section: {
     alignSelf: 'stretch',
-    gap: 16,
+    gap: 8,
   },
   sectionTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 14,
-    lineHeight: 22,
+    ...BearCashTypography.subheading,
     color: BearCashColors.text,
   },
   sectionList: {
-    gap: 12,
+    gap: 8,
   },
   logoutButton: {
     alignSelf: 'stretch',
-    borderWidth: 1,
-    borderColor: BearCashColors.borderStrong,
+    backgroundColor: BearCashColors.surface,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -518,10 +649,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    overflow: 'hidden',
   },
   logoutLabel: {
     ...BearCashTypography.bodySmall,
-    color: BearCashColors.text,
+    color: BearCashColors.danger,
   },
   version: {
     ...BearCashTypography.captionSmall,

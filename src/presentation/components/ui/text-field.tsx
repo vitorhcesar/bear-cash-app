@@ -16,6 +16,8 @@ export type TextFieldProps = TextInputProps & {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
   trailing?: ReactNode;
+  /** Read-only display: full-contrast text and the idle border, even with a value. */
+  appearance?: 'default' | 'static';
 };
 
 export function TextField({
@@ -25,6 +27,7 @@ export function TextField({
   error,
   containerStyle,
   trailing,
+  appearance = 'default',
   onFocus,
   onBlur,
   style,
@@ -34,6 +37,7 @@ export function TextField({
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
   const isDisabled = editable === false;
+  const isStatic = appearance === 'static';
   const hasValue = Boolean(value && String(value).length > 0);
   const showFloatingLabel = focused || hasValue;
   const hasError = Boolean(error);
@@ -54,8 +58,10 @@ export function TextField({
         pointerEvents={isDisabled ? 'none' : 'auto'}
         style={[
           styles.inputShell,
-          showFloatingLabel ? styles.inputShellActive : styles.inputShellIdle,
-          isDisabled && styles.inputShellDisabled,
+          showFloatingLabel && !isStatic
+            ? styles.inputShellActive
+            : styles.inputShellIdle,
+          isDisabled && !isStatic && styles.inputShellDisabled,
           hasError && styles.inputShellError,
         ]}>
         <TextInput
@@ -65,7 +71,11 @@ export function TextField({
           selectTextOnFocus={!isDisabled}
           placeholder={showFloatingLabel ? undefined : (placeholder ?? label)}
           placeholderTextColor={placeholderTextColor}
-          style={[styles.input, isDisabled && styles.inputDisabled, style]}
+          style={[
+            styles.input,
+            isDisabled && !isStatic && styles.inputDisabled,
+            style,
+          ]}
           onFocus={(event) => {
             setFocused(true);
             onFocus?.(event);

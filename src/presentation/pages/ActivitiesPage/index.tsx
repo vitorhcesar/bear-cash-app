@@ -21,7 +21,9 @@ import {
 import {
   ActivitiesFilterSheet,
   DEFAULT_ACTIVITIES_FILTERS,
+  type ActivitiesBankOption,
   type ActivitiesFilters,
+  type PeriodId,
 } from "@/presentation/components/ui/activities-filter-sheet";
 import {
   ActivityEyeClosedIcon,
@@ -42,6 +44,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { getCategoryGroup } from "@/presentation/components/ui/activities-category-catalog";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const FILTERS = ["Entradas", "Saídas", "Pagamentos", "Cartão"] as const;
@@ -98,6 +101,72 @@ function dayKey(date: Date) {
   return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 }
 
+function matchesPeriod(date: Date, period: PeriodId) {
+  const now = new Date();
+  const startOfDay = (value: Date) =>
+    new Date(value.getFullYear(), value.getMonth(), value.getDate()).getTime();
+  const day = startOfDay(date);
+  const today = startOfDay(now);
+
+  if (period === "today") {
+    return day === today;
+  }
+  if (period === "yesterday") {
+    return day === today - 86_400_000;
+  }
+  if (period === "7d") {
+    return day >= today - 6 * 86_400_000;
+  }
+  if (period === "15d") {
+    return day >= today - 14 * 86_400_000;
+  }
+  if (period === "current-month") {
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  }
+  if (period === "last-month") {
+    const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return date.getFullYear() === last.getFullYear() && date.getMonth() === last.getMonth();
+  }
+  if (period === "6m") {
+    const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    return date >= from;
+  }
+  if (period === "year") {
+    const from = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    return date >= from;
+  }
+  return true;
+}
+
+function matchesBank(item: TransactionItem, banks: string[]) {
+  if (banks.length === 0) {
+    return true;
+  }
+  const name = (item.bankName ?? "").toLowerCase();
+  const code = (item.bankCode ?? "").toLowerCase();
+  return banks.some((bank) => {
+    const needle = bank.toLowerCase();
+    return name.includes(needle) || needle.includes(name) || code === needle;
+  });
+}
+
+function matchesCategory(item: TransactionItem, categories: string[]) {
+  if (categories.length === 0) {
+    return true;
+  }
+  const id = item.categoryId ?? "";
+  const label = (item.category ?? "").toLowerCase();
+  return categories.some((category) => {
+    if (id === category) {
+      return true;
+    }
+    const group = getCategoryGroup(category);
+    if (group?.children.some((child) => child.id === id)) {
+      return true;
+    }
+    return Boolean(group?.label && label.includes(group.label.toLowerCase()));
+  });
+}
 function matchesFilter(item: TransactionItem, filter: FilterId) {
   if (filter === "Entradas") {
     return item.type === "CREDIT";
@@ -128,6 +197,7 @@ export function ActivitiesPage() {
   const [filters, setFilters] = useState<ActivitiesFilters>(
     DEFAULT_ACTIVITIES_FILTERS,
   );
+  const [bankOptions, setBankOptions] = useState<ActivitiesBankOption[]>([]);
 
   const loadTransactions = useCallback(
     async (search?: string) => {
@@ -167,8 +237,27 @@ export function ActivitiesPage() {
       const handle = setTimeout(() => {
         void loadTransactions(query);
       }, query ? 250 : 0);
+      void api.modules.openFinance
+        .listConnections()
+        .then((response) => {
+          const unique = new Map<string, ActivitiesBankOption>();
+          for (const connection of response.items) {
+            if (connection.revokedAt) {
+              continue;
+            }
+            unique.set(connection.institutionName, {
+              id: connection.institutionName,
+              label: connection.institutionName,
+              logoUrl: connection.institutionLogoUrl,
+            });
+          }
+          setBankOptions([...unique.values()]);
+        })
+        .catch(() => {
+          setBankOptions([]);
+        });
       return () => clearTimeout(handle);
-    }, [query, loadTransactions]),
+    }, [query, loadTransactions, api.modules.openFinance]),
   );
 
   const toggleIncomeVisibility = useCallback(() => {
@@ -201,7 +290,39 @@ export function ActivitiesPage() {
   }, [items]);
 
   const grouped = useMemo(() => {
-    const filtered = items.filter((item) => matchesFilter(item, activeFilter));
+    const filtered = items.filter((item) => {
+      if (!filters.showHidden && item.hiddenFromTotals) {
+        return false;
+      }
+      if (!matchesFilter(item, activeFilter)) {
+        return false;
+      }
+      const date = new Date(item.date);
+      if (!matchesPeriod(date, filters.period)) {
+        return false;
+      }
+      if (!matchesBank(item, filters.banks)) {
+        return false;
+      }
+      if (!matchesCategory(item, filters.categories)) {
+        return false;
+      }
+      return true;
+    });
+
+    filtered.sort((left, right) => {
+      if (filters.sort === "oldest") {
+        return new Date(left.date).getTime() - new Date(right.date).getTime();
+      }
+      if (filters.sort === "highest") {
+        return Math.abs(right.amount) - Math.abs(left.amount);
+      }
+      if (filters.sort === "lowest") {
+        return Math.abs(left.amount) - Math.abs(right.amount);
+      }
+      return new Date(right.date).getTime() - new Date(left.date).getTime();
+    });
+
     const sections = new Map<string, { key: string; title: string; data: TransactionItem[] }>();
 
     for (const item of filtered) {
@@ -220,7 +341,7 @@ export function ActivitiesPage() {
     }
 
     return [...sections.values()];
-  }, [items, activeFilter]);
+  }, [items, activeFilter, filters]);
 
   const empty = grouped.length === 0;
 
@@ -368,6 +489,7 @@ export function ActivitiesPage() {
       <ActivitiesFilterSheet
         visible={filtersOpen}
         value={filters}
+        banks={bankOptions}
         onClose={() => setFiltersOpen(false)}
         onApply={setFilters}
       />

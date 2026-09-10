@@ -21,15 +21,13 @@ import {
 } from "@/presentation/components/ui/activities-category-catalog";
 import { CategoryChipIcon } from "@/presentation/components/ui/activities-category-icons";
 import {
-  BancoDoBrasilLogo,
   FilterCalendarIcon,
   FilterCheckboxOnIcon,
   FilterChevronIcon,
   FilterChipCloseIcon,
-  NubankLogo,
-  SantanderLogo,
 } from "@/presentation/components/ui/activities-filter-icons";
 import { Button } from "@/presentation/components/ui/button";
+import { InstitutionMark } from "@/presentation/components/ui/institution-mark";
 import { Sheet } from "@/presentation/components/ui/sheet";
 import {
   BearCashColors,
@@ -56,7 +54,7 @@ const SORTS = [
   { id: "lowest", label: "Menor valor" },
 ] as const;
 
-const BANKS = [
+const FALLBACK_BANKS = [
   { id: "santander", label: "Santander" },
   { id: "bb", label: "Banco do Brasil" },
   { id: "nubank", label: "Nubank" },
@@ -64,8 +62,14 @@ const BANKS = [
 
 export type PeriodId = (typeof PERIODS)[number]["id"];
 export type SortId = (typeof SORTS)[number]["id"];
-export type BankId = (typeof BANKS)[number]["id"];
+export type BankId = string;
 export type CategoryId = CategoryGroupId;
+
+export type ActivitiesBankOption = {
+  id: string;
+  label: string;
+  logoUrl?: string | null;
+};
 
 export type ActivitiesFilters = {
   period: PeriodId;
@@ -86,6 +90,7 @@ export const DEFAULT_ACTIVITIES_FILTERS: ActivitiesFilters = {
 export type ActivitiesFilterSheetProps = {
   visible: boolean;
   value: ActivitiesFilters;
+  banks?: ActivitiesBankOption[];
   onClose: () => void;
   onApply: (filters: ActivitiesFilters) => void;
 };
@@ -150,14 +155,8 @@ function RemovableChip({
   );
 }
 
-function BankMark({ id }: { id: BankId }) {
-  if (id === "santander") {
-    return <SantanderLogo size={24} />;
-  }
-  if (id === "bb") {
-    return <BancoDoBrasilLogo size={24} />;
-  }
-  return <NubankLogo size={24} />;
+function BankMark({ bank }: { bank: ActivitiesBankOption }) {
+  return <InstitutionMark name={bank.label} logoUrl={bank.logoUrl} size={24} />;
 }
 
 function FilterToggle({
@@ -182,6 +181,7 @@ function FilterToggle({
 export function ActivitiesFilterSheet({
   visible,
   value,
+  banks,
   onClose,
   onApply,
 }: ActivitiesFilterSheetProps) {
@@ -195,6 +195,14 @@ export function ActivitiesFilterSheet({
     setCategoriesOpen(false);
     didOpenCategories.current = false;
   }, [value]);
+
+  const bankOptions = useMemo<ActivitiesBankOption[]>(
+    () =>
+      banks && banks.length > 0
+        ? banks
+        : FALLBACK_BANKS.map((bank) => ({ id: bank.id, label: bank.label })),
+    [banks],
+  );
 
   const categoryChips = useMemo(
     () =>
@@ -248,7 +256,7 @@ export function ActivitiesFilterSheet({
     }[] = [];
 
     for (const bankId of draft.banks) {
-      const bank = BANKS.find((item) => item.id === bankId);
+      const bank = bankOptions.find((item) => item.id === bankId);
       if (bank) {
         chips.push({
           key: `bank-${bank.id}`,
@@ -294,7 +302,7 @@ export function ActivitiesFilterSheet({
     }
 
     return chips;
-  }, [draft]);
+  }, [draft, bankOptions]);
 
   function removeSelectedChip(chip: (typeof selectedChips)[number]) {
     if (chip.kind === "bank" && chip.id) {
@@ -405,7 +413,7 @@ export function ActivitiesFilterSheet({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Bancos</Text>
           <View style={styles.bankList}>
-            {BANKS.map((bank) => {
+            {bankOptions.map((bank) => {
               const checked = draft.banks.includes(bank.id);
               return (
                 <Pressable
@@ -416,7 +424,7 @@ export function ActivitiesFilterSheet({
                   style={styles.bankRow}
                 >
                   <Checkbox checked={checked} />
-                  <BankMark id={bank.id} />
+                  <BankMark bank={bank} />
                   <Text style={styles.bankLabel}>{bank.label}</Text>
                 </Pressable>
               );

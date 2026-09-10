@@ -36,6 +36,16 @@ export type OpenFinanceConsent = {
   updatedAt: string;
 };
 
+export type OpenFinanceBill = {
+  id: string;
+  dueDate: string | null;
+  billClosingDate: string | null;
+  isInstalment: boolean;
+  minimumAmount: number | null;
+  totalAmount: number | null;
+  currency: string | null;
+};
+
 export type OpenFinanceConnection = OpenFinanceConsent & {
   accounts: Array<{
     id: string;
@@ -43,18 +53,23 @@ export type OpenFinanceConnection = OpenFinanceConsent & {
     number: string | null;
     currency: string | null;
     availableAmount: number | null;
+    hasReservedBalance: boolean;
   }>;
   creditCards: Array<{
     id: string;
     name: string | null;
     network: string | null;
     last4: string | null;
+    availableLimit: number | null;
+    currentBill: OpenFinanceBill | null;
   }>;
 };
 
 export interface IOpenFinanceModule {
   listInstitutions(): Promise<{ items: OpenFinanceInstitution[] }>;
   listConnections(): Promise<{ items: OpenFinanceConnection[] }>;
+  getConnection(id: string): Promise<OpenFinanceConnection>;
+  listCreditCardBills(creditCardId: string): Promise<{ items: OpenFinanceBill[] }>;
   createConsent(input: { institutionId: string }): Promise<OpenFinanceConsent>;
   getConsent(id: string): Promise<OpenFinanceConsent>;
   refreshConsent(id: string): Promise<OpenFinanceConsent>;
@@ -72,6 +87,18 @@ export class OpenFinanceModule extends BaseApiModule implements IOpenFinanceModu
   listConnections() {
     return this.http.get<{ items: OpenFinanceConnection[] }>(
       '/api/v1/open-finance/connections',
+    );
+  }
+
+  getConnection(id: string) {
+    return this.http.get<OpenFinanceConnection>(
+      `/api/v1/open-finance/connections/${id}`,
+    );
+  }
+
+  listCreditCardBills(creditCardId: string) {
+    return this.http.get<{ items: OpenFinanceBill[] }>(
+      `/api/v1/open-finance/credit-cards/${creditCardId}/bills`,
     );
   }
 
