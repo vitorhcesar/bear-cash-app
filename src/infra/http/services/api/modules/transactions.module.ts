@@ -27,6 +27,7 @@ export type TransactionItem = {
   source: 'MANUAL' | 'OPEN_FINANCE';
   bankName: string | null;
   bankCode: string | null;
+  bankLogoUrl: string | null;
   recurring: boolean;
   hiddenFromTotals: boolean;
   createdAt: string;

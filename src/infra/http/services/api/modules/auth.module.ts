@@ -133,7 +133,7 @@ export interface IAuthModule {
   register(input: RegisterInput): Promise<AuthResult>;
   completeOnboarding(input: CompleteOnboardingInput): Promise<AuthResult>;
   login(input: LoginInput): Promise<AuthResult>;
-  logout(): Promise<void>;
+  logout(token?: string): Promise<void>;
   me(): Promise<MeResponse>;
   updateAvatar(avatarKey: string): Promise<MeResponse>;
   verifyPassword(password: string): Promise<{ ok: true }>;
@@ -212,7 +212,14 @@ export class AuthModule extends BaseApiModule implements IAuthModule {
     return this.http.post<AuthResult>('/api/v1/auth/login', input, { skipAuth: true });
   }
 
-  logout() {
+  logout(token?: string) {
+    if (token) {
+      return this.http.post<void>('/api/v1/auth/logout', undefined, {
+        skipAuth: true,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
+
     return this.http.post<void>('/api/v1/auth/logout');
   }
 

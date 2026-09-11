@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
-import type { OpenFinanceConsent, OpenFinanceInstitution } from '@/infra/http/services/api/modules/open-finance.module';
+import type { OpenFinanceConsent, OpenFinanceConnection, OpenFinanceInstitution } from '@/infra/http/services/api/modules/open-finance.module';
 import {
   isInstitutionsCacheFresh,
   peekInstitutionsCache,
@@ -41,6 +41,8 @@ import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentatio
 import { useApiService } from '@/presentation/hooks/use-api-service';
 import {
   connectOpenFinanceInstitution,
+  isOpenFinanceConnectionLimitReached,
+  openFinanceConnectionLimitMessage,
   reconnectOpenFinanceConsent,
 } from '@/presentation/open-finance/connect-bank';
 
@@ -175,6 +177,7 @@ export function BankSelectPage() {
   const [loading, setLoading] = useState(() => !peekInstitutionsCache()?.items.length);
   const [connecting, setConnecting] = useState(false);
   const [syncConsent, setSyncConsent] = useState<OpenFinanceConsent | null>(null);
+  const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const hasQuery = query.trim().length > 0;
@@ -224,10 +227,20 @@ export function BankSelectPage() {
     [api.modules.openFinance],
   );
 
+  const refreshConnections = useCallback(async () => {
+    try {
+      const response = await api.modules.openFinance.listConnections();
+      setConnections(response.items);
+    } catch {
+      setConnections([]);
+    }
+  }, [api.modules.openFinance]);
+
   useFocusEffect(
     useCallback(() => {
       void refreshInstitutions();
-    }, [refreshInstitutions]),
+      void refreshConnections();
+    }, [refreshInstitutions, refreshConnections]),
   );
 
   const banks = useMemo(() => {
@@ -271,6 +284,10 @@ export function BankSelectPage() {
     }
     if (missingCpf) {
       Alert.alert('CPF necessário', 'Complete seu CPF no perfil para conectar um banco.');
+      return;
+    }
+    if (isOpenFinanceConnectionLimitReached(connections, selectedBank.id)) {
+      Alert.alert('Limite de conexões', openFinanceConnectionLimitMessage());
       return;
     }
 

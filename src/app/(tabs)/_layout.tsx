@@ -4,14 +4,8 @@ import { useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { BlurTargetProvider } from "@/presentation/blur/blur-target-context";
-import {
-  AppBottomBar,
-  type AppTabKey,
-} from "@/presentation/components/app-bottom-bar";
+import { AppBottomBar, type AppTabKey } from "@/presentation/components/app-bottom-bar";
 import { BearCashColors } from "@/presentation/constants/theme";
-
-/** Espaço reservado para AI bar + nav + safe area */
-export const APP_BOTTOM_CHROME_HEIGHT = 148;
 
 export const unstable_settings = {
   initialRouteName: "index",
@@ -28,9 +22,15 @@ export default function TabsLayout() {
             tabBar={() => null}
             screenOptions={{
               headerShown: false,
+              tabBarStyle: {
+                display: "none",
+                backgroundColor: "transparent",
+                borderTopWidth: 0,
+                elevation: 0,
+                position: "absolute",
+              },
               sceneStyle: {
                 backgroundColor: BearCashColors.background,
-                paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
               },
             }}
           >
@@ -91,5 +91,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    backgroundColor: "transparent",
   },
 });

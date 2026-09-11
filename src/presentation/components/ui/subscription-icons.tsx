@@ -1,9 +1,17 @@
-import Svg, { Circle, Path } from 'react-native-svg';
+import { useMemo } from 'react';
+import { View } from 'react-native';
+import Svg, { Circle, Path, SvgXml } from 'react-native-svg';
 
 type IconProps = {
   size?: number;
   color?: string;
 };
+
+const FEATURE_CHECK_XML =
+  '<svg overflow="visible" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="Icon">\n<path id="Vector" opacity="0.5" d="M2.66667 8.6L4.7619 11L10 5" stroke="#B385E0" stroke-linecap="round" stroke-linejoin="round"/>\n<path id="Vector_2" d="M13.3333 5.04167L7.61888 11.0417L7.33333 10.6667" stroke="#B385E0" stroke-linecap="round" stroke-linejoin="round"/>\n</g>\n</svg>';
+
+const HINT_INFO_XML =
+  '<svg overflow="visible" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="Icon">\n<circle id="Vector" opacity="0.5" cx="8" cy="8" r="6.66667" stroke="#0C84FC"/>\n<path id="Vector_2" d="M8 11.3333V7.33333" stroke="#0C84FC" stroke-linecap="round"/>\n<circle id="Vector_3" cx="8" cy="5.33333" r="0.666667" fill="#0C84FC"/>\n</g>\n</svg>';
 
 /** Outline ghost used in the subscription empty state */
 export function GhostIcon({ size = 20, color = '#767D73' }: IconProps) {
@@ -27,17 +35,24 @@ export function GhostIcon({ size = 20, color = '#767D73' }: IconProps) {
   );
 }
 
-export function FeatureCheckIcon({ size = 16, color = '#95FF52' }: IconProps) {
+export function FeatureCheckIcon({ size = 16, color = '#B385E0' }: IconProps) {
+  const xml = useMemo(
+    () => FEATURE_CHECK_XML.replace(/#B385E0/gi, color),
+    [color],
+  );
+
   return (
-    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
-      <Path
-        d="M3.2 8.2L6.4 11.2L12.8 4.4"
-        stroke={color}
-        strokeWidth={1.4}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
+    <View style={{ width: size, height: size, overflow: 'hidden' }}>
+      <SvgXml xml={xml} width={size} height={size} />
+    </View>
+  );
+}
+
+export function HintInfoIcon({ size = 16 }: IconProps) {
+  return (
+    <View style={{ width: size, height: size, overflow: 'hidden' }}>
+      <SvgXml xml={HINT_INFO_XML} width={size} height={size} />
+    </View>
   );
 }
 
@@ -61,13 +76,17 @@ export function PlanRadioIcon({
   selected?: boolean;
   selectedColor?: string;
 }) {
-  const outer = selected ? selectedColor : '#585D56';
+  const cx = size / 2;
+  const outerR = size * 0.4;
   const innerR = selected ? size * 0.2 : size * 0.325;
+  const outer = selected ? selectedColor : '#59565D';
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
-      <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={outer} />
-      <Circle cx={size / 2} cy={size / 2} r={innerR} fill="#0A0B0A" />
-    </Svg>
+    <View style={{ width: size, height: size, overflow: 'hidden' }}>
+      <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
+        <Circle cx={cx} cy={cx} r={outerR} fill={outer} />
+        <Circle cx={cx} cy={cx} r={innerR} fill="#0A0A0B" />
+      </Svg>
+    </View>
   );
 }

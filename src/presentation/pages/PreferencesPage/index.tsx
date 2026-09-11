@@ -13,6 +13,7 @@ import {
   unregisterPushForCurrentUser,
 } from '@/infra/notifications/push-notifications';
 import { BackButton } from '@/presentation/components/ui/back-button';
+import { HighlightCardBorder } from '@/presentation/components/ui/highlight-card-border';
 import {
   BellIcon,
   PreferenceRestoreIcon,
@@ -43,19 +44,18 @@ function PreferenceRow({
   onValueChange,
 }: PreferenceRowProps) {
   return (
-    <View style={[styles.row, value ? styles.rowOn : styles.rowOff]}>
-      <View style={styles.rowMain}>
-        <View style={[styles.iconSlot, value ? styles.iconSlotOn : styles.iconSlotOff]}>
-          {icon}
+    <View style={value ? styles.rowOnOuter : undefined}>
+      {value ? <HighlightCardBorder /> : null}
+      <View style={[styles.row, value ? styles.rowOnInner : styles.rowOff]}>
+        <View style={styles.rowMain}>
+          <View style={styles.iconSlot}>{icon}</View>
+          <View style={styles.rowCopy}>
+            <Text style={styles.rowTitle}>{title}</Text>
+            <Text style={styles.rowDescription}>{description}</Text>
+          </View>
         </View>
-        <View style={styles.rowCopy}>
-          <Text style={[styles.rowTitle, value && styles.rowTitleOn]}>{title}</Text>
-          <Text style={[styles.rowDescription, value && styles.rowDescriptionOn]}>
-            {description}
-          </Text>
-        </View>
+        <PreferenceToggle value={value} onValueChange={onValueChange} />
       </View>
-      <PreferenceToggle value={value} onValueChange={onValueChange} />
     </View>
   );
 }
@@ -234,8 +234,14 @@ const styles = StyleSheet.create({
   rowOff: {
     backgroundColor: 'transparent',
   },
-  rowOn: {
-    backgroundColor: BearCashColors.neutralLight,
+  rowOnOuter: {
+    borderRadius: 12,
+    padding: 1,
+    overflow: 'hidden',
+  },
+  rowOnInner: {
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 12,
   },
   rowMain: {
     flex: 1,
@@ -249,12 +255,7 @@ const styles = StyleSheet.create({
     padding: 6,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconSlotOff: {
     backgroundColor: BearCashColors.neutralBase,
-  },
-  iconSlotOn: {
-    backgroundColor: BearCashColors.textMid,
   },
   rowCopy: {
     flex: 1,
@@ -265,15 +266,9 @@ const styles = StyleSheet.create({
     ...BearCashTypography.subheading,
     color: BearCashColors.text,
   },
-  rowTitleOn: {
-    color: BearCashColors.buttonFilledText,
-  },
   rowDescription: {
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
-  },
-  rowDescriptionOn: {
-    color: BearCashColors.bannerMuted,
   },
   restoreButton: {
     alignSelf: 'center',

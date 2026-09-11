@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
@@ -27,11 +27,8 @@ export function PlaceholderTabPage({
   async function handleLogout() {
     setLoading(true);
     try {
-      await signOut();
       resetDraft();
-      // Stack.Protected no root troca para as telas de login ao limpar a sessão.
-    } catch {
-      Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
+      await signOut();
     } finally {
       setLoading(false);
     }

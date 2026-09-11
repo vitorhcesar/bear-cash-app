@@ -1,4 +1,4 @@
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Alert,
@@ -34,7 +34,9 @@ import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentatio
 import { useApiService } from '@/presentation/hooks/use-api-service';
 import {
   isAwaitingAuthorization,
+  isOpenFinanceConnectionLimitReached,
   isUrlExpired,
+  openFinanceConnectionLimitMessage,
   reconnectOpenFinanceConsent,
 } from '@/presentation/open-finance/connect-bank';
 
@@ -122,6 +124,7 @@ function formatDueDate(value?: string | null) {
 
 export function BankConnectionPage() {
   const router = useRouter();
+  const { consentId: returningConsentId } = useLocalSearchParams<{ consentId?: string }>();
   const api = useApiService();
   const { profile, user } = useAuthSession();
   const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
@@ -140,22 +143,49 @@ export function BankConnectionPage() {
     [profile?.displayName, profile?.fullName, user?.name],
   );
 
-  const loadConnections = useCallback(async () => {
-    try {
-      const response = await api.modules.openFinance.listConnections();
-      setConnections(response.items);
-    } catch {
-      setConnections([]);
-    }
-  }, [api.modules.openFinance]);
+  const loadConnections = useCallback(
+    async (options?: { refreshAwaiting?: boolean }) => {
+      try {
+        let items = (await api.modules.openFinance.listConnections()).items;
+        if (options?.refreshAwaiting) {
+          const awaiting = items.filter(
+            (item) =>
+              !item.revokedAt &&
+              isAwaitingAuthorization(item) &&
+              !isUrlExpired(item),
+          );
+          const focused =
+            returningConsentId && items.some((item) => item.id === returningConsentId)
+              ? [returningConsentId]
+              : [];
+          const refreshIds = [...new Set([...awaiting.map((item) => item.id), ...focused])];
+          if (refreshIds.length > 0) {
+            await Promise.all(
+              refreshIds.map((id) =>
+                api.modules.openFinance.refreshConsent(id).catch(() => null),
+              ),
+            );
+            items = (await api.modules.openFinance.listConnections()).items;
+          }
+        }
+        setConnections(items);
+      } catch {
+        setConnections([]);
+      }
+    },
+    [api.modules.openFinance, returningConsentId],
+  );
 
   useFocusEffect(
     useCallback(() => {
-      void loadConnections();
+      void loadConnections({ refreshAwaiting: true });
     }, [loadConnections]),
   );
 
   const activeConnections = connections.filter((item) => !item.revokedAt);
+  const awaitingAuthorization = activeConnections.some(
+    (item) => isAwaitingAuthorization(item) && !isUrlExpired(item),
+  );
   const syncing = activeConnections.some(
     (item) =>
       item.status === 'AWAITING_AUTHORIZATION' ||
@@ -167,10 +197,10 @@ export function BankConnectionPage() {
       return;
     }
     const handle = setInterval(() => {
-      void loadConnections();
+      void loadConnections({ refreshAwaiting: awaitingAuthorization });
     }, 5000);
     return () => clearInterval(handle);
-  }, [syncing, loadConnections]);
+  }, [syncing, awaitingAuthorization, loadConnections]);
 
   async function handleReconnect(connection: OpenFinanceConnection) {
     setBusyId(connection.id);
@@ -243,7 +273,13 @@ export function BankConnectionPage() {
               color={BearCashColors.buttonFilledText}
             />
           }
-          onPress={() => router.push('/bank-select')}
+          onPress={() => {
+            if (isOpenFinanceConnectionLimitReached(activeConnections)) {
+              Alert.alert('Limite de conexões', openFinanceConnectionLimitMessage());
+              return;
+            }
+            router.push('/bank-select');
+          }}
         />
 
         {activeConnections.length > 0 ? (

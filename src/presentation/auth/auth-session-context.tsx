@@ -1,4 +1,4 @@
-import { createContext, flushSync, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { router } from 'expo-router';
 
 import { authClient } from '@/infra/auth/auth-client';
@@ -14,7 +14,6 @@ type AuthSessionContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   hasCompletedOnboarding: boolean;
-  isAbandoningSession: boolean;
   user: AuthUser | null;
   profile: AuthProfile | null;
   applyAuthResult: (result: AuthResult, source?: AuthMethod) => Promise<void>;
@@ -26,25 +25,38 @@ type AuthSessionContextValue = {
 
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function startIgnored(task: () => Promise<unknown>) {
+  try {
+    void task().catch(() => {
+      // remote cleanup must never block local session changes
+    });
+  } catch {
+    // ignore sync throws from third-party clients
+  }
+}
+
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   const api = useApiService();
   const { playEnter, playLeave } = useSessionTransition();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<AuthProfile | null>(null);
-  const [isAbandoningSession, setIsAbandoningSession] = useState(false);
-  const abandoningSessionRef = useRef(false);
-  const userRef = useRef(user);
-  userRef.current = user;
+  const signingOutRef = useRef(false);
 
-  const beginAbandonSession = useCallback(() => {
-    abandoningSessionRef.current = true;
-    setIsAbandoningSession(true);
-  }, []);
-
-  const endAbandonSession = useCallback(() => {
-    abandoningSessionRef.current = false;
-    setIsAbandoningSession(false);
+  const clearLocalSession = useCallback(async () => {
+    try {
+      await clearSession();
+    } catch {
+      // local store must not block logout
+    }
+    setUser(null);
+    setProfile(null);
   }, []);
 
   const refreshSession = useCallback(async () => {
@@ -85,11 +97,10 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   }, [refreshSession]);
 
   const applyAuthResult = useCallback(async (result: AuthResult, source?: AuthMethod) => {
-    await saveSession(result.session);
-    setUser(result.user);
-    setProfile(result.profile);
-
     if (!result.profile.onboardingCompleted) {
+      await saveSession(result.session);
+      setUser(result.user);
+      setProfile(result.profile);
       router.replace({
         pathname: '/login-email-phone',
         params: {
@@ -101,7 +112,15 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     }
 
     await playEnter(async () => {
-      router.replace('/(tabs)');
+      await saveSession(result.session);
+      setUser(result.user);
+      setProfile(result.profile);
+      await wait(48);
+      try {
+        router.replace('/(tabs)');
+      } catch {
+        // Protected app screens become available after setUser
+      }
     });
   }, [playEnter]);
 
@@ -115,75 +134,54 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    if (abandoningSessionRef.current && !userRef.current) {
-      router.replace('/');
+    if (signingOutRef.current) {
       return;
     }
 
-    beginAbandonSession();
+    signingOutRef.current = true;
     try {
-      await unregisterPushForCurrentUser(api.modules.push).catch(() => {
-        // ignore push cleanup errors on logout
-      });
+      const token = await getSessionToken().catch(() => null);
 
-      const logoutRequest = api.modules.auth.logout().catch(() => {
-        // ignore network errors on logout
-      });
-
-      await Promise.race([
-        authClient.signOut().catch(() => {
-          // ignore Better Auth cookie cleanup errors
-        }),
-        new Promise<void>((resolve) => {
-          setTimeout(resolve, 1500);
-        }),
-      ]);
-      await clearSession();
-      flushSync(() => {
-        setUser(null);
-        setProfile(null);
-      });
+      startIgnored(() => unregisterPushForCurrentUser(api.modules.push));
+      if (token) {
+        startIgnored(() => api.modules.auth.logout(token));
+      }
+      startIgnored(() => Promise.resolve(authClient.signOut()));
 
       try {
         await playLeave(async () => {
-          router.replace('/');
+          await clearLocalSession();
+          await wait(80);
         });
       } catch {
-        router.replace('/');
+        // overlay / navigation failures must not keep the user logged in
       }
-
-      void Promise.race([
-        logoutRequest,
-        new Promise<void>((resolve) => {
-          setTimeout(resolve, 2500);
-        }),
-      ]);
     } finally {
-      endAbandonSession();
+      await clearLocalSession();
+      signingOutRef.current = false;
     }
-  }, [api.modules.auth, api.modules.push, beginAbandonSession, endAbandonSession, playLeave]);
+  }, [api.modules.auth, api.modules.push, clearLocalSession, playLeave]);
 
   const deleteAccount = useCallback(async () => {
     await unregisterPushForCurrentUser(api.modules.push);
     await api.modules.auth.deleteAccount();
 
-    await playLeave(async () => {
-      await authClient.signOut().catch(() => {
-        // ignore Better Auth cookie cleanup errors
+    try {
+      await playLeave(async () => {
+        startIgnored(() => Promise.resolve(authClient.signOut()));
+        await clearLocalSession();
+        await wait(80);
       });
-      await clearSession();
-      setUser(null);
-      setProfile(null);
-      router.replace('/');
-    });
-  }, [api.modules.auth, api.modules.push, playLeave]);
+    } catch {
+      await clearLocalSession();
+    }
+  }, [api.modules.auth, api.modules.push, clearLocalSession, playLeave]);
 
   const value = useMemo(
     () => ({
       isLoading,
       isAuthenticated: Boolean(user),
       hasCompletedOnboarding: Boolean(profile?.onboardingCompleted),
-      isAbandoningSession,
       user,
       profile,
       applyAuthResult,
@@ -194,7 +192,6 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     }),
     [
       isLoading,
-      isAbandoningSession,
       user,
       profile,
       applyAuthResult,

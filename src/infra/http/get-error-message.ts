@@ -45,6 +45,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
     'Ainda não conectamos instituições empresariais.',
   OPEN_FINANCE_CONSENT_NOT_FOUND: 'Conexão bancária não encontrada.',
   OPEN_FINANCE_CONSENT_TAKEN: 'Esta conexão bancária já está em uso.',
+  OPEN_FINANCE_CONNECTION_LIMIT:
+    'Você pode conectar no máximo 5 bancos por enquanto. Desconecte um para adicionar outro.',
   POLP_RATE_LIMITED: 'Muitas tentativas. Aguarde um momento e tente novamente.',
   POLP_REQUEST_FAILED: 'Não foi possível falar com o Open Finance. Tente novamente.',
 };

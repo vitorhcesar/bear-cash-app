@@ -9,7 +9,6 @@ import { CategoryChipIcon } from '@/presentation/components/ui/activities-catego
 import { formatActivityDay } from '@/presentation/components/ui/calendar';
 import { getCurrencySymbol } from '@/presentation/components/ui/currencies';
 import { TransactionPencilIcon } from '@/presentation/components/ui/new-transaction-icons';
-import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
   BearCashColors,
   BearCashFonts,
@@ -49,54 +48,53 @@ export function TransactionListItem({
       disabled={!onPress}
       style={({ pressed }) => [styles.row, pressed && onPress ? styles.pressed : null]}
     >
-      <View style={styles.main}>
-        <View style={styles.iconStack}>
-          <View style={styles.categoryBox}>
-            {category ? (
-              <CategoryChipIcon
-                iconKey={category.iconKey}
-                color={category.color}
-                size={24}
-              />
-            ) : (
-              <TransactionPencilIcon size={24} />
-            )}
-          </View>
-          <View style={styles.bankBadge}>
-            <TransactionBankBadge
-              bankName={item.bankName}
-              bankCode={item.bankCode}
+      <View style={styles.copy}>
+        <View style={styles.titleRow}>
+          {category ? (
+            <CategoryChipIcon
+              iconKey={category.iconKey}
+              color={category.color}
+              size={12}
             />
-          </View>
-        </View>
-
-        <View style={styles.copy}>
+          ) : (
+            <TransactionPencilIcon size={12} />
+          )}
           <Text style={styles.title} numberOfLines={1}>
             {item.description}
           </Text>
-          <View>
-            <View style={styles.metaRow}>
-              <Text style={styles.meta}>
-                {formatActivityDay(new Date(item.date))}
-              </Text>
-              <View style={styles.dot} />
-              <Text style={styles.meta} numberOfLines={1}>
-                {groupLabel}
-              </Text>
-            </View>
+        </View>
+        <View>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>
+              {formatActivityDay(new Date(item.date))}
+            </Text>
+            <View style={styles.dot} />
             <Text style={styles.meta} numberOfLines={1}>
-              {accountLabel}
+              {groupLabel}
             </Text>
           </View>
+          <Text style={styles.meta} numberOfLines={1}>
+            {accountLabel}
+          </Text>
         </View>
       </View>
 
       <View style={styles.amount}>
-        <Text style={[styles.amountText, isCredit ? styles.income : styles.expense]}>
+        <Text
+          style={[
+            styles.amountSymbol,
+            isCredit ? styles.income : styles.expense,
+          ]}
+        >
           {isCredit ? '+' : '-'}
-          {symbol}{' '}
+          {symbol}
         </Text>
-        <Text style={[styles.amountText, isCredit ? styles.income : styles.expense]}>
+        <Text
+          style={[
+            styles.amountValue,
+            isCredit ? styles.income : styles.expense,
+          ]}
+        >
           {formatAbsoluteAmount(item.amount)}
         </Text>
       </View>
@@ -114,32 +112,19 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-  main: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    minWidth: 0,
-  },
-  iconStack: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  categoryBox: {
-    backgroundColor: BearCashColors.surface,
-    borderRadius: 12,
-    padding: 8,
-    marginRight: -11,
-  },
-  bankBadge: {
-    zIndex: 1,
-  },
   copy: {
     flex: 1,
     minWidth: 0,
     gap: 2,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 0,
+  },
   title: {
+    flex: 1,
     fontFamily: BearCashFonts.semiBold,
     fontSize: 12,
     lineHeight: 19,
@@ -167,15 +152,16 @@ const styles = StyleSheet.create({
     gap: 2,
     flexShrink: 0,
   },
-  amountText: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 12,
-    lineHeight: 19,
+  amountSymbol: {
+    ...BearCashTypography.captionSmall,
+  },
+  amountValue: {
+    ...BearCashTypography.caption,
   },
   income: {
     color: BearCashColors.income,
   },
   expense: {
-    color: BearCashColors.dangerBase,
+    color: BearCashColors.dangerVivid,
   },
 });

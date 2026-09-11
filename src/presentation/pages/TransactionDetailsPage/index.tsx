@@ -279,6 +279,8 @@ export function TransactionDetailsPage() {
                   <TransactionBankBadge
                     bankName={item.bankName}
                     bankCode={item.bankCode}
+                    bankLogoUrl={item.bankLogoUrl}
+                    source={item.source}
                   />
                 </View>
               </View>
@@ -324,6 +326,8 @@ export function TransactionDetailsPage() {
                   <TransactionBankBadge
                     bankName={item.bankName}
                     bankCode={item.bankCode}
+                    bankLogoUrl={item.bankLogoUrl}
+                    source={item.source}
                     size={40}
                   />
                 }

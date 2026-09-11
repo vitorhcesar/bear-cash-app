@@ -20,7 +20,7 @@ type IconProps = {
 };
 
 function tintFigmaIcon(xml: string, color: string) {
-  return xml.replace(/#(?:E0E2DF|585D56|373A36|63E29F|C33A22)/gi, color);
+  return xml.replace(/#(?:E0E2DF|E0DFE2|585D56|373A36|63E29F|C33A22|FF2E31)/gi, color);
 }
 
 function FigmaIcon({

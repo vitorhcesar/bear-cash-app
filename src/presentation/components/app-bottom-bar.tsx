@@ -99,7 +99,7 @@ export function AppBottomBar({
         >
           <Text style={styles.aiPlaceholder}>Pergunte ao BearCash IA</Text>
           <View style={styles.aiIconWrap}>
-            <AiAskGlyph size={24} color={BearCashColors.primarySoft} />
+            <AiAskGlyph size={24} color={BearCashColors.iconAccent} />
           </View>
         </GlassSurface>
       </Pressable>
@@ -140,7 +140,7 @@ export function AppBottomBar({
                 padded={false}
                 radius={PILL_RADIUS}
                 glassEffectStyle="regular"
-                tintColor="rgba(149, 255, 82, 0.06)"
+                tintColor="rgba(179, 102, 255, 0.06)"
                 bottomGlow
                 style={styles.routePillGlass}
               />
@@ -250,6 +250,7 @@ const styles = StyleSheet.create({
     minWidth: 280,
     maxWidth: 340,
     alignSelf: "center",
+    backgroundColor: "transparent",
   },
   aiBar: {
     height: 48,

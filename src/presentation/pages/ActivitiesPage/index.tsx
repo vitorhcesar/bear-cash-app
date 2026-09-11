@@ -25,75 +25,48 @@ import {
   type ActivitiesFilters,
   type PeriodId,
 } from "@/presentation/components/ui/activities-filter-sheet";
+import { getCategoryGroup } from "@/presentation/components/ui/activities-category-catalog";
+import { FilterChipCloseIcon } from "@/presentation/components/ui/activities-filter-icons";
 import {
-  ActivityEyeClosedIcon,
-  ActivityEyeOpenIcon,
   EmptyActivityIcon,
-  ExpenseArrowIcon,
   FilterSlidersIcon,
-  IncomeArrowIcon,
   PlusIcon,
   SearchIcon,
 } from "@/presentation/components/ui/activities-icons";
-import { BackButton } from "@/presentation/components/ui/back-button";
 import { formatActivitySection } from "@/presentation/components/ui/calendar";
-import { formatCurrencyAmount } from "@/presentation/components/ui/currencies";
+import { CashFlowCard } from "@/presentation/components/ui/cash-flow-card";
+import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
+import { HighlightCardBorder } from "@/presentation/components/ui/highlight-card-border";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
+  APP_BOTTOM_CHROME_HEIGHT,
   BearCashColors,
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
-import { getCategoryGroup } from "@/presentation/components/ui/activities-category-catalog";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const FILTERS = ["Entradas", "Saídas", "Pagamentos", "Cartão"] as const;
 
 type FilterId = (typeof FILTERS)[number];
 
-type SummaryCardProps = {
-  label: string;
-  value: string;
-  hidden: boolean;
-  onToggleVisibility: () => void;
-  tone: "income" | "expense";
-};
+function splitCurrencyAmount(amount: number, currencyCode = "BRL") {
+  return {
+    symbol: getCurrencySymbol(currencyCode),
+    value: Math.abs(amount).toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }),
+  };
+}
 
-function SummaryCard({
-  label,
-  value,
-  hidden,
-  onToggleVisibility,
-  tone,
-}: SummaryCardProps) {
+function filtersAreActive(filters: ActivitiesFilters) {
   return (
-    <View style={styles.summaryCard}>
-      <View style={styles.summaryIconWrap}>
-        {tone === "income" ? (
-          <IncomeArrowIcon size={12} />
-        ) : (
-          <ExpenseArrowIcon size={12} />
-        )}
-      </View>
-      <View style={styles.summaryCopy}>
-        <Text style={styles.summaryLabel}>{label}</Text>
-        <View style={styles.summaryValueRow}>
-          <Text style={styles.summaryValue}>{hidden ? "R$ *,**" : value}</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={hidden ? "Mostrar valor" : "Ocultar valor"}
-            onPress={onToggleVisibility}
-            hitSlop={8}
-          >
-            {hidden ? (
-              <ActivityEyeClosedIcon size={16} />
-            ) : (
-              <ActivityEyeOpenIcon size={16} />
-            )}
-          </Pressable>
-        </View>
-      </View>
-    </View>
+    filters.period !== DEFAULT_ACTIVITIES_FILTERS.period ||
+    filters.banks.length > 0 ||
+    filters.categories.length > 0 ||
+    filters.sort !== DEFAULT_ACTIVITIES_FILTERS.sort ||
+    filters.showHidden
   );
 }
 
@@ -344,6 +317,10 @@ export function ActivitiesPage() {
   }, [items, activeFilter, filters]);
 
   const empty = grouped.length === 0;
+  const hasQuery = query.trim().length > 0;
+  const filterActive = filtersAreActive(filters);
+  const incomeAmount = splitCurrencyAmount(totals.credit);
+  const expenseAmount = splitCurrencyAmount(totals.debit);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -354,23 +331,30 @@ export function ActivitiesPage() {
       >
         <View style={styles.topBlock}>
           <View style={styles.header}>
-            <View style={styles.headerTop}>
-              <BackButton />
-              <Pressable
-                style={styles.addButton}
-                accessibilityRole="button"
-                accessibilityLabel="Nova transação"
-                onPress={() => router.push("/new-transaction")}
-              >
-                <PlusIcon size={24} />
-              </Pressable>
-            </View>
             <Text style={styles.title}>Atividades</Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.addButton,
+                pressed && styles.pressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Nova transação"
+              onPress={() => router.push("/new-transaction")}
+            >
+              <PlusIcon size={24} />
+            </Pressable>
           </View>
 
           <View style={styles.toolbar}>
             <View style={styles.searchRow}>
               <View style={styles.searchField}>
+                {hasQuery ? (
+                  <View style={styles.floatingLabelRow} pointerEvents="none">
+                    <View style={styles.floatingLabelBackground}>
+                      <Text style={styles.floatingLabel}>Buscar atividades</Text>
+                    </View>
+                  </View>
+                ) : null}
                 <SearchIcon size={16} />
                 <TextInput
                   style={styles.searchInput}
@@ -380,7 +364,18 @@ export function ActivitiesPage() {
                   onChangeText={setQuery}
                   autoCorrect={false}
                   returnKeyType="search"
+                  accessibilityLabel="Buscar atividades"
                 />
+                {hasQuery ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Limpar busca"
+                    hitSlop={8}
+                    onPress={() => setQuery("")}
+                  >
+                    <FilterChipCloseIcon size={16} />
+                  </Pressable>
+                ) : null}
               </View>
               <Pressable
                 accessibilityRole="button"
@@ -388,7 +383,10 @@ export function ActivitiesPage() {
                 hitSlop={8}
                 onPress={() => setFiltersOpen(true)}
               >
-                <FilterSlidersIcon size={28} />
+                <View style={styles.filterButton}>
+                  <FilterSlidersIcon size={28} />
+                  {filterActive ? <View style={styles.filterDot} /> : null}
+                </View>
               </Pressable>
             </View>
 
@@ -428,60 +426,67 @@ export function ActivitiesPage() {
         {loading && items.length === 0 ? (
           <View style={styles.loading}>
             <ActivityIndicator
-              color={BearCashColors.text}
+              color={BearCashColors.primary}
               accessibilityLabel="Carregando atividades"
             />
           </View>
         ) : (
           <>
-        <View style={styles.summaryRow}>
-          <SummaryCard
-            label="Total entrada"
-            value={formatCurrencyAmount(totals.credit)}
-            hidden={!incomeVisible}
-            onToggleVisibility={toggleIncomeVisibility}
-            tone="income"
-          />
-          <SummaryCard
-            label="Total saídas"
-            value={formatCurrencyAmount(totals.debit)}
-            hidden={!expenseVisible}
-            onToggleVisibility={toggleExpenseVisibility}
-            tone="expense"
-          />
-        </View>
+            <View style={styles.summaryRow}>
+              <CashFlowCard
+                label="Entrada"
+                symbol={incomeAmount.symbol}
+                amount={incomeAmount.value}
+                hidden={!incomeVisible}
+                onToggleVisibility={toggleIncomeVisibility}
+                tone="income"
+              />
+              <CashFlowCard
+                label="Saída"
+                symbol={expenseAmount.symbol}
+                amount={expenseAmount.value}
+                hidden={!expenseVisible}
+                onToggleVisibility={toggleExpenseVisibility}
+                tone="expense"
+              />
+            </View>
 
-        {empty ? (
-          <View style={styles.emptyState}>
-            <EmptyActivityIcon size={24} />
-            <View style={styles.emptyCopy}>
-              <Text style={styles.emptyTitle}>Nenhuma atividade encontrada</Text>
-              <Text style={styles.emptySubtitle}>
-                Você não possui nenhuma atividade financeira registrada
-              </Text>
-            </View>
-          </View>
-        ) : (
-          grouped.map((section) => (
-            <View key={section.key} style={styles.section}>
-              <Text style={styles.sectionTitle}>{section.title}</Text>
-              <View style={styles.sectionList}>
-                {section.data.map((item) => (
-                  <TransactionListItem
-                    key={item.id}
-                    item={item}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/transaction/[id]',
-                        params: { id: item.id },
-                      })
-                    }
-                  />
-                ))}
+            {empty ? (
+              <View style={styles.emptyState}>
+                <EmptyActivityIcon size={24} />
+                <View style={styles.emptyCopy}>
+                  <Text style={styles.emptyTitle}>
+                    Nenhuma atividade encontrada
+                  </Text>
+                  <Text style={styles.emptySubtitle}>
+                    Você não possui nenhuma atividade financeira registrada
+                  </Text>
+                </View>
               </View>
-            </View>
-          ))
-        )}
+            ) : (
+              grouped.map((section) => (
+                <View key={section.key} style={styles.section}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  <View style={styles.sectionCard}>
+                    <HighlightCardBorder />
+                    <View style={styles.sectionList}>
+                      {section.data.map((item) => (
+                        <TransactionListItem
+                          key={item.id}
+                          item={item}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/transaction/[id]",
+                              params: { id: item.id },
+                            })
+                          }
+                        />
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
           </>
         )}
       </ScrollView>
@@ -505,17 +510,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
-    gap: 24,
+    paddingTop: 16,
+    paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
+    gap: 20,
   },
   topBlock: {
     gap: 16,
   },
   header: {
-    gap: 8,
-  },
-  headerTop: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -528,12 +530,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 24,
-    backgroundColor: BearCashColors.primarySoft,
+    backgroundColor: BearCashColors.buttonFilled,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
   title: {
     ...BearCashTypography.h1,
+    flex: 1,
+    paddingRight: 12,
     color: BearCashColors.text,
   },
   searchRow: {
@@ -543,6 +548,8 @@ const styles = StyleSheet.create({
   },
   searchField: {
     flex: 1,
+    minWidth: 0,
+    position: "relative",
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -552,11 +559,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
+  floatingLabelRow: {
+    position: "absolute",
+    top: -8,
+    left: 13,
+    zIndex: 2,
+  },
+  floatingLabelBackground: {
+    backgroundColor: BearCashColors.background,
+    paddingHorizontal: 4,
+  },
+  floatingLabel: {
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.text,
+  },
   searchInput: {
     flex: 1,
     ...BearCashTypography.body,
     color: BearCashColors.text,
     padding: 0,
+  },
+  filterButton: {
+    width: 28,
+    height: 28,
+  },
+  filterDot: {
+    position: "absolute",
+    top: 3,
+    left: 13,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: BearCashColors.primarySoft,
   },
   filtersWrap: {
     flexGrow: 0,
@@ -591,44 +625,7 @@ const styles = StyleSheet.create({
   },
   summaryRow: {
     flexDirection: "row",
-    gap: 12,
-  },
-  summaryCard: {
-    flex: 1,
-    minWidth: 150,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderWidth: 1,
-    borderColor: BearCashColors.borderSoft,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  summaryIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: BearCashColors.borderSoft,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  summaryCopy: {
-    flex: 1,
-    gap: 2,
-  },
-  summaryLabel: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-  },
-  summaryValueRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  summaryValue: {
-    ...BearCashTypography.bodySmall,
-    color: BearCashColors.textMid,
+    gap: 16,
   },
   emptyState: {
     flex: 1,
@@ -639,14 +636,15 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   emptyCopy: {
-    gap: 4,
+    gap: 6,
     alignItems: "center",
   },
   emptyTitle: {
-    ...BearCashTypography.bodySmall,
-    color: BearCashColors.text,
-    textAlign: "center",
     fontFamily: BearCashFonts.semiBold,
+    fontSize: 20,
+    lineHeight: 24,
+    color: BearCashColors.textMid,
+    textAlign: "center",
   },
   emptySubtitle: {
     ...BearCashTypography.caption,
@@ -664,11 +662,21 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   sectionTitle: {
-    ...BearCashTypography.body,
-    fontFamily: BearCashFonts.semiBold,
+    ...BearCashTypography.subheading,
     color: BearCashColors.text,
   },
+  sectionCard: {
+    borderRadius: 12,
+    padding: 1,
+    overflow: "hidden",
+  },
   sectionList: {
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 12,
+    padding: 18,
     gap: 16,
+  },
+  pressed: {
+    opacity: 0.85,
   },
 });

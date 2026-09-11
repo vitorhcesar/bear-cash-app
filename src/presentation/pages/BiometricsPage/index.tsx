@@ -4,7 +4,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from 'react-native';
@@ -21,11 +20,13 @@ import {
   type BiometricCapability,
 } from '@/presentation/biometrics/biometric-capability';
 import { BackButton } from '@/presentation/components/ui/back-button';
-import {
-  BiometricsFaceIcon,
-  BiometricsFingerprintIcon,
-} from '@/presentation/components/ui/biometrics-icons';
-import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { BiometricsGridIcon } from '@/presentation/components/ui/biometrics-icons';
+import { HighlightCardBorder } from '@/presentation/components/ui/highlight-card-border';
+import { PreferenceToggle } from '@/presentation/components/ui/preferences-icons';
+import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+
+const ICON_OFF = '#E0DFE2';
+const ICON_ON = '#B385E0';
 
 export function BiometricsPage() {
   const [enabled, setEnabled] = useState(
@@ -107,17 +108,10 @@ export function BiometricsPage() {
 
   const subtitle =
     capability?.subtitle ?? 'Configure como a biometria é usada no BearCash';
-  const toggleTitle = capability?.toggleTitle ?? 'Habilitar Biometria';
+  const toggleTitle = capability?.toggleTitle ?? 'Biometria';
   const toggleDescription =
     capability?.toggleDescription ??
     'Use a biometria para entrar no app sem digitar a senha';
-
-  const icon =
-    capability?.kind === 'fingerprint' ? (
-      <BiometricsFingerprintIcon size={20} color={BearCashColors.textMid} />
-    ) : (
-      <BiometricsFaceIcon size={20} color={BearCashColors.textMid} />
-    );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -125,35 +119,31 @@ export function BiometricsPage() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <BackButton />
-
-        <View style={styles.headerCopy}>
-          <Text style={styles.title}>Biometria</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+        <View style={styles.header}>
+          <BackButton />
+          <View style={styles.headerCopy}>
+            <Text style={styles.title}>Biometria</Text>
+            <Text style={styles.subtitle}>{subtitle}</Text>
+          </View>
         </View>
 
-        <View
-          style={[
-            styles.row,
-            enabled && styles.rowActive,
-            !ready && styles.rowLoading,
-          ]}
-        >
-          <View style={styles.iconWrap}>{icon}</View>
-          <View style={styles.rowCopy}>
-            <Text style={styles.rowTitle}>{toggleTitle}</Text>
-            <Text style={styles.rowDescription}>{toggleDescription}</Text>
+        <View style={[enabled && styles.rowOnOuter, !ready && styles.rowLoading]}>
+          {enabled ? <HighlightCardBorder /> : null}
+          <View style={[styles.row, enabled ? styles.rowOnInner : styles.rowOff]}>
+            <View style={styles.rowMain}>
+              <View style={styles.iconSlot}>
+                <BiometricsGridIcon
+                  size={12}
+                  color={enabled ? ICON_ON : ICON_OFF}
+                />
+              </View>
+              <View style={styles.rowCopy}>
+                <Text style={styles.rowTitle}>{toggleTitle}</Text>
+                <Text style={styles.rowDescription}>{toggleDescription}</Text>
+              </View>
+            </View>
+            <PreferenceToggle value={enabled} onValueChange={handleToggle} />
           </View>
-          <Switch
-            value={enabled}
-            onValueChange={handleToggle}
-            trackColor={{
-              false: BearCashColors.borderStrong,
-              true: BearCashColors.primary,
-            }}
-            thumbColor={BearCashColors.text}
-            ios_backgroundColor={BearCashColors.borderStrong}
-          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -166,13 +156,16 @@ const styles = StyleSheet.create({
     backgroundColor: BearCashColors.background,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: 24,
     gap: 24,
   },
+  header: {
+    gap: 8,
+  },
   headerCopy: {
-    gap: 4,
+    gap: 8,
   },
   title: {
     ...BearCashTypography.h1,
@@ -185,32 +178,47 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 24,
     padding: 12,
     borderRadius: 12,
   },
-  rowActive: {
+  rowOff: {
+    backgroundColor: 'transparent',
+  },
+  rowOnOuter: {
+    alignSelf: 'stretch',
+    borderRadius: 12,
+    padding: 1,
+    overflow: 'hidden',
+  },
+  rowOnInner: {
     backgroundColor: BearCashColors.surface,
+    borderRadius: 12,
   },
   rowLoading: {
     opacity: 0.7,
   },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: BearCashColors.neutralBlackSoft,
+  rowMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  iconSlot: {
+    borderRadius: 8,
+    padding: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: BearCashColors.neutralBase,
   },
   rowCopy: {
     flex: 1,
+    minWidth: 0,
     gap: 2,
   },
   rowTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 16,
-    lineHeight: 26,
+    ...BearCashTypography.subheading,
     color: BearCashColors.text,
   },
   rowDescription: {

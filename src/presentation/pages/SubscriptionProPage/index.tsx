@@ -4,7 +4,9 @@ import {
 } from '@/presentation/components/ui/subscription-offer-screen';
 import { BearCashColors } from '@/presentation/constants/theme';
 
-const PLAN_BADGE = '#2FB70D';
+const PRO_ACCENT = '#B385E0';
+const PRO_BADGE = '#BF99E5';
+const PRO_CTA = '#CCADEB';
 
 const PRO_CONTENT = {
   hero: require('@/assets/images/subscription/hero-paws.png'),
@@ -13,23 +15,23 @@ const PRO_CONTENT = {
   titleColor: BearCashColors.text,
   subtitle:
     'Mais bancos, respostas ilimitadas e mais clareza sobre seu dinheiro',
-  accent: BearCashColors.primarySoft,
+  accent: PRO_ACCENT,
   ctaLabel: 'Testar grátis por 7 dias',
-  ctaColor: BearCashColors.primary,
+  ctaColor: PRO_CTA,
   yearly: {
     title: 'Anual',
     description: 'Melhor custo benefício - R$ 399,45 (cobrança única)',
     price: '33,33',
-    strikethrough: 'R$ 45,45',
+    strikethrough: 'R$ 45,00',
     badge: '-15%',
-    badgeColor: PLAN_BADGE,
+    badgeColor: PRO_BADGE,
   },
   monthly: {
     title: 'Mensal',
     description: 'Flexível, cancele o plano quando quiser',
     price: '33,33',
     badge: '-15%',
-    badgeColor: PLAN_BADGE,
+    badgeColor: PRO_BADGE,
   },
   features: [
     'Até 100 mensagens por dia;',
@@ -39,29 +41,7 @@ const PRO_CONTENT = {
     'Agentes que te avisam antes de ser tarde',
     'Cancele quando quiser',
   ],
-  reviews: [
-    {
-      id: '1',
-      title: 'Planejamento financeiro ficou muito mais simples',
-      body: 'Sempre tive dificuldade para organizar minhas despesas, mas o aplicativo tornou tudo muito mais fácil.',
-      author: 'Paulo Gustavo',
-      place: 'Paraná',
-    },
-    {
-      id: '2',
-      title: 'Planejamento financeiro ficou muito mais simples',
-      body: 'Sempre tive dificuldade para organizar minhas despesas, mas o aplicativo tornou tudo muito mais fácil.',
-      author: 'Paulo Gustavo',
-      place: 'Paraná',
-    },
-    {
-      id: '3',
-      title: 'Planejamento financeiro ficou muito mais simples',
-      body: 'Sempre tive dificuldade para organizar minhas despesas, mas o aplicativo tornou tudo muito mais fácil.',
-      author: 'Paulo Gustavo',
-      place: 'Paraná',
-    },
-  ],
+  reviews: [],
 } satisfies SubscriptionOfferContent;
 
 export function SubscriptionProPage() {

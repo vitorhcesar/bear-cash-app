@@ -10,11 +10,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { InfoCircleIcon } from '@/presentation/components/ui/api-keys-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { Button } from '@/presentation/components/ui/button';
+import { HighlightCardBorder } from '@/presentation/components/ui/highlight-card-border';
 import {
   FeatureCheckIcon,
+  HintInfoIcon,
   PlanRadioIcon,
   ReviewStarIcon,
 } from '@/presentation/components/ui/subscription-icons';
@@ -80,33 +81,49 @@ function PlanCard({
       accessibilityState={{ selected }}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.planCard,
-        selected ? styles.planCardSelected : styles.planCardIdle,
+        selected ? styles.planCardSelectedOuter : styles.planCardIdleOuter,
         pressed && styles.pressed,
       ]}
     >
-      <View style={styles.planCardMain}>
-        <PlanRadioIcon selected={selected} selectedColor={accent} />
-        <View style={styles.planCardCopy}>
-          <View style={styles.planCardTitleRow}>
-            <Text style={styles.planCardTitle}>{title}</Text>
-            <View style={[styles.badge, { backgroundColor: badgeColor }]}>
-              <Text style={styles.badgeText}>{badge}</Text>
+      {selected ? <HighlightCardBorder /> : null}
+      <View style={[styles.planCardRow, selected && styles.planCardSelectedInner]}>
+        <View style={styles.planCardMain}>
+          <PlanRadioIcon selected={selected} selectedColor={accent} />
+          <View style={styles.planCardCopy}>
+            <View style={styles.planCardTitleRow}>
+              <Text style={styles.planCardTitle}>{title}</Text>
+              <View style={[styles.badge, { backgroundColor: badgeColor }]}>
+                <Text style={styles.badgeText}>{badge}</Text>
+              </View>
             </View>
+            <Text style={styles.planCardDescription}>{description}</Text>
           </View>
-          <Text style={styles.planCardDescription}>{description}</Text>
         </View>
-      </View>
 
-      <View style={styles.planCardPrice}>
-        {strikethrough ? (
-          <Text style={styles.planCardStrike}>{strikethrough}</Text>
-        ) : null}
-        <View style={styles.planCardAmountRow}>
-          <Text style={styles.planCardCurrency}>R$</Text>
-          <Text style={styles.planCardAmount}>{price}</Text>
+        <View style={styles.planCardPrice}>
+          {strikethrough ? (
+            <Text
+              style={[
+                styles.planCardStrike,
+                selected && styles.planCardMetaSelected,
+              ]}
+            >
+              {strikethrough}
+            </Text>
+          ) : null}
+          <View style={styles.planCardAmountRow}>
+            <Text style={styles.planCardCurrency}>R$</Text>
+            <Text style={styles.planCardAmount}>{price}</Text>
+          </View>
+          <Text
+            style={[
+              styles.planCardPeriod,
+              selected && styles.planCardMetaSelected,
+            ]}
+          >
+            Por mês
+          </Text>
         </View>
-        <Text style={styles.planCardPeriod}>Por mês</Text>
       </View>
     </Pressable>
   );
@@ -208,28 +225,30 @@ export function SubscriptionOfferScreen({
             ))}
           </View>
 
-          <View style={styles.reviewsSection}>
-            <Text style={styles.reviewsHeading}>
-              Mais de 6.000 clientes confiam no nosso trabalho
-            </Text>
-            {singleReview && content.reviews[0] ? (
-              <ReviewCard {...content.reviews[0]} fullWidth />
-            ) : (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.reviewsList}
-                style={styles.reviewsScroller}
-              >
-                {content.reviews.map((review) => (
-                  <ReviewCard key={review.id} {...review} />
-                ))}
-              </ScrollView>
-            )}
-          </View>
+          {content.reviews.length > 0 ? (
+            <View style={styles.reviewsSection}>
+              <Text style={styles.reviewsHeading}>
+                Mais de 6.000 clientes confiam no nosso trabalho
+              </Text>
+              {singleReview && content.reviews[0] ? (
+                <ReviewCard {...content.reviews[0]} fullWidth />
+              ) : (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.reviewsList}
+                  style={styles.reviewsScroller}
+                >
+                  {content.reviews.map((review) => (
+                    <ReviewCard key={review.id} {...review} />
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          ) : null}
 
           <View style={styles.hintRow}>
-            <InfoCircleIcon size={16} />
+            <HintInfoIcon size={16} />
             <Text style={styles.hintText}>Cancele quando quiser</Text>
           </View>
 
@@ -313,19 +332,30 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-  planCard: {
-    alignSelf: 'stretch',
+  planCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
     padding: 12,
     borderRadius: 12,
   },
-  planCardSelected: {
+  planCardSelectedOuter: {
+    alignSelf: 'stretch',
+    borderRadius: 12,
+    padding: 1,
+    overflow: 'hidden',
+  },
+  planCardSelectedInner: {
     backgroundColor: BearCashColors.surface,
   },
-  planCardIdle: {
+  planCardIdleOuter: {
+    alignSelf: 'stretch',
+    borderRadius: 12,
     backgroundColor: BearCashColors.background,
+    shadowColor: '#0A0D14',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
   },
   planCardMain: {
     flex: 1,
@@ -388,6 +418,9 @@ const styles = StyleSheet.create({
   planCardPeriod: {
     ...BearCashTypography.captionSmall,
     color: BearCashColors.textSoft,
+  },
+  planCardMetaSelected: {
+    color: '#c7c5c9',
   },
   features: {
     alignSelf: 'stretch',

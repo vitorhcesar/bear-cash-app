@@ -116,7 +116,7 @@ export function SessionTransitionProvider({ children }: { children: ReactNode })
         ]);
 
         await commit();
-        await wait(32);
+        await wait(64);
 
         contentOpacity.value = 0;
         contentScale.value = incomingScale;
@@ -130,14 +130,13 @@ export function SessionTransitionProvider({ children }: { children: ReactNode })
           timing(contentScale, 1, REVEAL_MS, REVEAL_EASING),
           timing(contentTranslateY, 0, REVEAL_MS, REVEAL_EASING),
         ]);
-      } catch (error) {
+      } catch {
         overlayOpacity.value = 0;
         markOpacity.value = 0;
         markScale.value = 1;
         contentOpacity.value = 1;
         contentScale.value = 1;
         contentTranslateY.value = 0;
-        throw error;
       } finally {
         setBlocking(false);
         runningRef.current = false;

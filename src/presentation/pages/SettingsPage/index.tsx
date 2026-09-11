@@ -1,6 +1,12 @@
-import Constants from 'expo-constants';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import Constants from "expo-constants";
+import { useFocusEffect, useRouter } from "expo-router";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Alert,
   Pressable,
@@ -8,24 +14,23 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getErrorMessage } from '@/infra/http/get-error-message';
-import type { OpenFinanceConnection } from '@/infra/http/services/api/modules/open-finance.module';
-import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
-import { useAuthSession } from '@/presentation/auth/auth-session-context';
-import { BackButton } from '@/presentation/components/ui/back-button';
-import { EmailIcon } from '@/presentation/components/ui/brand-icons';
-import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
-import { ProfileAvatarControl } from '@/presentation/components/ui/profile-avatar-control';
-import { ReportProblemSheet } from '@/presentation/components/ui/report-problem-sheet';
+import { getErrorMessage } from "@/infra/http/get-error-message";
+import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
+import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
+import { useAuthSession } from "@/presentation/auth/auth-session-context";
+import { BackButton } from "@/presentation/components/ui/back-button";
+import { EmailIcon } from "@/presentation/components/ui/brand-icons";
+import { InstitutionMark } from "@/presentation/components/ui/institution-mark";
+import { ProfileAvatarControl } from "@/presentation/components/ui/profile-avatar-control";
+import { ReportProblemSheet } from "@/presentation/components/ui/report-problem-sheet";
 import {
   SettingsBankIcon,
   SettingsBiometricsIcon,
   SettingsCardIcon,
   SettingsChevronIcon,
-  SettingsKeyIcon,
   SettingsLogoutIcon,
   SettingsPasswordIcon,
   SettingsProfileIcon,
@@ -34,14 +39,18 @@ import {
   SettingsSparkleIcon,
   SettingsStarIcon,
   SettingsSupportIcon,
-} from '@/presentation/components/ui/settings-icons';
+} from "@/presentation/components/ui/settings-icons";
 import {
   DEFAULT_AVATARS,
   getAvatarOption,
   type IAvatarOption,
-} from '@/presentation/constants/avatars';
-import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
-import { useApiService } from '@/presentation/hooks/use-api-service';
+} from "@/presentation/constants/avatars";
+import {
+  BearCashColors,
+  BearCashFonts,
+  BearCashTypography,
+} from "@/presentation/constants/theme";
+import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const NAV_ICON_COLOR = BearCashColors.iconAccent;
 const MAX_BANK_STACK = 4;
@@ -112,13 +121,13 @@ function SettingsPlanBanner({
         <View style={styles.planBannerTitleRow}>
           <SettingsSparkleIcon size={16} />
           <Text style={styles.planBannerTitle}>
-            {hasPlan ? 'Sua conta é Pro!' : 'Faça upgrade!'}
+            {hasPlan ? "Sua conta é Pro!" : "Faça upgrade!"}
           </Text>
         </View>
         <Text style={styles.planBannerSubtitle}>
           {hasPlan
-            ? 'Conheça todos os benefícios para controlar e organizar seus gastos'
-            : 'Desbloqueie mais benefícios e aproveite a experiência completa.'}
+            ? "Conheça todos os benefícios para controlar e organizar seus gastos"
+            : "Desbloqueie mais benefícios e aproveite a experiência completa."}
         </Text>
       </View>
       <Pressable
@@ -126,7 +135,9 @@ function SettingsPlanBanner({
         onPress={onPress}
         style={({ pressed }) => [styles.planCta, pressed && styles.pressed]}
       >
-        <Text style={styles.planCtaLabel}>{hasPlan ? 'Ver plano' : 'Assinar'}</Text>
+        <Text style={styles.planCtaLabel}>
+          {hasPlan ? "Ver plano" : "Assinar"}
+        </Text>
       </Pressable>
     </View>
   );
@@ -157,7 +168,13 @@ function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
         </View>
       ))}
       {remaining > 0 ? (
-        <View style={[styles.bankDot, styles.bankMore, { marginLeft: -5, zIndex: 0 }]}>
+        <View
+          style={[
+            styles.bankDot,
+            styles.bankMore,
+            { marginLeft: -5, zIndex: 0 },
+          ]}
+        >
           <Text style={styles.bankMoreText}>+{remaining}</Text>
         </View>
       ) : null}
@@ -167,12 +184,12 @@ function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
 
 function appVersionLabel() {
   const version =
-    Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? '1.0.0';
+    Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? "1.0.0";
   const build =
     Constants.nativeBuildVersion ??
     Constants.expoConfig?.ios?.buildNumber ??
     Constants.expoConfig?.android?.versionCode ??
-    '0';
+    "0";
   return `V.${version} (${build})`;
 }
 
@@ -212,7 +229,7 @@ export function SettingsPage() {
       profile?.displayName?.trim() ||
       profile?.fullName?.trim() ||
       user?.name?.trim() ||
-      'Usuário'
+      "Usuário"
     );
   }, [profile?.displayName, profile?.fullName, user?.name]);
 
@@ -231,8 +248,8 @@ export function SettingsPage() {
     } catch (error) {
       setSelectedAvatar(previous);
       Alert.alert(
-        'Erro',
-        getErrorMessage(error, 'Não foi possível atualizar o avatar.'),
+        "Erro",
+        getErrorMessage(error, "Não foi possível atualizar o avatar."),
       );
     }
   }
@@ -242,22 +259,20 @@ export function SettingsPage() {
       return;
     }
     setLoggingOut(true);
+    resetDraft();
     try {
       await signOut();
-      resetDraft();
-    } catch {
-      Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
     } finally {
       setLoggingOut(false);
     }
   }
 
   function comingSoon(feature: string) {
-    Alert.alert(feature, 'Em breve.');
+    Alert.alert(feature, "Em breve.");
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -274,13 +289,18 @@ export function SettingsPage() {
         />
 
         <View style={styles.body}>
-          <View style={[styles.identity, hasConnections && styles.identityConnected]}>
+          <View
+            style={[
+              styles.identity,
+              hasConnections && styles.identityConnected,
+            ]}
+          >
             <Text style={styles.name}>{displayName}</Text>
             {hasConnections ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Conexões"
-                onPress={() => router.push('/bank-connection')}
+                onPress={() => router.push("/bank-connection")}
                 style={({ pressed }) => [
                   styles.connectionsSummary,
                   pressed && styles.pressed,
@@ -292,7 +312,7 @@ export function SettingsPage() {
             ) : (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => router.push('/bank-select')}
+                onPress={() => router.push("/bank-select")}
                 style={({ pressed }) => [
                   styles.connectLink,
                   pressed && styles.pressed,
@@ -307,7 +327,7 @@ export function SettingsPage() {
           <SettingsPlanBanner
             hasPlan={hasPlan}
             onPress={() =>
-              router.push(hasPlan ? '/subscription' : '/subscription-pro')
+              router.push(hasPlan ? "/subscription" : "/subscription-premium")
             }
           />
 
@@ -315,7 +335,7 @@ export function SettingsPage() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Verifique seu e-mail"
-              onPress={() => router.push('/verify-email')}
+              onPress={() => router.push("/verify-email")}
               style={({ pressed }) => [
                 styles.verifyBanner,
                 pressed && styles.pressed,
@@ -326,13 +346,18 @@ export function SettingsPage() {
                   <EmailIcon size={16} color={BearCashColors.warningText} />
                 </View>
                 <View style={styles.verifyBannerCopy}>
-                  <Text style={styles.verifyBannerTitle}>Verifique seu e-mail</Text>
+                  <Text style={styles.verifyBannerTitle}>
+                    Verifique seu e-mail
+                  </Text>
                   <Text style={styles.verifyBannerSubtitle}>
                     Confirme sua conta com um código
                   </Text>
                 </View>
               </View>
-              <SettingsChevronIcon size={16} color={BearCashColors.warningText} />
+              <SettingsChevronIcon
+                size={16}
+                color={BearCashColors.warningText}
+              />
             </Pressable>
           ) : null}
 
@@ -341,7 +366,7 @@ export function SettingsPage() {
               label="Bancos"
               icon={<SettingsBankIcon size={16} color={NAV_ICON_COLOR} />}
               badge={connections.length}
-              onPress={() => router.push('/bank-connection')}
+              onPress={() => router.push("/bank-connection")}
             />
           </Section>
 
@@ -349,27 +374,28 @@ export function SettingsPage() {
             <NavRow
               label="Perfil"
               icon={<SettingsProfileIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => router.push('/profile')}
+              onPress={() => router.push("/profile")}
             />
             <NavRow
               label="Assinatura"
               icon={<SettingsCardIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => router.push('/subscription')}
+              onPress={() => router.push("/subscription")}
             />
             <NavRow
               label="Preferências"
               icon={<SettingsSlidersIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => router.push('/preferences')}
+              onPress={() => router.push("/preferences")}
             />
-            <NavRow
+            {/* Não deve aparecer no app por enquanto */}
+            {/* <NavRow
               label="Chave API"
               icon={<SettingsKeyIcon size={16} color={NAV_ICON_COLOR} />}
               onPress={() => router.push('/api-keys')}
-            />
+            /> */}
             <NavRow
               label="Avalie o BearCash"
               icon={<SettingsStarIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => comingSoon('Avalie o BearCash')}
+              onPress={() => comingSoon("Avalie o BearCash")}
             />
           </Section>
 
@@ -377,12 +403,12 @@ export function SettingsPage() {
             <NavRow
               label="Alterar senha"
               icon={<SettingsPasswordIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => router.push('/change-password-code')}
+              onPress={() => router.push("/change-password-code")}
             />
             <NavRow
               label="Biometria"
               icon={<SettingsBiometricsIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => router.push('/biometrics')}
+              onPress={() => router.push("/biometrics")}
             />
             <NavRow
               label="Reportar um problema"
@@ -392,7 +418,7 @@ export function SettingsPage() {
             <NavRow
               label="Suporte"
               icon={<SettingsSupportIcon size={16} color={NAV_ICON_COLOR} />}
-              onPress={() => comingSoon('Suporte')}
+              onPress={() => comingSoon("Suporte")}
             />
           </Section>
 
@@ -406,7 +432,7 @@ export function SettingsPage() {
             ]}
           >
             <Text style={styles.logoutLabel}>
-              {loggingOut ? 'Saindo…' : 'Sair'}
+              {loggingOut ? "Saindo…" : "Sair"}
             </Text>
             <SettingsLogoutIcon size={16} color={BearCashColors.danger} />
           </Pressable>
@@ -433,21 +459,21 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
     gap: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   header: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
   },
   body: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     gap: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   identity: {
-    alignSelf: 'stretch',
-    alignItems: 'center',
+    alignSelf: "stretch",
+    alignItems: "center",
     gap: 8,
   },
   identityConnected: {
@@ -456,12 +482,12 @@ const styles = StyleSheet.create({
   name: {
     ...BearCashTypography.h1,
     color: BearCashColors.text,
-    textAlign: 'center',
-    alignSelf: 'stretch',
+    textAlign: "center",
+    alignSelf: "stretch",
   },
   connectLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 2,
   },
   connectLinkLabel: {
@@ -469,26 +495,26 @@ const styles = StyleSheet.create({
     color: BearCashColors.textMid,
   },
   connectionsSummary: {
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   connectionsCaption: {
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
-    textAlign: 'center',
+    textAlign: "center",
   },
   planBanner: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     backgroundColor: BearCashColors.neutralLight,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
     gap: 10,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   planBannerCopy: {
     flexGrow: 1,
@@ -497,8 +523,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   planBannerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   planBannerTitle: {
@@ -515,16 +541,16 @@ const styles = StyleSheet.create({
     backgroundColor: BearCashColors.buttonFilled,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   planCtaLabel: {
     ...BearCashTypography.bodySmall,
     color: BearCashColors.buttonFilledText,
   },
   bankStack: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     height: 20,
   },
   bankDot: {
@@ -533,29 +559,29 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: BearCashColors.surface,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   bankMore: {
     backgroundColor: BearCashColors.text,
-    borderColor: '#212022',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderColor: "#212022",
+    alignItems: "center",
+    justifyContent: "center",
   },
   bankMoreText: {
     ...BearCashTypography.captionSmall,
     color: BearCashColors.buttonFilledText,
   },
   navRow: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     padding: 12,
     borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   navRowLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     flex: 1,
     paddingRight: 8,
@@ -564,8 +590,8 @@ const styles = StyleSheet.create({
     backgroundColor: BearCashColors.surface,
     borderRadius: 6,
     padding: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   navLabel: {
     fontFamily: BearCashFonts.semiBold,
@@ -579,28 +605,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
     borderRadius: 999,
     backgroundColor: BearCashColors.iconAccent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   badgeText: {
     ...BearCashTypography.captionSmall,
     color: BearCashColors.buttonFilledText,
-    textAlign: 'center',
+    textAlign: "center",
   },
   verifyBanner: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     minHeight: 58,
     backgroundColor: BearCashColors.warning,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   verifyBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     flex: 1,
     paddingRight: 8,
@@ -609,9 +635,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(10, 11, 10, 0.12)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(10, 11, 10, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   verifyBannerCopy: {
     flex: 1,
@@ -629,7 +655,7 @@ const styles = StyleSheet.create({
     opacity: 0.72,
   },
   section: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     gap: 8,
   },
   sectionTitle: {
@@ -640,16 +666,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutButton: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     backgroundColor: BearCashColors.surface,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   logoutLabel: {
     ...BearCashTypography.bodySmall,

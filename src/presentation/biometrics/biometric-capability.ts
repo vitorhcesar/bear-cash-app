@@ -88,7 +88,7 @@ export async function getBiometricCapability(): Promise<BiometricCapability> {
             ? 'Configure como o reconhecimento facial é usado no BearCash'
             : 'Configure como a biometria é usada no BearCash';
 
-  const toggleTitle = 'Habilitar Biometria';
+  const toggleTitle = 'Biometria';
 
   const toggleDescription =
     kind === 'face' && Platform.OS === 'ios'

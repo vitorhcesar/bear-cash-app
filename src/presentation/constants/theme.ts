@@ -31,6 +31,7 @@ export const BearCashColors = {
   text: "#f5f4f5",
   textMid: "#cccace",
   textSoft: "#78737d",
+  textAccent: "#bf99e5",
   textDisabled: "#a5a2a9",
   borderSoft: "#1c1b1d",
   borderStrong: "#2e2c30",
@@ -48,6 +49,8 @@ export const BearCashColors = {
   errorSoft: "#f97066",
   danger: "#c33a22",
   dangerBase: "#ff8f61",
+  dangerVivid: "#ff2e31",
+  dangerStrongest: "#ffa9aa",
   warning: "#E8C547",
   warningText: "#0a0b0a",
   premiumGold: "#FFD700",
@@ -61,6 +64,7 @@ export const BearCashColors = {
 export const BearCashFonts = {
   regular: "Poppins_400Regular",
   semiBold: "Poppins_600SemiBold",
+  script: "LumenScript-Heavy",
 } as const;
 
 export const BearCashTypography = {
@@ -139,4 +143,6 @@ export const Spacing = {
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+/** Espaço reservado para AI bar + nav + safe area */
+export const APP_BOTTOM_CHROME_HEIGHT = 148;
 export const MaxContentWidth = 800;

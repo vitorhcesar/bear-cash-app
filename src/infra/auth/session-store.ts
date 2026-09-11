@@ -20,11 +20,15 @@ async function getItem(key: string) {
 }
 
 async function deleteItem(key: string) {
-  if (Platform.OS === 'web') {
-    globalThis.localStorage?.removeItem(key);
-    return;
+  try {
+    if (Platform.OS === 'web') {
+      globalThis.localStorage?.removeItem(key);
+      return;
+    }
+    await SecureStore.deleteItemAsync(key);
+  } catch {
+    // Missing keys or SecureStore failures must not block logout.
   }
-  await SecureStore.deleteItemAsync(key);
 }
 
 export type StoredSession = {
