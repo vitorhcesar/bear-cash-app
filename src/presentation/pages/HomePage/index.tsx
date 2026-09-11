@@ -26,7 +26,8 @@ import { HomeConnectedDashboard } from "@/presentation/components/ui/home-connec
 import { HomePlusIcon } from "@/presentation/components/ui/home-icons";
 import {
   DEFAULT_AVATARS,
-  getAvatarOption,
+  resolveAvatarSource,
+  type IAvatarOption,
 } from "@/presentation/constants/avatars";
 import {
   APP_BOTTOM_CHROME_HEIGHT,
@@ -109,7 +110,7 @@ function HeroScrim() {
 function ProfileAvatar({
   source,
 }: {
-  source: ReturnType<typeof getAvatarOption>["source"];
+  source: IAvatarOption["source"];
 }) {
   return (
     <View style={styles.avatarFrame}>
@@ -131,7 +132,7 @@ function HomeEmptyState({
   onOpenBankSelect,
 }: {
   firstName: string;
-  avatarSource: ReturnType<typeof getAvatarOption>["source"];
+  avatarSource: IAvatarOption["source"];
   connections: OpenFinanceConnection[];
   onConnect: () => void;
   onOpenBankSelect: () => void;
@@ -222,7 +223,7 @@ function HomeConnectedState({
   onPressTransactions,
 }: {
   firstName: string;
-  avatarSource: ReturnType<typeof getAvatarOption>["source"];
+  avatarSource: IAvatarOption["source"];
   chipConnections: OpenFinanceConnection[];
   connections: OpenFinanceConnection[];
   transactions: TransactionItem[];
@@ -313,8 +314,8 @@ export function HomePage() {
     [profile?.displayName, profile?.fullName, user?.name],
   );
   const avatar = useMemo(
-    () => getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]),
-    [profile?.avatarKey],
+    () => resolveAvatarSource(profile?.avatarKey, profile?.avatarUrl, DEFAULT_AVATARS[0]),
+    [profile?.avatarKey, profile?.avatarUrl],
   );
 
   useFocusEffect(

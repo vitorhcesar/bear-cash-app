@@ -1,9 +1,13 @@
 import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { pickProfilePhoto, prepareProfilePhoto } from '@/application/avatar/prepare-profile-photo';
+import { CUSTOM_AVATAR_ID } from '@/domain/avatar/avatar.type';
+import { AvatarCropSheet } from '@/presentation/components/ui/avatar-crop-sheet';
 import {
   DEFAULT_AVATARS,
+  createCustomAvatar,
   type IAvatarOption,
 } from '@/presentation/constants/avatars';
 import { BearCashColors } from '@/presentation/constants/theme';
@@ -23,6 +27,7 @@ export interface IAvatarPickerSheetProps {
   selectedId?: string;
   /** Override preset list — defaults to DEFAULT_AVATARS */
   avatars?: IAvatarOption[];
+  currentAvatar?: IAvatarOption;
 }
 
 export function AvatarPickerSheet({
@@ -31,22 +36,28 @@ export function AvatarPickerSheet({
   onConfirm,
   selectedId,
   avatars = DEFAULT_AVATARS,
+  currentAvatar,
 }: IAvatarPickerSheetProps) {
-  const [draftId, setDraftId] = useState(
-    selectedId && avatars.some((a) => a.id === selectedId)
-      ? selectedId
-      : avatars[0]?.id,
+  const [draftId, setDraftId] = useState(selectedId ?? avatars[0]?.id);
+  const [draftCustom, setDraftCustom] = useState<IAvatarOption | null>(
+    currentAvatar?.id === CUSTOM_AVATAR_ID ? currentAvatar : null,
   );
+  const [cropUri, setCropUri] = useState<string | null>(null);
+  const [cropVisible, setCropVisible] = useState(false);
+  const [cropConfirming, setCropConfirming] = useState(false);
 
-  const draft = avatars.find((avatar) => avatar.id === draftId) ?? avatars[0];
+  const draft: IAvatarOption | undefined =
+    draftId === CUSTOM_AVATAR_ID
+      ? (draftCustom ?? currentAvatar)
+      : (avatars.find((avatar) => avatar.id === draftId) ?? avatars[0]);
 
   const handleOpen = useCallback(() => {
-    const nextId =
-      selectedId && avatars.some((a) => a.id === selectedId)
-        ? selectedId
-        : avatars[0]?.id;
+    const nextId = selectedId && (selectedId === CUSTOM_AVATAR_ID || avatars.some((a) => a.id === selectedId))
+      ? selectedId
+      : avatars[0]?.id;
     setDraftId(nextId);
-  }, [avatars, selectedId]);
+    setDraftCustom(currentAvatar?.id === CUSTOM_AVATAR_ID ? currentAvatar : null);
+  }, [avatars, currentAvatar, selectedId]);
 
   function handleCyclePreview() {
     if (avatars.length < 2) {
@@ -67,56 +78,137 @@ export function AvatarPickerSheet({
     onClose();
   }
 
+  async function handlePickCustom() {
+    try {
+      const picked = await pickProfilePhoto();
+      if (!picked) {
+        return;
+      }
+      setCropUri(picked.uri);
+      setCropVisible(true);
+    } catch {
+      Alert.alert('Erro', 'Não foi possível abrir a galeria.');
+    }
+  }
+
+  async function handleCropConfirm(rotationDegrees: number) {
+    if (!cropUri || cropConfirming) {
+      return;
+    }
+
+    setCropConfirming(true);
+    try {
+      const prepared = await prepareProfilePhoto(cropUri, rotationDegrees);
+      const custom = createCustomAvatar(prepared.uri);
+      setDraftCustom(custom);
+      setDraftId(CUSTOM_AVATAR_ID);
+      setCropVisible(false);
+      setCropUri(null);
+      onConfirm(custom);
+      onClose();
+    } catch {
+      Alert.alert('Erro', 'Não foi possível recortar a foto.');
+    } finally {
+      setCropConfirming(false);
+    }
+  }
+
   return (
-    <Sheet
-      visible={visible}
-      onClose={onClose}
-      onOpen={handleOpen}
-      title="Escolher Avatar"
-      subtitle="Selecione um avatar para o seu perfil"
-    >
-      <View style={styles.previewWrap}>
-        <Image
-          source={draft?.source}
-          style={styles.preview}
-          contentFit="cover"
-          accessibilityLabel="Avatar selecionado"
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Próximo avatar"
-          style={styles.previewAction}
-          onPress={handleCyclePreview}
-        >
-          <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
-        </Pressable>
-      </View>
+    <>
+      <Sheet
+        visible={visible}
+        onClose={onClose}
+        onOpen={handleOpen}
+        title="Escolher Avatar"
+        subtitle="Selecione um avatar para o seu perfil"
+      >
+        <View style={styles.previewWrap}>
+          {draft ? (
+            <Image
+              source={draft.source}
+              style={styles.preview}
+              contentFit="cover"
+              accessibilityLabel="Avatar selecionado"
+            />
+          ) : (
+            <View style={styles.preview} />
+          )}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Próximo avatar"
+            style={styles.previewAction}
+            onPress={handleCyclePreview}
+          >
+            <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
+          </Pressable>
+        </View>
 
-      <View style={styles.grid}>
-        {avatars.map((avatar) => {
-          const isSelected = avatar.id === draftId;
+        <View style={styles.grid}>
+          {avatars.map((avatar) => {
+            const isSelected = avatar.id === draftId;
 
-          return (
-            <Pressable
-              key={avatar.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              accessibilityLabel={`Avatar ${avatar.id}`}
-              style={[styles.gridItem, isSelected && styles.gridItemSelected]}
-              onPress={() => setDraftId(avatar.id)}
-            >
+            return (
+              <Pressable
+                key={avatar.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`Avatar ${avatar.id}`}
+                style={[styles.gridItem, isSelected && styles.gridItemSelected]}
+                onPress={() => setDraftId(avatar.id)}
+              >
+                <Image
+                  source={avatar.source}
+                  style={styles.gridImage}
+                  contentFit="cover"
+                />
+              </Pressable>
+            );
+          })}
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Adicionar foto de perfil"
+            accessibilityState={{ selected: draftId === CUSTOM_AVATAR_ID }}
+            style={[
+              styles.gridItem,
+              styles.addItem,
+              draftId === CUSTOM_AVATAR_ID && styles.gridItemSelected,
+            ]}
+            onPress={() => {
+              void handlePickCustom();
+            }}
+          >
+            {draftId === CUSTOM_AVATAR_ID && draftCustom ? (
               <Image
-                source={avatar.source}
+                source={draftCustom.source}
                 style={styles.gridImage}
                 contentFit="cover"
               />
-            </Pressable>
-          );
-        })}
-      </View>
+            ) : (
+              <Text style={styles.addLabel}>+</Text>
+            )}
+          </Pressable>
+        </View>
 
-      <Button label="Definir" variant="filled" onPress={handleConfirm} />
-    </Sheet>
+        <Button label="Definir" variant="filled" onPress={handleConfirm} />
+      </Sheet>
+
+      <AvatarCropSheet
+        visible={cropVisible}
+        uri={cropUri}
+        confirming={cropConfirming}
+        onCancel={() => {
+          if (cropConfirming) {
+            return;
+          }
+          setCropVisible(false);
+          setCropUri(null);
+        }}
+        onConfirm={(rotation) => {
+          void handleCropConfirm(rotation);
+        }}
+      />
+    </>
   );
 }
 
@@ -166,4 +258,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  addItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: BearCashColors.surface,
+    borderColor: BearCashColors.borderStrong,
+  },
+  addLabel: {
+    color: BearCashColors.text,
+    fontSize: 36,
+    lineHeight: 40,
+    fontWeight: '300',
+  },
 });
+

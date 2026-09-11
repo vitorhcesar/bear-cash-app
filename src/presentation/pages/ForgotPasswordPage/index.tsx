@@ -71,12 +71,14 @@ export function ForgotPasswordPage() {
     phone?: string;
     method?: string;
     avatarKey?: string;
+    avatarUrl?: string;
   }>();
 
   const method = parseAuthMethod(params.method) === 'phone' ? 'phone' : 'email';
   const email = paramString(params.email);
   const phone = paramString(params.phone);
   const avatarKey = paramString(params.avatarKey);
+  const avatarUrl = paramString(params.avatarUrl);
 
   const identifier = useMemo(
     () => (method === 'phone' ? { phone } : { email }),
@@ -241,6 +243,7 @@ export function ForgotPasswordPage() {
         email,
         phone,
         avatarKey,
+        avatarUrl,
       },
     });
   }

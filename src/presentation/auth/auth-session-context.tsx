@@ -19,6 +19,7 @@ type AuthSessionContextValue = {
   applyAuthResult: (result: AuthResult, source?: AuthMethod) => Promise<void>;
   refreshSession: () => Promise<void>;
   updateAvatar: (avatarKey: string) => Promise<void>;
+  uploadAvatarPhoto: (uri: string) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
 };
@@ -133,6 +134,15 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     [api.modules.auth],
   );
 
+  const uploadAvatarPhoto = useCallback(
+    async (uri: string) => {
+      const me = await api.modules.auth.uploadAvatarPhoto(uri);
+      setUser(me.user);
+      setProfile(me.profile);
+    },
+    [api.modules.auth],
+  );
+
   const signOut = useCallback(async () => {
     if (signingOutRef.current) {
       return;
@@ -187,6 +197,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       applyAuthResult,
       refreshSession,
       updateAvatar,
+      uploadAvatarPhoto,
       signOut,
       deleteAccount,
     }),
@@ -197,6 +208,7 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
       applyAuthResult,
       refreshSession,
       updateAvatar,
+      uploadAvatarPhoto,
       signOut,
       deleteAccount,
     ],

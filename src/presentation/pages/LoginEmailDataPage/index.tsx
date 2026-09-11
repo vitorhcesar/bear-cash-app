@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getErrorMessage } from "@/infra/http/get-error-message";
+import { saveSession } from "@/infra/auth/session-store";
 import {
   getAuthStep,
   isOauthMethod,
@@ -29,6 +30,8 @@ import { ProfileAvatarControl } from "@/presentation/components/ui/profile-avata
 import { TextField } from "@/presentation/components/ui/text-field";
 import {
   DEFAULT_AVATARS,
+  getAvatarUri,
+  isCustomAvatar,
   type IAvatarOption,
 } from "@/presentation/constants/avatars";
 import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
@@ -141,6 +144,11 @@ export function LoginEmailDataPage() {
 
     setLoading(true);
     try {
+      const customUri = isCustomAvatar(selectedAvatar)
+        ? getAvatarUri(selectedAvatar)
+        : null;
+      const avatarPayload = customUri ? {} : { avatarKey: selectedAvatar.id };
+
       const result = isOauthOnboarding
         ? await api.modules.auth.completeOnboarding({
             phone,
@@ -149,7 +157,7 @@ export function LoginEmailDataPage() {
             fullName: fullName.trim(),
             birthDate,
             cpf: cpf.replace(/\D/g, ""),
-            avatarKey: selectedAvatar.id,
+            ...avatarPayload,
           })
         : await api.modules.auth.register({
             email: email.trim(),
@@ -159,9 +167,24 @@ export function LoginEmailDataPage() {
             fullName: fullName.trim(),
             birthDate,
             cpf: cpf.replace(/\D/g, ""),
-            avatarKey: selectedAvatar.id,
+            ...avatarPayload,
           });
-      await applyAuthResult(result);
+
+      if (customUri) {
+        await saveSession(result.session);
+        try {
+          const me = await api.modules.auth.uploadAvatarPhoto(customUri);
+          await applyAuthResult({
+            ...result,
+            user: me.user,
+            profile: me.profile,
+          });
+        } catch {
+          await applyAuthResult(result);
+        }
+      } else {
+        await applyAuthResult(result);
+      }
       resetDraft();
     } catch (error) {
       Alert.alert(

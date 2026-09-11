@@ -63,9 +63,13 @@ export class HttpClient implements IHttpClient {
   ): Promise<T> {
     const headers: Record<string, string> = {
       Accept: 'application/json',
-      ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...config?.headers,
     };
+
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    if (body !== undefined && !isFormData && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     if (!config?.skipAuth) {
       const token = await getSessionToken();
@@ -77,7 +81,7 @@ export class HttpClient implements IHttpClient {
     const response = await fetch(`${this.baseUrl}${buildUrl(url, config?.params)}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFormData ? (body as FormData) : JSON.stringify(body),
       signal: config?.signal,
     });
 

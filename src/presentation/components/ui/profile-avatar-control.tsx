@@ -81,6 +81,7 @@ export function ProfileAvatarControl({
         visible={pickerOpen}
         selectedId={avatar.id}
         avatars={avatars}
+        currentAvatar={avatar}
         onClose={() => setPickerOpen(false)}
         onConfirm={onChange}
       />

@@ -61,6 +61,7 @@ export function LoginEmailPage() {
     setPhone,
     setOtpDevHint,
     setAvatarKey,
+    setAvatarUrl,
     resetDraft,
   } = useAuthDraft();
   const params = useLocalSearchParams<{
@@ -69,6 +70,7 @@ export function LoginEmailPage() {
     phone?: string;
     method?: string;
     avatarKey?: string;
+    avatarUrl?: string;
   }>();
   const resumeLogin = paramString(params.resume) === "login";
   const resumedMethod: AuthMethod =
@@ -89,6 +91,9 @@ export function LoginEmailPage() {
   const [avatarKey, setAvatarKeyLocal] = useState(() =>
     resumeLogin ? paramString(params.avatarKey) : "",
   );
+  const [avatarUrl, setAvatarUrlLocal] = useState(() =>
+    resumeLogin ? paramString(params.avatarUrl) : "",
+  );
   const [loading, setLoading] = useState(false);
   const [hasSwitchedMethod, setHasSwitchedMethod] = useState(false);
   const [hasLeftIdentify, setHasLeftIdentify] = useState(resumeLogin);
@@ -106,13 +111,16 @@ export function LoginEmailPage() {
     setEmail(paramString(params.email));
     setPhone(paramString(params.phone));
     setAvatarKey(paramString(params.avatarKey));
+    setAvatarUrl(paramString(params.avatarUrl));
   }, [
     params.avatarKey,
+    params.avatarUrl,
     params.email,
     params.phone,
     resumeLogin,
     resumedMethod,
     setAvatarKey,
+    setAvatarUrl,
     setEmail,
     setMethod,
     setPhone,
@@ -134,10 +142,15 @@ export function LoginEmailPage() {
     setMethod(next);
   }
 
-  function goToPassword(nextAvatarKey: string | null | undefined) {
+  function goToPassword(
+    nextAvatarKey: string | null | undefined,
+    nextAvatarUrl?: string | null,
+  ) {
     Keyboard.dismiss();
     setAvatarKeyLocal(nextAvatarKey ?? "");
     setAvatarKey(nextAvatarKey ?? "");
+    setAvatarUrlLocal(nextAvatarUrl ?? "");
+    setAvatarUrl(nextAvatarUrl ?? "");
     setHasLeftIdentify(true);
     setPhase("password");
   }
@@ -175,7 +188,7 @@ export function LoginEmailPage() {
 
         if (result.nextStep === "login") {
           setLoading(false);
-          goToPassword(result.avatarKey);
+          goToPassword(result.avatarKey, result.avatarUrl);
           return;
         }
 
@@ -200,7 +213,7 @@ export function LoginEmailPage() {
 
       if (result.nextStep === "login") {
         setLoading(false);
-        goToPassword(result.avatarKey);
+        goToPassword(result.avatarKey, result.avatarUrl);
         return;
       }
 
@@ -306,6 +319,7 @@ export function LoginEmailPage() {
                   phone={phone}
                   password={password}
                   avatarKey={avatarKey}
+                  avatarUrl={avatarUrl}
                   loading={loading}
                   googleLoading={googleLoading}
                   appleLoading={appleLoading}
@@ -331,6 +345,7 @@ export function LoginEmailPage() {
                         email,
                         phone,
                         avatarKey,
+                        avatarUrl,
                       },
                     });
                   }}

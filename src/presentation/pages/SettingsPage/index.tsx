@@ -42,7 +42,9 @@ import {
 } from "@/presentation/components/ui/settings-icons";
 import {
   DEFAULT_AVATARS,
-  getAvatarOption,
+  getAvatarUri,
+  isCustomAvatar,
+  resolveAvatarSource,
   type IAvatarOption,
 } from "@/presentation/constants/avatars";
 import {
@@ -196,18 +198,18 @@ function appVersionLabel() {
 export function SettingsPage() {
   const router = useRouter();
   const api = useApiService();
-  const { profile, user, signOut, updateAvatar } = useAuthSession();
+  const { profile, user, signOut, updateAvatar, uploadAvatarPhoto } = useAuthSession();
   const { resetDraft } = useAuthDraft();
   const [loggingOut, setLoggingOut] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
   const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<IAvatarOption>(() =>
-    getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]),
+    resolveAvatarSource(profile?.avatarKey, profile?.avatarUrl, DEFAULT_AVATARS[0]),
   );
 
   useEffect(() => {
-    setSelectedAvatar(getAvatarOption(profile?.avatarKey, DEFAULT_AVATARS[0]));
-  }, [profile?.avatarKey]);
+    setSelectedAvatar(resolveAvatarSource(profile?.avatarKey, profile?.avatarUrl, DEFAULT_AVATARS[0]));
+  }, [profile?.avatarKey, profile?.avatarUrl]);
 
   const loadConnections = useCallback(async () => {
     try {
@@ -244,7 +246,15 @@ export function SettingsPage() {
     const previous = selectedAvatar;
     setSelectedAvatar(avatar);
     try {
-      await updateAvatar(avatar.id);
+      if (isCustomAvatar(avatar)) {
+        const uri = getAvatarUri(avatar);
+        if (!uri) {
+          throw new Error("missing photo");
+        }
+        await uploadAvatarPhoto(uri);
+      } else {
+        await updateAvatar(avatar.id);
+      }
     } catch (error) {
       setSelectedAvatar(previous);
       Alert.alert(

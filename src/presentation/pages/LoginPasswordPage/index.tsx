@@ -39,6 +39,7 @@ export function LoginPasswordPage() {
     phone?: string;
     method?: string;
     avatarKey?: string;
+    avatarUrl?: string;
   }>();
   const method =
     parseAuthMethod(params.method) === 'phone' || Boolean(paramString(params.phone))
@@ -47,6 +48,7 @@ export function LoginPasswordPage() {
   const emailParam = paramString(params.email) || draft.email;
   const phone = paramString(params.phone) || (method === 'phone' ? draft.phone : '');
   const avatarKey = paramString(params.avatarKey) || draft.avatarKey;
+  const avatarUrl = paramString(params.avatarUrl) || draft.avatarUrl;
 
   const [email, setEmailLocal] = useState(emailParam);
   const [password, setPassword] = useState('');
@@ -114,6 +116,7 @@ export function LoginPasswordPage() {
                 phone={phone}
                 password={password}
                 avatarKey={avatarKey}
+                avatarUrl={avatarUrl}
                 loading={loading}
                 googleLoading={googleLoading}
                 appleLoading={appleLoading}
@@ -139,6 +142,7 @@ export function LoginPasswordPage() {
                       email,
                       phone,
                       avatarKey,
+                      avatarUrl,
                     },
                   });
                 }}

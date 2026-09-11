@@ -35,7 +35,7 @@ const CODE_LENGTH = 6;
 export function LoginEmailCodePage() {
   const router = useRouter();
   const api = useApiService();
-  const { setVerificationToken, setPhone, setEmail, setMethod, setOtpDevHint, setAvatarKey, draft } =
+  const { setVerificationToken, setPhone, setEmail, setMethod, setOtpDevHint, setAvatarKey, setAvatarUrl, draft } =
     useAuthDraft();
   const params = useLocalSearchParams<{
     email?: string;
@@ -120,12 +120,14 @@ export function LoginEmailCodePage() {
         }
 
         setAvatarKey(result.avatarKey ?? '');
+        setAvatarUrl(result.avatarUrl ?? '');
         router.push({
           pathname: '/login-password',
           params: {
             method: 'phone',
             phone: result.phone,
             avatarKey: result.avatarKey ?? '',
+            avatarUrl: result.avatarUrl ?? '',
           },
         });
         return;

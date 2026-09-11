@@ -10,7 +10,7 @@ import { ContentDivider } from '@/presentation/components/ui/content-divider';
 import { PasswordField } from '@/presentation/components/ui/password-field';
 import { formatBrazilPhoneDisplay } from '@/presentation/components/ui/phone-field';
 import { TextField } from '@/presentation/components/ui/text-field';
-import { getAvatarOption } from '@/presentation/constants/avatars';
+import { resolveAvatarSource } from '@/presentation/constants/avatars';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
 
 const AVATAR_SIZE = 72;
@@ -21,6 +21,7 @@ export type ExistingAccountLoginProps = {
   phone: string;
   password: string;
   avatarKey: string;
+  avatarUrl?: string;
   loading: boolean;
   googleLoading?: boolean;
   appleLoading?: boolean;
@@ -38,6 +39,7 @@ export function ExistingAccountLogin({
   phone,
   password,
   avatarKey,
+  avatarUrl,
   loading,
   googleLoading = false,
   appleLoading = false,
@@ -49,7 +51,10 @@ export function ExistingAccountLogin({
   onForgotPassword,
 }: ExistingAccountLoginProps) {
   const phoneDisplay = useMemo(() => formatBrazilPhoneDisplay(phone), [phone]);
-  const avatar = useMemo(() => getAvatarOption(avatarKey), [avatarKey]);
+  const avatar = useMemo(
+    () => resolveAvatarSource(avatarKey, avatarUrl),
+    [avatarKey, avatarUrl],
+  );
   const identifierReady = method === 'phone' ? phone.length >= 10 : isValidEmail(email);
   const canContinue = identifierReady && password.length >= 6;
   const previousPassword = useRef(password);

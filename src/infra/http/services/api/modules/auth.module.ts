@@ -5,6 +5,7 @@ export type EmailStartResponse = {
   exists: boolean;
   nextStep: 'phone' | 'login';
   avatarKey: string | null;
+  avatarUrl: string | null;
 };
 
 export type PhoneStartResponse = {
@@ -12,6 +13,7 @@ export type PhoneStartResponse = {
   exists: boolean;
   nextStep: 'otp' | 'login';
   avatarKey: string | null;
+  avatarUrl: string | null;
 };
 
 export type LoginInput = {
@@ -32,6 +34,7 @@ export type OtpVerifyResponse = {
   verificationToken: string;
   phoneRegistered: boolean;
   avatarKey: string | null;
+  avatarUrl: string | null;
 };
 
 export type AuthProfile = {
@@ -41,6 +44,7 @@ export type AuthProfile = {
   birthDate: string | null;
   cpf: string | null;
   avatarKey: string | null;
+  avatarUrl: string | null;
   onboardingStep: number;
   onboardingCompleted: boolean;
 };
@@ -136,6 +140,7 @@ export interface IAuthModule {
   logout(token?: string): Promise<void>;
   me(): Promise<MeResponse>;
   updateAvatar(avatarKey: string): Promise<MeResponse>;
+  uploadAvatarPhoto(uri: string): Promise<MeResponse>;
   verifyPassword(password: string): Promise<{ ok: true }>;
   sendPasswordOtp(): Promise<OtpSendResponse>;
   verifyPasswordOtp(code: string): Promise<OtpVerifyResponse>;
@@ -229,6 +234,16 @@ export class AuthModule extends BaseApiModule implements IAuthModule {
 
   updateAvatar(avatarKey: string) {
     return this.http.patch<MeResponse>('/api/v1/auth/me/avatar', { avatarKey });
+  }
+
+  uploadAvatarPhoto(uri: string) {
+    const form = new FormData();
+    form.append('file', {
+      uri,
+      name: 'avatar.webp',
+      type: 'image/webp',
+    } as unknown as Blob);
+    return this.http.post<MeResponse>('/api/v1/auth/me/avatar/photo', form);
   }
 
   verifyPassword(password: string) {
