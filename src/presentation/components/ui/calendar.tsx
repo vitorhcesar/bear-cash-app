@@ -35,7 +35,7 @@ const WEEKDAYS_LONG = [
   'Sábado',
 ] as const;
 
-const MONTHS_LONG = [
+export const MONTHS_LONG = [
   'Janeiro',
   'Fevereiro',
   'Março',
@@ -156,10 +156,7 @@ export function formatActivitySection(date: Date, today = new Date()) {
   if (selected.getTime() === yesterday.getTime()) {
     return 'Ontem';
   }
-  if (selected.getFullYear() === current.getFullYear()) {
-    return `${selected.getDate()} de ${MONTHS_LONG[selected.getMonth()]}`;
-  }
-  return formatLongDate(selected);
+  return `${selected.getDate()} ${MONTHS_LONG[selected.getMonth()]} — ${selected.getFullYear()}`;
 }
 
 function formatMonthYear(date: Date) {

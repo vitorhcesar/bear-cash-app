@@ -15,6 +15,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { setupNotificationHandler } from "@/infra/notifications/push-notifications";
 import { AuthDraftProvider } from "@/presentation/auth/auth-draft-context";
@@ -120,6 +121,8 @@ function RootNavigator() {
           <Stack.Screen name="new-transaction" options={pushFromRight} />
           <Stack.Screen name="edit-transaction" options={pushFromRight} />
           <Stack.Screen name="transaction/[id]" options={pushFromRight} />
+          <Stack.Screen name="categories" options={pushFromRight} />
+          <Stack.Screen name="category/[id]" options={pushFromRight} />
         </Stack.Protected>
 
         <Stack.Protected guard={!canUseApp}>
@@ -152,7 +155,7 @@ export default function RootLayout() {
   }
 
   return (
-    <View style={styles.root}>
+    <GestureHandlerRootView style={styles.root}>
       <ThemeProvider value={BearCashNavigationTheme}>
         <AuthDraftProvider>
           <SessionTransitionProvider>
@@ -164,7 +167,7 @@ export default function RootLayout() {
           </SessionTransitionProvider>
         </AuthDraftProvider>
       </ThemeProvider>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

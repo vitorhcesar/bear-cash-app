@@ -40,7 +40,14 @@ function copyFor(consent: OpenFinanceConsent | null) {
     };
   }
 
-  if (isSyncSettled(consent)) {
+  if (consent.status === 'AUTHORISED') {
+    if (consent.executionStatus === 'AWAITING_RESOURCES') {
+      return {
+        title: 'Sincronizando',
+        description: 'O banco ainda está enviando contas e transações. Você já pode voltar ao app; a sincronização continua.',
+        confirmLabel: 'Continuar',
+      };
+    }
     return {
       title: consent.executionStatus === 'PARTIAL_SUCCESS' ? 'Conectado, com ressalvas' : 'Banco conectado',
       description:
@@ -62,8 +69,8 @@ function copyFor(consent: OpenFinanceConsent | null) {
   if (isAwaitingAuthorization(consent)) {
     return {
       title: 'Autorize no banco',
-      description: `Abra o app do ${consent.institutionName} e aprove o acesso Open Finance.`,
-      confirmLabel: null,
+      description: `Abra o app do ${consent.institutionName} e aprove o acesso Open Finance. Depois volte ao BearCash; o app fecha a tela do banco sozinho.`,
+      confirmLabel: 'Fechar',
     };
   }
 
@@ -96,10 +103,12 @@ export function BankSyncSheet({
     !loading &&
     Boolean(
       consent &&
-        (isSyncSettled(consent) ||
+        (consent.status === 'AUTHORISED' ||
+          isSyncSettled(consent) ||
           isAuthRejected(consent.status) ||
           expired ||
-          copy.confirmLabel === 'Fechar'),
+          copy.confirmLabel === 'Fechar' ||
+          copy.confirmLabel === 'Continuar'),
     );
 
   return (

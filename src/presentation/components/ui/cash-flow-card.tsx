@@ -6,10 +6,8 @@ import {
   ExpenseArrowIcon,
   IncomeArrowIcon,
 } from '@/presentation/components/ui/activities-icons';
-import { HighlightCardBorder } from '@/presentation/components/ui/highlight-card-border';
 import {
   BearCashColors,
-  BearCashFonts,
   BearCashTypography,
 } from '@/presentation/constants/theme';
 
@@ -28,14 +26,21 @@ export function CashFlowCard({
   onToggleVisibility: () => void;
   tone: 'income' | 'expense';
 }) {
-  const expense = tone === 'expense';
-
   return (
-    <View style={styles.outer}>
-      <HighlightCardBorder />
-      <View style={styles.inner}>
-        <View style={styles.labelRow}>
-          <Text style={styles.label}>{label}</Text>
+    <View style={styles.card}>
+      <View style={styles.iconHold}>
+        {tone === 'income' ? (
+          <IncomeArrowIcon size={12} />
+        ) : (
+          <ExpenseArrowIcon size={12} />
+        )}
+      </View>
+      <View style={styles.copy}>
+        <Text style={styles.label}>{label}</Text>
+        <View style={styles.amountRow}>
+          <Text style={styles.amount} numberOfLines={1}>
+            {hidden ? `${symbol}*,**` : `${symbol}${amount}`}
+          </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={hidden ? 'Mostrar valor' : 'Ocultar valor'}
@@ -43,33 +48,11 @@ export function CashFlowCard({
             hitSlop={8}
           >
             {hidden ? (
-              <ActivityEyeClosedIcon size={12} />
+              <ActivityEyeClosedIcon size={16} />
             ) : (
-              <ActivityEyeOpenIcon size={12} />
+              <ActivityEyeOpenIcon size={16} />
             )}
           </Pressable>
-        </View>
-        <View style={styles.amountRow}>
-          <View style={styles.iconWrap}>
-            {tone === 'income' ? (
-              <IncomeArrowIcon size={12} />
-            ) : (
-              <ExpenseArrowIcon size={12} />
-            )}
-          </View>
-          <View style={styles.amount}>
-            <Text style={[styles.symbol, expense && styles.expense]}>
-              {symbol}
-            </Text>
-            <Text
-              style={[styles.value, expense && styles.expense]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-            >
-              {hidden ? '*,**' : amount}
-            </Text>
-          </View>
         </View>
       </View>
     </View>
@@ -77,58 +60,40 @@ export function CashFlowCard({
 }
 
 const styles = StyleSheet.create({
-  outer: {
-    flex: 1,
-    minWidth: 0,
-    borderRadius: 12,
-    padding: 1,
-    overflow: 'hidden',
-  },
-  inner: {
-    backgroundColor: BearCashColors.surface,
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
-  },
-  labelRow: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 10,
+    borderWidth: 1,
+    borderColor: BearCashColors.borderSoft,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  iconHold: {
+    backgroundColor: BearCashColors.borderSoft,
+    borderRadius: 8,
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  copy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 2,
   },
   label: {
-    ...BearCashTypography.captionSmall,
-    color: BearCashColors.textMid,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
   },
   amountRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  iconWrap: {
-    backgroundColor: BearCashColors.neutralBase,
-    borderRadius: 4,
-    padding: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   amount: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    minWidth: 0,
-  },
-  symbol: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 12,
-    lineHeight: 19,
-    color: BearCashColors.text,
-  },
-  value: {
-    ...BearCashTypography.h3,
-    lineHeight: 22,
-    color: BearCashColors.text,
-  },
-  expense: {
-    color: BearCashColors.dangerStrongest,
+    ...BearCashTypography.subheading,
+    color: BearCashColors.textMid,
+    flexShrink: 1,
   },
 });

@@ -48,10 +48,15 @@ export function FeatureCheckIcon({ size = 16, color = '#B385E0' }: IconProps) {
   );
 }
 
-export function HintInfoIcon({ size = 16 }: IconProps) {
+export function HintInfoIcon({ size = 16, color = '#0C84FC' }: IconProps) {
+  const xml = useMemo(
+    () => HINT_INFO_XML.replace(/#0C84FC/gi, color),
+    [color],
+  );
+
   return (
     <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={HINT_INFO_XML} width={size} height={size} />
+      <SvgXml xml={xml} width={size} height={size} />
     </View>
   );
 }

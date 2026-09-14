@@ -160,6 +160,7 @@ export function OtpField({
                 textContentType={index === 0 ? 'oneTimeCode' : 'none'}
                 autoComplete={index === 0 ? 'sms-otp' : 'off'}
                 maxLength={length}
+                multiline={false}
                 selectTextOnFocus
                 style={styles.input}
                 placeholder="0"
@@ -183,17 +184,22 @@ export function OtpField({
 }
 
 const CELL_HEIGHT = 46;
+const INPUT_HEIGHT = 26;
 
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'stretch',
+    flexGrow: 0,
+    flexShrink: 0,
     gap: 10,
   },
   shell: {
     flexDirection: 'row',
-    alignItems: 'stretch',
+    alignItems: 'center',
     alignSelf: 'stretch',
-    minHeight: CELL_HEIGHT,
+    height: CELL_HEIGHT,
+    maxHeight: CELL_HEIGHT,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: BearCashColors.borderSoft,
     borderRadius: 8,
@@ -207,8 +213,10 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    minHeight: CELL_HEIGHT - 2,
+    height: CELL_HEIGHT - 2,
+    maxHeight: CELL_HEIGHT - 2,
     minWidth: 46,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -221,9 +229,10 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    height: '100%',
     ...BearCashTypography.body,
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : null),
+    height: INPUT_HEIGHT,
+    maxHeight: INPUT_HEIGHT,
     textAlign: 'center',
     textAlignVertical: 'center',
     color: BearCashColors.text,

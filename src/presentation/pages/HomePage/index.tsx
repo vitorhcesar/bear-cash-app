@@ -3,6 +3,8 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useId, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,6 +18,7 @@ import {
 } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
+import { getErrorMessage } from "@/infra/http/get-error-message";
 import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
@@ -41,6 +44,18 @@ const AVATAR_SIZE = 44;
 const HERO_PANDA = require("@/assets/images/home/hero-panda.jpg");
 const EMPTY_HERO_RATIO = 0.6;
 const EMPTY_COPY_MIN_HEIGHT = 300;
+
+function homeRefreshControl(refreshing: boolean, onRefresh: () => void) {
+  return (
+    <RefreshControl
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      tintColor={BearCashColors.buttonFilled}
+      colors={[BearCashColors.buttonFilled]}
+      progressBackgroundColor={BearCashColors.surface}
+    />
+  );
+}
 
 function firstNameFromSession(
   fullName?: string | null,
@@ -158,12 +173,16 @@ function HomeEmptyState({
   firstName,
   avatarSource,
   connections,
+  refreshing,
+  onRefresh,
   onConnect,
   onOpenBankSelect,
 }: {
   firstName: string;
   avatarSource: IAvatarOption["source"];
   connections: OpenFinanceConnection[];
+  refreshing: boolean;
+  onRefresh: () => void;
   onConnect: () => void;
   onOpenBankSelect: () => void;
 }) {
@@ -180,7 +199,15 @@ function HomeEmptyState({
 
   return (
     <View style={styles.safeArea}>
-      <View style={styles.emptyRoot}>
+      <ScrollView
+        style={styles.emptyScroll}
+        contentContainerStyle={styles.emptyScrollContent}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        overScrollMode="always"
+        refreshControl={homeRefreshControl(refreshing, onRefresh)}
+      >
+        <View style={styles.emptyRoot}>
         <View
           style={[styles.hero, { height: heroHeight }]}
           onLayout={(event) => {
@@ -233,6 +260,7 @@ function HomeEmptyState({
           />
         </View>
       </View>
+      </ScrollView>
     </View>
   );
 }
@@ -243,18 +271,24 @@ function HomeConnectedState({
   chipConnections,
   connections,
   transactions,
+  refreshing,
+  onRefresh,
   onOpenBankSelect,
   onPressLastTransaction,
   onPressTransactions,
+  onPressCategories,
 }: {
   firstName: string;
   avatarSource: IAvatarOption["source"];
   chipConnections: OpenFinanceConnection[];
   connections: OpenFinanceConnection[];
   transactions: TransactionItem[];
+  refreshing: boolean;
+  onRefresh: () => void;
   onOpenBankSelect: () => void;
   onPressLastTransaction: (id: string) => void;
   onPressTransactions: () => void;
+  onPressCategories: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -269,6 +303,9 @@ function HomeConnectedState({
       <ScrollView
         contentContainerStyle={styles.connectedScroll}
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        overScrollMode="always"
+        refreshControl={homeRefreshControl(refreshing, onRefresh)}
       >
         <View
           style={[styles.connectedHero, { height: heroHeight }]}
@@ -306,6 +343,7 @@ function HomeConnectedState({
             transactions={transactions}
             onPressLastTransaction={onPressLastTransaction}
             onPressTransactions={onPressTransactions}
+            onPressCategories={onPressCategories}
           />
         </View>
       </ScrollView>
@@ -323,6 +361,7 @@ export function HomePage() {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [bankSelectOpen, setBankSelectOpen] = useState(false);
   const [selectedBankIds, setSelectedBankIds] = useState<string[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const firstName = useMemo(
     () =>
       firstNameFromSession(profile?.fullName, profile?.displayName, user?.name),
@@ -333,22 +372,47 @@ export function HomePage() {
     [profile?.avatarKey, profile?.avatarUrl],
   );
 
+  const loadHomeData = useCallback(async () => {
+    const [connectionResponse, transactionResponse] = await Promise.all([
+      api.modules.openFinance.listConnections(),
+      api.modules.transactions.list(),
+    ]);
+    setConnections(connectionResponse.items);
+    setTransactions(transactionResponse.items);
+  }, [api.modules.openFinance, api.modules.transactions]);
+
   useFocusEffect(
     useCallback(() => {
-      void Promise.all([
-        api.modules.openFinance.listConnections(),
-        api.modules.transactions.list(),
-      ])
-        .then(([connectionResponse, transactionResponse]) => {
-          setConnections(connectionResponse.items);
-          setTransactions(transactionResponse.items);
-        })
-        .catch(() => {
-          setConnections([]);
-          setTransactions([]);
-        });
-    }, [api.modules.openFinance, api.modules.transactions]),
+      void loadHomeData().catch(() => {
+        setConnections((current) => current ?? []);
+      });
+    }, [loadHomeData]),
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const synced = await api.modules.openFinance.syncConnections();
+      const transactionResponse = await api.modules.transactions.list();
+      setConnections(synced.items);
+      setTransactions(transactionResponse.items);
+    } catch (error) {
+      try {
+        await loadHomeData();
+      } catch {
+        setConnections((current) => current ?? []);
+      }
+      Alert.alert(
+        "Não foi possível atualizar",
+        getErrorMessage(
+          error,
+          "Não foi possível sincronizar seus bancos. Tente novamente.",
+        ),
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }, [api.modules.openFinance, api.modules.transactions, loadHomeData]);
 
   if (connections === null) {
     return <HomeLoading />;
@@ -400,6 +464,8 @@ export function HomePage() {
           firstName={firstName}
           avatarSource={avatar.source}
           connections={connections}
+          refreshing={refreshing}
+          onRefresh={() => void onRefresh()}
           onConnect={() => router.push("/bank-connection")}
           onOpenBankSelect={() => setBankSelectOpen(true)}
         />
@@ -416,11 +482,14 @@ export function HomePage() {
         chipConnections={dashboardConnections}
         connections={dashboardConnections}
         transactions={dashboardTransactions}
+        refreshing={refreshing}
+        onRefresh={() => void onRefresh()}
         onOpenBankSelect={() => setBankSelectOpen(true)}
         onPressLastTransaction={(id) =>
           router.push({ pathname: "/transaction/[id]", params: { id } })
         }
         onPressTransactions={() => router.navigate("/(tabs)/activities")}
+        onPressCategories={() => router.push("/categories")}
       />
       {bankSelectSheet}
     </>
@@ -444,6 +513,12 @@ const styles = StyleSheet.create({
   },
   emptyRoot: {
     flex: 1,
+  },
+  emptyScroll: {
+    flex: 1,
+  },
+  emptyScrollContent: {
+    flexGrow: 1,
   },
   hero: {
     width: "100%",

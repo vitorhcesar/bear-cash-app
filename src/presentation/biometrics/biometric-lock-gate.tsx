@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FullWindowOverlay } from 'react-native-screens';
 
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
+import { isOpenFinanceBrowserActive } from '@/presentation/open-finance/connect-bank';
 import {
   authenticateWithBiometrics,
   shouldRequireBiometricLock,
@@ -101,11 +102,18 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
       appStateRef.current = nextState;
 
       if (nextState === 'background' && lockEnabled) {
+        if (isOpenFinanceBrowserActive()) {
+          return;
+        }
         void lockIfRequired();
         return;
       }
 
       if (nextState !== 'active' || previous !== 'background' || !lockEnabled) {
+        return;
+      }
+
+      if (isOpenFinanceBrowserActive()) {
         return;
       }
 

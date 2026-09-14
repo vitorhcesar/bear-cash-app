@@ -14,9 +14,11 @@ import {
   ActivitiesCategoriesSheet,
 } from "@/presentation/components/ui/activities-categories-sheet";
 import {
+  CATEGORY_GROUPS,
   FILTER_CATEGORY_CHIPS,
   getCategoryGroup,
   getCategoryLabel,
+  toggleCategorySelection,
   type CategoryGroupId,
 } from "@/presentation/components/ui/activities-category-catalog";
 import { CategoryChipIcon } from "@/presentation/components/ui/activities-category-icons";
@@ -236,15 +238,10 @@ export function ActivitiesFilterSheet({
   }
 
   const toggleCategory = useCallback((id: string) => {
-    setDraft((current) => {
-      const selected = current.categories.includes(id);
-      return {
-        ...current,
-        categories: selected
-          ? current.categories.filter((category) => category !== id)
-          : [...current.categories, id],
-      };
-    });
+    setDraft((current) => ({
+      ...current,
+      categories: toggleCategorySelection(current.categories, id),
+    }));
   }, []);
 
   const selectedChips = useMemo(() => {
@@ -282,7 +279,19 @@ export function ActivitiesFilterSheet({
       }
     }
 
+    const coveredChildren = new Set<string>();
+    for (const group of CATEGORY_GROUPS) {
+      if (draft.categories.includes(group.id)) {
+        for (const child of group.children) {
+          coveredChildren.add(child.id);
+        }
+      }
+    }
+
     for (const categoryId of draft.categories) {
+      if (coveredChildren.has(categoryId)) {
+        continue;
+      }
       const label = getCategoryLabel(categoryId);
       if (label) {
         chips.push({

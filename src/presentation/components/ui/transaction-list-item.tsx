@@ -9,6 +9,7 @@ import { CategoryChipIcon } from '@/presentation/components/ui/activities-catego
 import { formatActivityDay } from '@/presentation/components/ui/calendar';
 import { getCurrencySymbol } from '@/presentation/components/ui/currencies';
 import { TransactionPencilIcon } from '@/presentation/components/ui/new-transaction-icons';
+import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
   BearCashColors,
   BearCashFonts,
@@ -25,20 +26,55 @@ function formatAbsoluteAmount(amount: number) {
 export function TransactionListItem({
   item,
   onPress,
+  leading = 'inline',
+  iconKey,
+  iconColor,
+  categoryLabel,
 }: {
   item: TransactionItem;
   onPress?: () => void;
+  leading?: 'inline' | 'mark';
+  iconKey?: string;
+  iconColor?: string;
+  categoryLabel?: string;
 }) {
   const category = item.categoryId
     ? getCategoryDisplay(item.categoryId)
     : undefined;
   const groupLabel =
+    categoryLabel ??
     (item.categoryId ? getCategoryGroupLabel(item.categoryId) : undefined) ??
     item.category ??
     'Sem categoria';
   const isCredit = item.type === 'CREDIT';
   const symbol = getCurrencySymbol(item.currencyCode);
   const accountLabel = item.bankName?.trim() || 'BearCash';
+  const mark = leading === 'mark';
+  const resolvedIconKey = iconKey ?? category?.iconKey;
+  const resolvedIconColor = iconColor ?? category?.color ?? BearCashColors.textMid;
+
+  const amount = (
+    <View style={styles.amount}>
+      <Text
+        style={[
+          styles.amountSymbol,
+          isCredit ? styles.income : styles.expense,
+        ]}
+      >
+        {isCredit ? '+' : '-'}
+        {symbol}
+      </Text>
+      <Text
+        numberOfLines={1}
+        style={[
+          styles.amountValue,
+          isCredit ? styles.income : styles.expense,
+        ]}
+      >
+        {formatAbsoluteAmount(item.amount)}
+      </Text>
+    </View>
+  );
 
   return (
     <Pressable
@@ -46,22 +82,57 @@ export function TransactionListItem({
       accessibilityLabel={item.description}
       onPress={onPress}
       disabled={!onPress}
-      style={({ pressed }) => [styles.row, pressed && onPress ? styles.pressed : null]}
+      style={({ pressed }) => [
+        styles.row,
+        mark && styles.rowMark,
+        pressed && onPress ? styles.pressed : null,
+      ]}
     >
-      <View style={styles.copy}>
-        <View style={styles.titleRow}>
-          {category ? (
-            <CategoryChipIcon
-              iconKey={category.iconKey}
-              color={category.color}
-              size={12}
+      {mark ? (
+        <View style={styles.mark}>
+          <View style={styles.markIcon}>
+            {resolvedIconKey ? (
+              <CategoryChipIcon
+                iconKey={resolvedIconKey}
+                color={resolvedIconColor}
+                size={16}
+              />
+            ) : (
+              <TransactionPencilIcon size={16} />
+            )}
+          </View>
+          <View style={styles.markBadge}>
+            <TransactionBankBadge
+              bankName={item.bankName}
+              bankCode={item.bankCode}
+              bankLogoUrl={item.bankLogoUrl}
+              source={item.source}
+              size={20}
             />
-          ) : (
-            <TransactionPencilIcon size={12} />
-          )}
-          <Text style={styles.title} numberOfLines={1}>
-            {item.description}
-          </Text>
+          </View>
+        </View>
+      ) : null}
+      <View style={[styles.copy, mark && styles.copyMark]}>
+        <View style={styles.titleRow}>
+          <View style={styles.titleMain}>
+            {mark ? null : category ? (
+              <CategoryChipIcon
+                iconKey={category.iconKey}
+                color={category.color}
+                size={12}
+              />
+            ) : (
+              <TransactionPencilIcon size={12} />
+            )}
+            <Text
+              style={styles.title}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {item.description}
+            </Text>
+          </View>
+          {mark ? null : amount}
         </View>
         <View>
           <View style={styles.metaRow}>
@@ -69,55 +140,73 @@ export function TransactionListItem({
               {formatActivityDay(new Date(item.date))}
             </Text>
             <View style={styles.dot} />
-            <Text style={styles.meta} numberOfLines={1}>
+            <Text
+              style={styles.metaFlexible}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {groupLabel}
             </Text>
           </View>
-          <Text style={styles.meta} numberOfLines={1}>
+          <Text
+            style={styles.metaFlexible}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {accountLabel}
           </Text>
         </View>
       </View>
-
-      <View style={styles.amount}>
-        <Text
-          style={[
-            styles.amountSymbol,
-            isCredit ? styles.income : styles.expense,
-          ]}
-        >
-          {isCredit ? '+' : '-'}
-          {symbol}
-        </Text>
-        <Text
-          style={[
-            styles.amountValue,
-            isCredit ? styles.income : styles.expense,
-          ]}
-        >
-          {formatAbsoluteAmount(item.amount)}
-        </Text>
-      </View>
+      {mark ? amount : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
+    alignSelf: 'stretch',
+    width: '100%',
+    minWidth: 0,
+  },
+  rowMark: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    gap: 10,
+  },
+  mark: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    flexShrink: 0,
+  },
+  markIcon: {
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 8,
+    padding: 8,
+    marginRight: -8,
+    zIndex: 0,
+  },
+  markBadge: {
+    zIndex: 1,
   },
   pressed: {
     opacity: 0.85,
   },
   copy: {
-    flex: 1,
     minWidth: 0,
     gap: 2,
+    overflow: 'hidden',
+  },
+  copyMark: {
+    flex: 1,
   },
   titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 0,
+  },
+  titleMain: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -125,6 +214,8 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
     fontFamily: BearCashFonts.semiBold,
     fontSize: 12,
     lineHeight: 19,
@@ -139,6 +230,14 @@ const styles = StyleSheet.create({
   meta: {
     ...BearCashTypography.captionSmall,
     color: BearCashColors.textSoft,
+    flexShrink: 0,
+  },
+  metaFlexible: {
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
+    flex: 1,
+    flexShrink: 1,
+    minWidth: 0,
   },
   dot: {
     width: 2,

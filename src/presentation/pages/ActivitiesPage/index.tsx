@@ -1,8 +1,10 @@
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,7 +27,7 @@ import {
   type ActivitiesFilters,
   type PeriodId,
 } from "@/presentation/components/ui/activities-filter-sheet";
-import { getCategoryGroup } from "@/presentation/components/ui/activities-category-catalog";
+import { getCategoryGroup, resolveCategoryId } from "@/presentation/components/ui/activities-category-catalog";
 import { FilterChipCloseIcon } from "@/presentation/components/ui/activities-filter-icons";
 import {
   EmptyActivityIcon,
@@ -33,10 +35,12 @@ import {
   PlusIcon,
   SearchIcon,
 } from "@/presentation/components/ui/activities-icons";
-import { formatActivitySection } from "@/presentation/components/ui/calendar";
+import {
+  MONTHS_LONG,
+  formatActivitySection,
+} from "@/presentation/components/ui/calendar";
 import { CashFlowCard } from "@/presentation/components/ui/cash-flow-card";
 import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
-import { HighlightCardBorder } from "@/presentation/components/ui/highlight-card-border";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
   APP_BOTTOM_CHROME_HEIGHT,
@@ -60,14 +64,71 @@ function splitCurrencyAmount(amount: number, currencyCode = "BRL") {
   };
 }
 
-function filtersAreActive(filters: ActivitiesFilters) {
-  return (
-    filters.period !== DEFAULT_ACTIVITIES_FILTERS.period ||
-    filters.banks.length > 0 ||
-    filters.categories.length > 0 ||
-    filters.sort !== DEFAULT_ACTIVITIES_FILTERS.sort ||
-    filters.showHidden
-  );
+function activeFilterCount(filters: ActivitiesFilters) {
+  let count = 0;
+  if (filters.period !== DEFAULT_ACTIVITIES_FILTERS.period) {
+    count += 1;
+  }
+  if (filters.banks.length > 0) {
+    count += 1;
+  }
+  if (filters.categories.length > 0) {
+    count += 1;
+  }
+  if (filters.sort !== DEFAULT_ACTIVITIES_FILTERS.sort) {
+    count += 1;
+  }
+  if (filters.showHidden) {
+    count += 1;
+  }
+  return count;
+}
+
+function padDay(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+function lastDayOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+}
+
+function periodResultsLabel(period: PeriodId, now = new Date()) {
+  const monthName = MONTHS_LONG[now.getMonth()];
+
+  if (period === "current-month") {
+    return `01 — ${padDay(lastDayOfMonth(now))} de ${monthName}`;
+  }
+  if (period === "last-month") {
+    const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return `01 — ${padDay(lastDayOfMonth(previous))} de ${MONTHS_LONG[previous.getMonth()]}`;
+  }
+  if (period === "today") {
+    return `${padDay(now.getDate())} de ${monthName}`;
+  }
+  if (period === "yesterday") {
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    return `${padDay(yesterday.getDate())} de ${MONTHS_LONG[yesterday.getMonth()]}`;
+  }
+  if (period === "7d" || period === "15d") {
+    const span = period === "7d" ? 6 : 14;
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - span);
+    if (from.getMonth() === now.getMonth() && from.getFullYear() === now.getFullYear()) {
+      return `${padDay(from.getDate())} — ${padDay(now.getDate())} de ${monthName}`;
+    }
+    return `${padDay(from.getDate())} de ${MONTHS_LONG[from.getMonth()]} — ${padDay(now.getDate())} de ${monthName}`;
+  }
+  if (period === "6m") {
+    const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    if (from.getFullYear() === now.getFullYear()) {
+      return `${MONTHS_LONG[from.getMonth()]} — ${monthName}`;
+    }
+    return `${MONTHS_LONG[from.getMonth()]} ${from.getFullYear()} — ${monthName} ${now.getFullYear()}`;
+  }
+  if (period === "year") {
+    const from = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    return `${padDay(from.getDate())} de ${MONTHS_LONG[from.getMonth()]} — ${padDay(now.getDate())} de ${monthName}`;
+  }
+  return "Personalizado";
 }
 
 function dayKey(date: Date) {
@@ -127,20 +188,28 @@ function matchesCategory(item: TransactionItem, categories: string[]) {
   if (categories.length === 0) {
     return true;
   }
-  const id = item.categoryId ?? "";
+  const id = item.categoryId ? resolveCategoryId(item.categoryId) : "";
   const label = (item.category ?? "").toLowerCase();
   return categories.some((category) => {
-    if (id === category) {
+    const filterId = resolveCategoryId(category);
+    if (id && id === filterId) {
       return true;
     }
-    const group = getCategoryGroup(category);
+    const group = getCategoryGroup(filterId);
     if (group?.children.some((child) => child.id === id)) {
       return true;
     }
-    return Boolean(group?.label && label.includes(group.label.toLowerCase()));
+    return Boolean(
+      group &&
+        (label.includes(group.label.toLowerCase()) ||
+          label.includes(group.chipLabel.toLowerCase())),
+    );
   });
 }
-function matchesFilter(item: TransactionItem, filter: FilterId) {
+function matchesFilter(item: TransactionItem, filter: FilterId | null) {
+  if (!filter) {
+    return true;
+  }
   if (filter === "Entradas") {
     return item.type === "CREDIT";
   }
@@ -159,7 +228,7 @@ export function ActivitiesPage() {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<FilterId>("Entradas");
+  const [activeFilter, setActiveFilter] = useState<FilterId | null>(null);
   const [incomeVisible, setIncomeVisible] = useState(
     DEFAULT_PREFERENCES.activitiesIncomeVisible,
   );
@@ -171,10 +240,39 @@ export function ActivitiesPage() {
     DEFAULT_ACTIVITIES_FILTERS,
   );
   const [bankOptions, setBankOptions] = useState<ActivitiesBankOption[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const params = useLocalSearchParams<{
+    category?: string | string[];
+    q?: string | string[];
+  }>();
+  const categoryParam = Array.isArray(params.category)
+    ? params.category[0]
+    : params.category;
+  const queryParam = Array.isArray(params.q) ? params.q[0] : params.q;
+
+  useEffect(() => {
+    if (!categoryParam) {
+      return;
+    }
+    setFilters((current) => ({
+      ...current,
+      categories: [categoryParam],
+    }));
+    setActiveFilter("Saídas");
+  }, [categoryParam]);
+
+  useEffect(() => {
+    if (!queryParam) {
+      return;
+    }
+    setQuery(queryParam);
+  }, [queryParam]);
 
   const loadTransactions = useCallback(
-    async (search?: string) => {
-      setLoading(true);
+    async (search?: string, options?: { silent?: boolean }) => {
+      if (!options?.silent) {
+        setLoading(true);
+      }
       try {
         const response = await api.modules.transactions.list(search);
         setItems(response.items);
@@ -183,11 +281,33 @@ export function ActivitiesPage() {
           getErrorMessage(error, "Não foi possível carregar as atividades."),
         );
       } finally {
-        setLoading(false);
+        if (!options?.silent) {
+          setLoading(false);
+        }
       }
     },
     [api.modules.transactions],
   );
+
+  const loadBankOptions = useCallback(async () => {
+    try {
+      const response = await api.modules.openFinance.listConnections();
+      const unique = new Map<string, ActivitiesBankOption>();
+      for (const connection of response.items) {
+        if (connection.revokedAt) {
+          continue;
+        }
+        unique.set(connection.institutionName, {
+          id: connection.institutionName,
+          label: connection.institutionName,
+          logoUrl: connection.institutionLogoUrl,
+        });
+      }
+      setBankOptions([...unique.values()]);
+    } catch {
+      setBankOptions([]);
+    }
+  }, [api.modules.openFinance]);
 
   useEffect(() => {
     let cancelled = false;
@@ -210,28 +330,35 @@ export function ActivitiesPage() {
       const handle = setTimeout(() => {
         void loadTransactions(query);
       }, query ? 250 : 0);
-      void api.modules.openFinance
-        .listConnections()
-        .then((response) => {
-          const unique = new Map<string, ActivitiesBankOption>();
-          for (const connection of response.items) {
-            if (connection.revokedAt) {
-              continue;
-            }
-            unique.set(connection.institutionName, {
-              id: connection.institutionName,
-              label: connection.institutionName,
-              logoUrl: connection.institutionLogoUrl,
-            });
-          }
-          setBankOptions([...unique.values()]);
-        })
-        .catch(() => {
-          setBankOptions([]);
-        });
+      void loadBankOptions();
       return () => clearTimeout(handle);
-    }, [query, loadTransactions, api.modules.openFinance]),
+    }, [query, loadTransactions, loadBankOptions]),
   );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await api.modules.openFinance.syncConnections();
+      await Promise.all([
+        loadTransactions(query, { silent: true }),
+        loadBankOptions(),
+      ]);
+    } catch (error) {
+      await Promise.all([
+        loadTransactions(query, { silent: true }),
+        loadBankOptions(),
+      ]);
+      Alert.alert(
+        "Não foi possível atualizar",
+        getErrorMessage(
+          error,
+          "Não foi possível sincronizar seus bancos. Tente novamente.",
+        ),
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }, [api.modules.openFinance, loadBankOptions, loadTransactions, query]);
 
   const toggleIncomeVisibility = useCallback(() => {
     const next = !incomeVisible;
@@ -245,29 +372,9 @@ export function ActivitiesPage() {
     void updatePreferences({ activitiesExpenseVisible: next });
   }, [expenseVisible]);
 
-  const totals = useMemo(() => {
-    let credit = 0;
-    let debit = 0;
-    for (const item of items) {
-      if (item.hiddenFromTotals) {
-        continue;
-      }
-      const value = Math.abs(item.amount);
-      if (item.type === "CREDIT") {
-        credit += value;
-      } else {
-        debit += value;
-      }
-    }
-    return { credit, debit };
-  }, [items]);
-
-  const grouped = useMemo(() => {
-    const filtered = items.filter((item) => {
+  const scopedItems = useMemo(() => {
+    return items.filter((item) => {
       if (!filters.showHidden && item.hiddenFromTotals) {
-        return false;
-      }
-      if (!matchesFilter(item, activeFilter)) {
         return false;
       }
       const date = new Date(item.date);
@@ -282,6 +389,12 @@ export function ActivitiesPage() {
       }
       return true;
     });
+  }, [items, filters]);
+
+  const filteredItems = useMemo(() => {
+    const filtered = scopedItems.filter((item) =>
+      matchesFilter(item, activeFilter),
+    );
 
     filtered.sort((left, right) => {
       if (filters.sort === "oldest") {
@@ -296,9 +409,33 @@ export function ActivitiesPage() {
       return new Date(right.date).getTime() - new Date(left.date).getTime();
     });
 
-    const sections = new Map<string, { key: string; title: string; data: TransactionItem[] }>();
+    return filtered;
+  }, [scopedItems, activeFilter, filters.sort]);
 
-    for (const item of filtered) {
+  const totals = useMemo(() => {
+    let credit = 0;
+    let debit = 0;
+    for (const item of scopedItems) {
+      if (item.hiddenFromTotals) {
+        continue;
+      }
+      const value = Math.abs(item.amount);
+      if (item.type === "CREDIT") {
+        credit += value;
+      } else {
+        debit += value;
+      }
+    }
+    return { credit, debit };
+  }, [scopedItems]);
+
+  const grouped = useMemo(() => {
+    const sections = new Map<
+      string,
+      { key: string; title: string; data: TransactionItem[] }
+    >();
+
+    for (const item of filteredItems) {
       const date = new Date(item.date);
       const key = dayKey(date);
       const existing = sections.get(key);
@@ -314,13 +451,22 @@ export function ActivitiesPage() {
     }
 
     return [...sections.values()];
-  }, [items, activeFilter, filters]);
+  }, [filteredItems]);
+
+  const clearSheetFilters = useCallback(() => {
+    setFilters(DEFAULT_ACTIVITIES_FILTERS);
+    if (categoryParam) {
+      router.setParams({ category: "" });
+    }
+  }, [categoryParam, router]);
 
   const empty = grouped.length === 0;
   const hasQuery = query.trim().length > 0;
-  const filterActive = filtersAreActive(filters);
+  const filterCount = activeFilterCount(filters);
+  const filterActive = filterCount > 0;
   const incomeAmount = splitCurrencyAmount(totals.credit);
   const expenseAmount = splitCurrencyAmount(totals.debit);
+  const resultsPeriodLabel = periodResultsLabel(filters.period);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -328,6 +474,17 @@ export function ActivitiesPage() {
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        overScrollMode="always"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={BearCashColors.buttonFilled}
+            colors={[BearCashColors.buttonFilled]}
+            progressBackgroundColor={BearCashColors.surface}
+          />
+        }
       >
         <View style={styles.topBlock}>
           <View style={styles.header}>
@@ -397,12 +554,32 @@ export function ActivitiesPage() {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.filters}
               >
+                {filterActive ? (
+                  <Pressable
+                    onPress={() => setFiltersOpen(true)}
+                    style={styles.chipFilters}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Filtros, ${filterCount} ativos`}
+                  >
+                    <FilterSlidersIcon
+                      size={16}
+                      color={BearCashColors.background}
+                    />
+                    <Text style={styles.chipFiltersText}>
+                      Filtros ({filterCount})
+                    </Text>
+                  </Pressable>
+                ) : null}
                 {FILTERS.map((filter) => {
                   const selected = filter === activeFilter;
                   return (
                     <Pressable
                       key={filter}
-                      onPress={() => setActiveFilter(filter)}
+                      onPress={() =>
+                        setActiveFilter((current) =>
+                          current === filter ? null : filter,
+                        )
+                      }
                       style={[styles.chip, selected && styles.chipSelected]}
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
@@ -420,6 +597,27 @@ export function ActivitiesPage() {
                 })}
               </ScrollView>
             </View>
+
+            {filterActive ? (
+              <View style={styles.resultsBar}>
+                <View style={styles.resultsCopy}>
+                  <Text style={styles.resultsCount}>
+                    “{filteredItems.length}” Resultados para:
+                  </Text>
+                  <Text style={styles.resultsPeriod} numberOfLines={1}>
+                    {resultsPeriodLabel}
+                  </Text>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Limpar filtros"
+                  hitSlop={8}
+                  onPress={clearSheetFilters}
+                >
+                  <FilterChipCloseIcon size={20} />
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         </View>
 
@@ -432,9 +630,9 @@ export function ActivitiesPage() {
           </View>
         ) : (
           <>
-            <View style={styles.summaryRow}>
+            <View style={styles.summaryColumn}>
               <CashFlowCard
-                label="Entrada"
+                label="Total entrada"
                 symbol={incomeAmount.symbol}
                 amount={incomeAmount.value}
                 hidden={!incomeVisible}
@@ -442,7 +640,7 @@ export function ActivitiesPage() {
                 tone="income"
               />
               <CashFlowCard
-                label="Saída"
+                label="Total saídas"
                 symbol={expenseAmount.symbol}
                 amount={expenseAmount.value}
                 hidden={!expenseVisible}
@@ -467,22 +665,20 @@ export function ActivitiesPage() {
               grouped.map((section) => (
                 <View key={section.key} style={styles.section}>
                   <Text style={styles.sectionTitle}>{section.title}</Text>
-                  <View style={styles.sectionCard}>
-                    <HighlightCardBorder />
-                    <View style={styles.sectionList}>
-                      {section.data.map((item) => (
-                        <TransactionListItem
-                          key={item.id}
-                          item={item}
-                          onPress={() =>
-                            router.push({
-                              pathname: "/transaction/[id]",
-                              params: { id: item.id },
-                            })
-                          }
-                        />
-                      ))}
-                    </View>
+                  <View style={styles.sectionList}>
+                    {section.data.map((item) => (
+                      <TransactionListItem
+                        key={item.id}
+                        item={item}
+                        leading="mark"
+                        onPress={() =>
+                          router.push({
+                            pathname: "/transaction/[id]",
+                            params: { id: item.id },
+                          })
+                        }
+                      />
+                    ))}
                   </View>
                 </View>
               ))
@@ -623,9 +819,53 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: BearCashColors.buttonFilledText,
   },
-  summaryRow: {
+  chipFilters: {
     flexDirection: "row",
-    gap: 16,
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 40,
+    backgroundColor: BearCashColors.text,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignSelf: "center",
+    justifyContent: "center",
+  },
+  chipFiltersText: {
+    ...BearCashTypography.bodySmall,
+    color: BearCashColors.background,
+    lineHeight: 22,
+  },
+  resultsBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+  },
+  resultsCopy: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 4,
+  },
+  resultsCount: {
+    fontFamily: BearCashFonts.semiBold,
+    fontSize: 12,
+    lineHeight: 19,
+    color: BearCashColors.text,
+  },
+  resultsPeriod: {
+    ...BearCashTypography.caption,
+    color: BearCashColors.textSoft,
+    flexShrink: 1,
+  },
+  summaryColumn: {
+    gap: 12,
   },
   emptyState: {
     flex: 1,
@@ -662,18 +902,12 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   sectionTitle: {
-    ...BearCashTypography.subheading,
+    fontFamily: BearCashFonts.semiBold,
+    fontSize: 16,
+    lineHeight: 26,
     color: BearCashColors.text,
   },
-  sectionCard: {
-    borderRadius: 12,
-    padding: 1,
-    overflow: "hidden",
-  },
   sectionList: {
-    backgroundColor: BearCashColors.surface,
-    borderRadius: 12,
-    padding: 18,
     gap: 16,
   },
   pressed: {

@@ -22,7 +22,7 @@ export function DisconnectBankSheet({
       visible={visible}
       loading={loading}
       title="Desconectar banco"
-      description={`Revogar o acesso a ${name}? As transações ficam ocultas dos totais.`}
+      description={`Desconectar ${name} no BearCash? As transações ficam ocultas dos totais. Você pode reconectar o mesmo banco depois sem nova cobrança na Polp.`}
       confirmLabel="Desconectar"
       onClose={onClose}
       onConfirm={onConfirm}

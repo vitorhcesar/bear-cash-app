@@ -68,6 +68,7 @@ export type OpenFinanceConnection = OpenFinanceConsent & {
 export interface IOpenFinanceModule {
   listInstitutions(): Promise<{ items: OpenFinanceInstitution[] }>;
   listConnections(): Promise<{ items: OpenFinanceConnection[] }>;
+  syncConnections(): Promise<{ items: OpenFinanceConnection[] }>;
   getConnection(id: string): Promise<OpenFinanceConnection>;
   listCreditCardBills(creditCardId: string): Promise<{ items: OpenFinanceBill[] }>;
   createConsent(input: { institutionId: string }): Promise<OpenFinanceConsent>;
@@ -87,6 +88,12 @@ export class OpenFinanceModule extends BaseApiModule implements IOpenFinanceModu
   listConnections() {
     return this.http.get<{ items: OpenFinanceConnection[] }>(
       '/api/v1/open-finance/connections',
+    );
+  }
+
+  syncConnections() {
+    return this.http.post<{ items: OpenFinanceConnection[] }>(
+      '/api/v1/open-finance/sync',
     );
   }
 

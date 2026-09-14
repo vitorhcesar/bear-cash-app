@@ -168,7 +168,9 @@ export function ActivitiesCategoriesSheet({
           children: group.children,
         }))
       : CATEGORY_GROUPS.flatMap((group) => {
-          const groupMatches = matchesQuery(group.label, normalizedQuery);
+          const groupMatches =
+            matchesQuery(group.label, normalizedQuery) ||
+            matchesQuery(group.chipLabel, normalizedQuery);
           const children = groupMatches
             ? group.children
             : group.children.filter((item) =>
@@ -322,7 +324,11 @@ const ChildRow = memo(function ChildRow({
       >
         <View style={styles.rowMain}>
           <CategoryChildIcon iconKey={item.iconKey} color={group.color} />
-          <Text style={styles.childLabel}>{item.label}</Text>
+          <Text
+            style={[styles.childLabel, checked && styles.childLabelChecked]}
+          >
+            {item.label}
+          </Text>
         </View>
         <Checkbox checked={checked} />
       </Pressable>
@@ -406,6 +412,10 @@ const styles = StyleSheet.create({
     ...BearCashTypography.bodySmall,
     color: BearCashColors.textSoft,
     flex: 1,
+  },
+  childLabelChecked: {
+    color: BearCashColors.text,
+    fontFamily: BearCashFonts.semiBold,
   },
   checkboxOuter: {
     width: 20,

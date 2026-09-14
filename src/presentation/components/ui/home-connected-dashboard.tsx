@@ -4,16 +4,12 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
-import {
-  CATEGORY_GROUPS,
-  getCategoryDisplay,
-  getCategoryGroupLabel,
-} from "@/presentation/components/ui/activities-category-catalog";
 import { CategoryChipIcon } from "@/presentation/components/ui/activities-category-icons";
+import { summarizeCategorySpend } from "@/presentation/components/ui/category-spend";
 import { ExpenseArrowIcon } from "@/presentation/components/ui/activities-icons";
-import { formatActivityDay } from "@/presentation/components/ui/calendar";
 import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
 import { HighlightCardBorder } from "@/presentation/components/ui/highlight-card-border";
+import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
   HomeDashInflowIcon,
   HomeDashInstallmentsIcon,
@@ -22,7 +18,7 @@ import {
 } from "@/presentation/components/ui/home-icons";
 import { InstitutionMark } from "@/presentation/components/ui/institution-mark";
 import { BankMarkStack } from "@/presentation/components/ui/bank-mark-stack";
-import { TransactionCardIcon, TransactionPencilIcon } from "@/presentation/components/ui/new-transaction-icons";
+import { TransactionCardIcon } from "@/presentation/components/ui/new-transaction-icons";
 import {
   BearCashColors,
   BearCashFonts,
@@ -31,7 +27,6 @@ import {
 
 const CATEGORIES_BEAR = require("@/assets/images/home/categories-bear.jpg");
 const OUTFLOW_AMOUNT = "#ffa9aa";
-const LAST_TX_AMOUNT = "#ff2e31";
 const TREND_MUTED = "#59565d";
 
 type HomeConnectedDashboardProps = {
@@ -39,6 +34,7 @@ type HomeConnectedDashboardProps = {
   transactions: TransactionItem[];
   onPressLastTransaction?: (id: string) => void;
   onPressTransactions?: () => void;
+  onPressCategories?: () => void;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -199,6 +195,7 @@ export function HomeConnectedDashboard({
   transactions,
   onPressLastTransaction,
   onPressTransactions,
+  onPressCategories,
 }: HomeConnectedDashboardProps) {
   const now = new Date();
   const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -259,46 +256,15 @@ export function HomeConnectedDashboard({
   }, [now, prev, visible]);
 
   const categories = useMemo(() => {
-    const totals = new Map<
-      string,
-      { label: string; iconKey: string; color: string; amount: number }
-    >();
-    for (const item of visible) {
-      if (item.type !== "DEBIT") {
-        continue;
-      }
-      if (!inMonth(new Date(item.date), now.getFullYear(), now.getMonth())) {
-        continue;
-      }
-      const display = item.categoryId
-        ? getCategoryDisplay(item.categoryId)
-        : undefined;
-      const groupLabel =
-        (item.categoryId
-          ? getCategoryGroupLabel(item.categoryId)
-          : undefined) ??
-        item.category ??
-        "Outros";
-      const group = CATEGORY_GROUPS.find((entry) => entry.label === groupLabel);
-      const key = group?.id ?? groupLabel;
-      const current = totals.get(key);
-      const amount = Math.abs(item.amount);
-      if (current) {
-        current.amount += amount;
-        continue;
-      }
-      totals.set(key, {
-        label: group?.label ?? groupLabel,
-        iconKey: display?.iconKey ?? group?.parentIconKey ?? "parent-food",
-        color: display?.color ?? group?.color ?? BearCashColors.textMid,
-        amount,
-      });
-    }
-    const list = [...totals.values()].sort((a, b) => b.amount - a.amount);
+    const spend = summarizeCategorySpend(
+      visible,
+      now.getFullYear(),
+      now.getMonth(),
+    );
     return {
-      total: list.reduce((sum, item) => sum + item.amount, 0),
-      count: list.length,
-      top: list[0] ?? null,
+      total: spend.total,
+      count: spend.items.length,
+      top: spend.items[0] ?? null,
     };
   }, [now, visible]);
 
@@ -314,14 +280,6 @@ export function HomeConnectedDashboard({
       (a, b) => Date.parse(b.date) - Date.parse(a.date),
     )[0];
   }, [visible]);
-
-  const lastCategory = last?.categoryId
-    ? getCategoryDisplay(last.categoryId)
-    : undefined;
-  const lastGroupLabel =
-    (last?.categoryId ? getCategoryGroupLabel(last.categoryId) : undefined) ??
-    last?.category ??
-    "Sem categoria";
 
   return (
     <View style={styles.root}>
@@ -447,7 +405,15 @@ export function HomeConnectedDashboard({
         ) : null}
       </GlassCard>
 
-      <View style={styles.categoriesCard}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Total em categorias"
+        onPress={onPressCategories}
+        style={({ pressed }) => [
+          styles.categoriesCard,
+          pressed && styles.categoriesPressed,
+        ]}
+      >
         <Image
           source={CATEGORIES_BEAR}
           style={StyleSheet.absoluteFill}
@@ -483,7 +449,7 @@ export function HomeConnectedDashboard({
             </View>
           ) : null}
         </View>
-      </View>
+      </Pressable>
 
       <View style={styles.row}>
         <GlassCard style={styles.flexCard} contentStyle={styles.metricInner}>
@@ -527,50 +493,14 @@ export function HomeConnectedDashboard({
           </View>
         </Pressable>
         {last ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={last.description}
-            onPress={() => onPressLastTransaction?.(last.id)}
-            style={({ pressed }) => [styles.lastRow, pressed && styles.pressed]}
-          >
-            <View style={styles.lastCopy}>
-              <View style={styles.lastTitleRow}>
-                {lastCategory ? (
-                  <CategoryChipIcon
-                    iconKey={lastCategory.iconKey}
-                    color={lastCategory.color}
-                    size={12}
-                  />
-                ) : (
-                  <TransactionPencilIcon size={12} />
-                )}
-                <Text style={styles.lastName} numberOfLines={1}>
-                  {lastGroupLabel}
-                </Text>
-              </View>
-              <View style={styles.lastMetaRow}>
-                <Text style={styles.lastMeta}>
-                  {formatActivityDay(new Date(last.date))}
-                </Text>
-                <View style={styles.dot} />
-                <Text style={styles.lastMeta} numberOfLines={1}>
-                  {last.description}
-                </Text>
-              </View>
-              <Text style={styles.lastMeta} numberOfLines={1}>
-                {last.bankName?.trim() || "BearCash"}
-              </Text>
-            </View>
-            <Text
-              style={[
-                styles.lastAmount,
-                last.type === "CREDIT" ? styles.lastIncome : styles.lastExpense,
-              ]}
-            >
-              {last.type === "CREDIT" ? "+" : "-"}
-              {getCurrencySymbol(last.currencyCode)} {formatAmount(last.amount)}
-            </Text>
-          </Pressable>
+          <TransactionListItem
+            item={last}
+            onPress={
+              onPressLastTransaction
+                ? () => onPressLastTransaction(last.id)
+                : undefined
+            }
+          />
         ) : (
           <Text style={styles.emptyLast}>Nenhuma transação ainda</Text>
         )}
@@ -743,13 +673,18 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     minHeight: 148,
   },
+  categoriesPressed: {
+    opacity: 0.92,
+  },
   categoriesDim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   categoriesInner: {
+    minHeight: 148,
     padding: 18,
     gap: 10,
+    justifyContent: "space-between",
     backgroundColor: "rgba(18,19,17,0.4)",
   },
   categoriesCopy: {
@@ -822,58 +757,6 @@ const styles = StyleSheet.create({
   countBadgeText: {
     ...BearCashTypography.captionSmall,
     color: BearCashColors.buttonFilledText,
-  },
-  lastRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  lastCopy: {
-    flex: 1,
-    minWidth: 0,
-    gap: 2,
-  },
-  lastTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  lastName: {
-    flex: 1,
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 12,
-    lineHeight: 19,
-    color: BearCashColors.text,
-  },
-  lastMetaRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    minWidth: 0,
-  },
-  lastMeta: {
-    ...BearCashTypography.captionSmall,
-    color: BearCashColors.textSoft,
-  },
-  dot: {
-    width: 2,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: BearCashColors.textSoft,
-  },
-  lastAmount: {
-    ...BearCashTypography.caption,
-    flexShrink: 0,
-  },
-  lastIncome: {
-    color: BearCashColors.income,
-  },
-  lastExpense: {
-    color: LAST_TX_AMOUNT,
   },
   emptyLast: {
     ...BearCashTypography.caption,

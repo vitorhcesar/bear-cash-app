@@ -3,6 +3,7 @@ import { useCallback, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -16,19 +17,23 @@ import type { TransactionItem } from '@/infra/http/services/api/modules/transact
 import {
   getCategoryDisplay,
   getCategoryGroupLabel,
+  getCategoryLabel,
 } from '@/presentation/components/ui/activities-category-catalog';
 import { CategoryChipIcon } from '@/presentation/components/ui/activities-category-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { Button } from '@/presentation/components/ui/button';
 import { formatTransactionDetailsDate } from '@/presentation/components/ui/calendar';
+import { CategoryPickerSheet } from '@/presentation/components/ui/category-picker-sheet';
 import { ConfirmationSheet } from '@/presentation/components/ui/confirmation-sheet';
 import { getCurrencySymbol } from '@/presentation/components/ui/currencies';
+import { HighlightCardBorder } from '@/presentation/components/ui/highlight-card-border';
 import {
   TransactionCardIcon,
   TransactionPencilIcon,
   TransactionTrashIcon,
 } from '@/presentation/components/ui/new-transaction-icons';
-import { SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
+import { SettingsChevronIcon, SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
+import { HintInfoIcon } from '@/presentation/components/ui/subscription-icons';
 import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
   BearCashColors,
@@ -103,6 +108,31 @@ function getPaymentMethodLabel(item: TransactionItem) {
   );
 }
 
+function normalizeDescription(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function countSimilarTransactions(current: TransactionItem, items: TransactionItem[]) {
+  const needle = normalizeDescription(current.descriptionRaw || current.description);
+  if (!needle) {
+    return 0;
+  }
+
+  return items.filter((candidate) => {
+    if (candidate.id === current.id) {
+      return false;
+    }
+    const haystack = normalizeDescription(
+      candidate.descriptionRaw || candidate.description,
+    );
+    return haystack === needle;
+  }).length;
+}
+
 function formatAbsoluteAmount(amount: number) {
   return Math.abs(amount).toLocaleString('pt-BR', {
     minimumFractionDigits: 2,
@@ -114,10 +144,12 @@ function FactRow({
   icon,
   label,
   value,
+  trailing,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
+  trailing?: ReactNode;
 }) {
   return (
     <View style={styles.factRow}>
@@ -126,6 +158,7 @@ function FactRow({
         <Text style={styles.factLabel}>{label}</Text>
         <Text style={styles.factValue}>{value}</Text>
       </View>
+      {trailing}
     </View>
   );
 }
@@ -138,8 +171,11 @@ export function TransactionDetailsPage() {
   const [item, setItem] = useState<TransactionItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
+  const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [savingRecurring, setSavingRecurring] = useState(false);
+  const [savingCategory, setSavingCategory] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [similarCount, setSimilarCount] = useState(0);
 
   const load = useCallback(async () => {
     if (!transactionId) {
@@ -150,6 +186,12 @@ export function TransactionDetailsPage() {
     try {
       const next = await api.modules.transactions.get(transactionId);
       setItem(next);
+      try {
+        const list = await api.modules.transactions.list();
+        setSimilarCount(countSimilarTransactions(next, list.items));
+      } catch {
+        setSimilarCount(0);
+      }
     } catch (error) {
       Alert.alert(
         'Erro',
@@ -196,6 +238,33 @@ export function TransactionDetailsPage() {
       );
     } finally {
       setSavingRecurring(false);
+    }
+  }
+
+  async function handleCategorySelect(id: string) {
+    if (!item || savingCategory) {
+      return;
+    }
+
+    const previous = item;
+    const label = getCategoryLabel(id) ?? item.category;
+    setItem({ ...item, categoryId: id, category: label ?? item.category });
+    setSavingCategory(true);
+
+    try {
+      const updated = await api.modules.transactions.update(item.id, {
+        categoryId: id,
+        category: label,
+      });
+      setItem(updated);
+    } catch (error) {
+      setItem(previous);
+      Alert.alert(
+        'Erro',
+        getErrorMessage(error, 'Não foi possível atualizar a categoria.'),
+      );
+    } finally {
+      setSavingCategory(false);
     }
   }
 
@@ -264,7 +333,7 @@ export function TransactionDetailsPage() {
           <View style={styles.body}>
             <View style={styles.summary}>
               <View style={styles.iconStack}>
-                <View style={styles.categoryBox}>
+                <View style={[styles.categoryBox, styles.heroCategoryBox]}>
                   {category ? (
                     <CategoryChipIcon
                       iconKey={category.iconKey}
@@ -288,11 +357,11 @@ export function TransactionDetailsPage() {
               <View style={styles.summaryCopy}>
                 <Text style={styles.name}>{item.description}</Text>
                 <View style={styles.amountRow}>
-                  <Text style={styles.amountText}>
+                  <Text style={styles.amountSymbol}>
                     {isCredit ? '+' : '-'}
-                    {symbol}{' '}
+                    {symbol}
                   </Text>
-                  <Text style={styles.amountText}>
+                  <Text style={styles.amountValue}>
                     {formatAbsoluteAmount(item.amount)}
                   </Text>
                 </View>
@@ -301,6 +370,32 @@ export function TransactionDetailsPage() {
                 </Text>
               </View>
             </View>
+
+            {similarCount > 0 ? (
+              <Pressable
+                style={styles.similarBar}
+                accessibilityRole="button"
+                accessibilityLabel={`${similarCount} transações similares`}
+                onPress={() =>
+                  router.push({
+                    pathname: '/(tabs)/activities',
+                    params: { q: item.description },
+                  })
+                }
+              >
+                <View style={styles.similarCopy}>
+                  <HintInfoIcon size={12} color={BearCashColors.textMid} />
+                  <Text style={styles.similarText}>
+                    Você tem{' '}
+                    <Text style={styles.similarCountText}>{similarCount}</Text>
+                    {similarCount === 1
+                      ? ' transação similar'
+                      : ' transações similares'}
+                  </Text>
+                </View>
+                <SettingsChevronIcon size={16} color={BearCashColors.textMid} />
+              </Pressable>
+            ) : null}
 
             <View style={styles.facts}>
               <FactRow
@@ -319,6 +414,18 @@ export function TransactionDetailsPage() {
                 }
                 label="Categoria"
                 value={categoryLabel}
+                trailing={
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Editar categoria"
+                    hitSlop={8}
+                    disabled={savingCategory}
+                    onPress={() => setCategorySheetOpen(true)}
+                    style={styles.categoryEdit}
+                  >
+                    <TransactionPencilIcon size={24} color={BearCashColors.text} />
+                  </Pressable>
+                }
               />
 
               <FactRow
@@ -358,35 +465,39 @@ export function TransactionDetailsPage() {
               ) : null}
             </View>
 
-            <View style={styles.recurringCard}>
-              <View style={styles.recurringCopy}>
-                <Text style={styles.recurringTitle}>Cobrança Recorrente</Text>
-                <Text style={styles.recurringDescription}>
-                  A cobrança será realizada nesta mesma data nos próximos meses.
-                </Text>
+            <View style={styles.recurringShell}>
+              <HighlightCardBorder />
+              <View style={styles.recurringCard}>
+                <View style={styles.recurringCopy}>
+                  <Text style={styles.recurringTitle}>Cobrança Recorrente</Text>
+                  <Text style={styles.recurringDescription}>
+                    A cobrança será realizada nesta mesma data nos próximos meses.
+                  </Text>
+                </View>
+                <Switch
+                  value={Boolean(item.recurring)}
+                  onValueChange={(value) => {
+                    void handleRecurringChange(value);
+                  }}
+                  disabled={savingRecurring}
+                  trackColor={{
+                    false: BearCashColors.borderStrong,
+                    true: BearCashColors.buttonFilled,
+                  }}
+                  thumbColor={BearCashColors.background}
+                  ios_backgroundColor={BearCashColors.borderStrong}
+                />
               </View>
-              <Switch
-                value={Boolean(item.recurring)}
-                onValueChange={(value) => {
-                  void handleRecurringChange(value);
-                }}
-                disabled={savingRecurring}
-                trackColor={{
-                  false: BearCashColors.borderStrong,
-                  true: BearCashColors.primary,
-                }}
-                thumbColor={BearCashColors.background}
-                ios_backgroundColor={BearCashColors.borderStrong}
-              />
             </View>
           </View>
         </ScrollView>
 
         <View style={styles.actions}>
           <Button
-            label="Editar Registro"
+            label="Selecionar"
+            style={styles.selectButton}
             rightIcon={
-              <SettingsEditIcon size={16} color={BearCashColors.buttonFilledText} />
+              <SettingsEditIcon size={16} color={BearCashColors.background} />
             }
             onPress={() =>
               router.push({
@@ -396,7 +507,7 @@ export function TransactionDetailsPage() {
             }
           />
           <Button
-            label="Excluir Registro"
+            label="Excluir registro"
             variant="stroke"
             rightIcon={<TransactionTrashIcon size={16} color={BearCashColors.text} />}
             onPress={() => setDeleteSheetOpen(true)}
@@ -404,6 +515,14 @@ export function TransactionDetailsPage() {
         </View>
       </View>
 
+      <CategoryPickerSheet
+        visible={categorySheetOpen}
+        selectedId={item.categoryId}
+        onClose={() => setCategorySheetOpen(false)}
+        onSelect={(id) => {
+          void handleCategorySelect(id);
+        }}
+      />
       <ConfirmationSheet
         visible={deleteSheetOpen}
         loading={deleting}
@@ -463,11 +582,13 @@ const styles = StyleSheet.create({
   },
   categoryBox: {
     backgroundColor: BearCashColors.surface,
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 8,
   },
+  heroCategoryBox: {
+    marginRight: -8,
+  },
   bankBadge: {
-    marginLeft: -11,
     zIndex: 1,
   },
   summaryCopy: {
@@ -482,13 +603,44 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
-  amountText: {
+  amountSymbol: {
+    ...BearCashTypography.subheading,
+    color: BearCashColors.text,
+  },
+  amountValue: {
     ...BearCashTypography.h1,
     color: BearCashColors.text,
   },
   date: {
     ...BearCashTypography.bodySmall,
     color: BearCashColors.textSoft,
+  },
+  similarBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  similarCopy: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  similarText: {
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
+    flexShrink: 1,
+  },
+  similarCountText: {
+    ...BearCashTypography.caption,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.text,
   },
   facts: {
     gap: 16,
@@ -508,13 +660,24 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
   },
   factValue: {
-    ...BearCashTypography.bodySmall,
+    ...BearCashTypography.subheading,
     color: BearCashColors.text,
+  },
+  categoryEdit: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recurringShell: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    padding: 1,
   },
   recurringCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 24,
+    gap: 12,
     backgroundColor: BearCashColors.surface,
     borderRadius: 12,
     padding: 12,
@@ -535,6 +698,9 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
   },
   actions: {
-    gap: 16,
+    gap: 12,
+  },
+  selectButton: {
+    backgroundColor: '#E0DFE2',
   },
 });
