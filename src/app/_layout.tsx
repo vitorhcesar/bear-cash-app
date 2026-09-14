@@ -121,6 +121,7 @@ function RootNavigator() {
           <Stack.Screen name="new-transaction" options={pushFromRight} />
           <Stack.Screen name="edit-transaction" options={pushFromRight} />
           <Stack.Screen name="transaction/[id]" options={pushFromRight} />
+          <Stack.Screen name="transaction/[id]/similar" options={pushFromRight} />
           <Stack.Screen name="categories" options={pushFromRight} />
           <Stack.Screen name="category/[id]" options={pushFromRight} />
         </Stack.Protected>

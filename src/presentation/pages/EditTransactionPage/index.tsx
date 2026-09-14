@@ -71,6 +71,7 @@ export function EditTransactionPage() {
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [hiddenFromTotals, setHiddenFromTotals] = useState(false);
   const [type, setType] = useState<'CREDIT' | 'DEBIT'>('DEBIT');
+  const [source, setSource] = useState<'MANUAL' | 'OPEN_FINANCE' | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const category = categoryId ? getCategoryDisplay(categoryId) : undefined;
   const amountLabel = formatAmountMask(amountCents);
@@ -101,6 +102,15 @@ export function EditTransactionPage() {
         setCurrencyCode(item.currencyCode);
         setCategoryId(item.categoryId);
         setHiddenFromTotals(Boolean(item.hiddenFromTotals));
+        setSource(item.source);
+
+        if (item.source === 'OPEN_FINANCE') {
+          Alert.alert(
+            'Transação do Open Finance',
+            'Transações importadas do banco não podem ser editadas. Você só pode marcá-las como recorrentes.',
+            [{ text: 'OK', onPress: () => router.back() }],
+          );
+        }
       } catch (error) {
         Alert.alert(
           'Erro',
@@ -125,7 +135,7 @@ export function EditTransactionPage() {
   }
 
   async function handleSubmit() {
-    if (!canSubmit || submitting || !transactionId) {
+    if (!canSubmit || submitting || !transactionId || source === 'OPEN_FINANCE') {
       return;
     }
 

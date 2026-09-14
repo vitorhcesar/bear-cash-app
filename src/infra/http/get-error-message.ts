@@ -51,6 +51,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   POLP_PLAN_REQUIRED:
     'O plano da conexão Open Finance não cobre esta atualização. Tente novamente mais tarde.',
   POLP_REQUEST_FAILED: 'Não foi possível falar com o Open Finance. Tente novamente.',
+  TRANSACTION_OPEN_FINANCE_READONLY:
+    'Transações do Open Finance não podem ser editadas nem excluídas. Você só pode marcá-las como recorrentes.',
 };
 
 /** Mensagem amigável para Alert — inclui falha de rede. */

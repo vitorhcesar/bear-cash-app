@@ -33,6 +33,7 @@ import {
   TransactionTrashIcon,
 } from '@/presentation/components/ui/new-transaction-icons';
 import { SettingsChevronIcon, SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
+import { countSimilarTransactions } from '@/presentation/components/ui/similar-transactions';
 import { HintInfoIcon } from '@/presentation/components/ui/subscription-icons';
 import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
@@ -106,31 +107,6 @@ function getPaymentMethodLabel(item: TransactionItem) {
     firstString(card, ['holder', 'cardNetwork', 'brand']) ??
     (item.source === 'MANUAL' ? 'Lançamento manual' : 'Não informado')
   );
-}
-
-function normalizeDescription(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
-
-function countSimilarTransactions(current: TransactionItem, items: TransactionItem[]) {
-  const needle = normalizeDescription(current.descriptionRaw || current.description);
-  if (!needle) {
-    return 0;
-  }
-
-  return items.filter((candidate) => {
-    if (candidate.id === current.id) {
-      return false;
-    }
-    const haystack = normalizeDescription(
-      candidate.descriptionRaw || candidate.description,
-    );
-    return haystack === needle;
-  }).length;
 }
 
 function formatAbsoluteAmount(amount: number) {
@@ -316,6 +292,7 @@ export function TransactionDetailsPage() {
   const symbol = getCurrencySymbol(item.currencyCode);
   const accountLabel = item.bankName?.trim() || 'BearCash';
   const installmentLabel = getInstallmentLabel(item);
+  const canEdit = item.source === 'MANUAL';
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -378,8 +355,8 @@ export function TransactionDetailsPage() {
                 accessibilityLabel={`${similarCount} transações similares`}
                 onPress={() =>
                   router.push({
-                    pathname: '/(tabs)/activities',
-                    params: { q: item.description },
+                    pathname: '/transaction/[id]/similar',
+                    params: { id: item.id },
                   })
                 }
               >
@@ -415,16 +392,18 @@ export function TransactionDetailsPage() {
                 label="Categoria"
                 value={categoryLabel}
                 trailing={
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Editar categoria"
-                    hitSlop={8}
-                    disabled={savingCategory}
-                    onPress={() => setCategorySheetOpen(true)}
-                    style={styles.categoryEdit}
-                  >
-                    <TransactionPencilIcon size={24} color={BearCashColors.text} />
-                  </Pressable>
+                  canEdit ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Editar categoria"
+                      hitSlop={8}
+                      disabled={savingCategory}
+                      onPress={() => setCategorySheetOpen(true)}
+                      style={styles.categoryEdit}
+                    >
+                      <TransactionPencilIcon size={24} color={BearCashColors.text} />
+                    </Pressable>
+                  ) : undefined
                 }
               />
 
@@ -492,37 +471,41 @@ export function TransactionDetailsPage() {
           </View>
         </ScrollView>
 
-        <View style={styles.actions}>
-          <Button
-            label="Selecionar"
-            style={styles.selectButton}
-            rightIcon={
-              <SettingsEditIcon size={16} color={BearCashColors.background} />
-            }
-            onPress={() =>
-              router.push({
-                pathname: '/edit-transaction',
-                params: { id: item.id },
-              })
-            }
-          />
-          <Button
-            label="Excluir registro"
-            variant="stroke"
-            rightIcon={<TransactionTrashIcon size={16} color={BearCashColors.text} />}
-            onPress={() => setDeleteSheetOpen(true)}
-          />
-        </View>
+        {canEdit ? (
+          <View style={styles.actions}>
+            <Button
+              label="Selecionar"
+              style={styles.selectButton}
+              rightIcon={
+                <SettingsEditIcon size={16} color={BearCashColors.background} />
+              }
+              onPress={() =>
+                router.push({
+                  pathname: '/edit-transaction',
+                  params: { id: item.id },
+                })
+              }
+            />
+            <Button
+              label="Excluir registro"
+              variant="stroke"
+              rightIcon={<TransactionTrashIcon size={16} color={BearCashColors.text} />}
+              onPress={() => setDeleteSheetOpen(true)}
+            />
+          </View>
+        ) : null}
       </View>
 
-      <CategoryPickerSheet
-        visible={categorySheetOpen}
-        selectedId={item.categoryId}
-        onClose={() => setCategorySheetOpen(false)}
-        onSelect={(id) => {
-          void handleCategorySelect(id);
-        }}
-      />
+      {canEdit ? (
+        <CategoryPickerSheet
+          visible={categorySheetOpen}
+          selectedId={item.categoryId}
+          onClose={() => setCategorySheetOpen(false)}
+          onSelect={(id) => {
+            void handleCategorySelect(id);
+          }}
+        />
+      ) : null}
       <ConfirmationSheet
         visible={deleteSheetOpen}
         loading={deleting}
