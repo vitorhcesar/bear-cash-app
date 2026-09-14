@@ -39,6 +39,8 @@ import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const AVATAR_SIZE = 44;
 const HERO_PANDA = require("@/assets/images/home/hero-panda.jpg");
+const EMPTY_HERO_RATIO = 0.6;
+const EMPTY_COPY_MIN_HEIGHT = 300;
 
 function firstNameFromSession(
   fullName?: string | null,
@@ -53,6 +55,23 @@ function firstNameFromSession(
   return first.charAt(0).toUpperCase() + first.slice(1);
 }
 
+function HeroPanda({ width, height }: { width: number; height: number }) {
+  if (width <= 0 || height <= 0) {
+    return null;
+  }
+
+  return (
+    <Image
+      source={HERO_PANDA}
+      style={{ position: "absolute", top: 0, left: 0, width, height }}
+      contentFit="cover"
+      contentPosition="center"
+      cachePolicy="memory-disk"
+      accessibilityLabel="Mascote BearCash"
+    />
+  );
+}
+
 function HeroScrim() {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -64,45 +83,56 @@ function HeroScrim() {
     }
   }
 
+  const svgHeight = size.height + 2;
+
   return (
-    <View pointerEvents="none" onLayout={onLayout} style={styles.heroScrim}>
-      {size.width > 0 ? (
-        <Svg
-          width={size.width}
-          height={size.height}
-          style={StyleSheet.absoluteFill}
-        >
-          <Defs>
-            <LinearGradient id={`hero${uid}`} x1="0" y1="0" x2="0" y2="1">
-              <Stop
-                offset="0.07276"
-                stopColor={BearCashColors.background}
-                stopOpacity={0}
-              />
-              <Stop
-                offset="0.36963"
-                stopColor={BearCashColors.background}
-                stopOpacity={0.637}
-              />
-              <Stop
-                offset="0.60764"
-                stopColor={BearCashColors.background}
-                stopOpacity={0.882}
-              />
-              <Stop
-                offset="0.78936"
-                stopColor={BearCashColors.background}
-                stopOpacity={1}
-              />
-            </LinearGradient>
-          </Defs>
-          <Rect
+    <View pointerEvents="none" style={styles.heroScrim}>
+      <View onLayout={onLayout} style={StyleSheet.absoluteFill}>
+        {size.width > 0 ? (
+          <Svg
             width={size.width}
-            height={size.height}
-            fill={`url(#hero${uid})`}
-          />
-        </Svg>
-      ) : null}
+            height={svgHeight}
+            style={StyleSheet.absoluteFill}
+            preserveAspectRatio="none"
+          >
+            <Defs>
+              <LinearGradient id={`hero${uid}`} x1="0" y1="0" x2="0" y2="1">
+                <Stop
+                  offset="0.07276"
+                  stopColor={BearCashColors.background}
+                  stopOpacity={0}
+                />
+                <Stop
+                  offset="0.36963"
+                  stopColor={BearCashColors.background}
+                  stopOpacity={0.637}
+                />
+                <Stop
+                  offset="0.60764"
+                  stopColor={BearCashColors.background}
+                  stopOpacity={0.882}
+                />
+                <Stop
+                  offset="0.78936"
+                  stopColor={BearCashColors.background}
+                  stopOpacity={1}
+                />
+                <Stop
+                  offset="1"
+                  stopColor={BearCashColors.background}
+                  stopOpacity={1}
+                />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              width={size.width}
+              height={svgHeight}
+              fill={`url(#hero${uid})`}
+            />
+          </Svg>
+        ) : null}
+      </View>
+      <View style={styles.heroScrimCap} />
     </View>
   );
 }
@@ -138,13 +168,21 @@ function HomeEmptyState({
   onOpenBankSelect: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const heroHeight = Math.min(
+    Math.round(windowHeight * EMPTY_HERO_RATIO),
+    Math.max(280, windowHeight - EMPTY_COPY_MIN_HEIGHT),
+  );
+  const [heroSize, setHeroSize] = useState({
+    width: windowWidth,
+    height: heroHeight,
+  });
 
   return (
     <View style={styles.safeArea}>
       <View style={styles.emptyRoot}>
         <View
-          style={styles.hero}
+          style={[styles.hero, { height: heroHeight }]}
           onLayout={(event) => {
             const { width, height } = event.nativeEvent.layout;
             if (width !== heroSize.width || height !== heroSize.height) {
@@ -152,20 +190,7 @@ function HomeEmptyState({
             }
           }}
         >
-          {heroSize.width > 0 ? (
-            <Image
-              source={HERO_PANDA}
-              style={{
-                position: "absolute",
-                width: heroSize.width,
-                height: heroSize.height,
-              }}
-              contentFit="cover"
-              contentPosition="center"
-              cachePolicy="memory-disk"
-              accessibilityLabel="Mascote BearCash"
-            />
-          ) : null}
+          <HeroPanda width={heroSize.width} height={heroSize.height} />
           <HeroScrim />
 
           <View style={[styles.heroHeader, { top: insets.top + 16 }]}>
@@ -232,9 +257,12 @@ function HomeConnectedState({
   onPressTransactions: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-  const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const heroHeight = Math.max(280, Math.round(windowHeight * 0.38));
+  const [heroSize, setHeroSize] = useState({
+    width: windowWidth,
+    height: heroHeight,
+  });
 
   return (
     <View style={styles.safeArea}>
@@ -251,20 +279,7 @@ function HomeConnectedState({
             }
           }}
         >
-          {heroSize.width > 0 ? (
-            <Image
-              source={HERO_PANDA}
-              style={{
-                position: "absolute",
-                width: heroSize.width,
-                height: heroSize.height,
-              }}
-              contentFit="cover"
-              contentPosition="center"
-              cachePolicy="memory-disk"
-              accessibilityLabel="Mascote BearCash"
-            />
-          ) : null}
+          <HeroPanda width={heroSize.width} height={heroSize.height} />
           <HeroScrim />
 
           <View style={[styles.heroHeader, { top: insets.top + 16 }]}>
@@ -431,9 +446,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   hero: {
-    flex: 1,
     width: "100%",
-    minHeight: 280,
     overflow: "hidden",
     position: "relative",
   },
@@ -443,6 +456,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: "72%",
+  },
+  heroScrimCap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 6,
+    backgroundColor: BearCashColors.background,
   },
   heroHeader: {
     position: "absolute",
@@ -480,10 +501,14 @@ const styles = StyleSheet.create({
     color: BearCashColors.textMid,
   },
   emptyCopy: {
+    flex: 1,
+    zIndex: 2,
+    marginTop: -2,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
     gap: 24,
+    backgroundColor: BearCashColors.background,
   },
   emptyTitleBlock: {
     gap: 6,
@@ -523,9 +548,12 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   connectedDashboard: {
+    zIndex: 2,
+    marginTop: -2,
     paddingHorizontal: 16,
     paddingTop: 16,
     gap: 16,
+    backgroundColor: BearCashColors.background,
   },
   loadingRoot: {
     flex: 1,

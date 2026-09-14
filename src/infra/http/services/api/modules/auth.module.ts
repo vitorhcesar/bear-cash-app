@@ -1,3 +1,5 @@
+import { File as ExpoFile } from 'expo-file-system';
+
 import { BaseApiModule } from '@/infra/http/services/api/modules/base-api.module';
 
 export type EmailStartResponse = {
@@ -238,11 +240,7 @@ export class AuthModule extends BaseApiModule implements IAuthModule {
 
   uploadAvatarPhoto(uri: string) {
     const form = new FormData();
-    form.append('file', {
-      uri,
-      name: 'avatar.webp',
-      type: 'image/webp',
-    } as unknown as Blob);
+    form.append('file', new ExpoFile(uri), 'avatar.webp');
     return this.http.post<MeResponse>('/api/v1/auth/me/avatar/photo', form);
   }
 

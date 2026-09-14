@@ -4,7 +4,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { pickProfilePhoto, prepareProfilePhoto } from '@/application/avatar/prepare-profile-photo';
 import { CUSTOM_AVATAR_ID } from '@/domain/avatar/avatar.type';
-import { AvatarCropSheet } from '@/presentation/components/ui/avatar-crop-sheet';
+import { AvatarCropSheet, type ProfilePhotoCrop } from '@/presentation/components/ui/avatar-crop-sheet';
 import {
   DEFAULT_AVATARS,
   createCustomAvatar,
@@ -43,6 +43,7 @@ export function AvatarPickerSheet({
     currentAvatar?.id === CUSTOM_AVATAR_ID ? currentAvatar : null,
   );
   const [cropUri, setCropUri] = useState<string | null>(null);
+  const [cropImageSize, setCropImageSize] = useState<{ width?: number; height?: number }>({});
   const [cropVisible, setCropVisible] = useState(false);
   const [cropConfirming, setCropConfirming] = useState(false);
 
@@ -85,25 +86,27 @@ export function AvatarPickerSheet({
         return;
       }
       setCropUri(picked.uri);
+      setCropImageSize({ width: picked.width, height: picked.height });
       setCropVisible(true);
     } catch {
       Alert.alert('Erro', 'Não foi possível abrir a galeria.');
     }
   }
 
-  async function handleCropConfirm(rotationDegrees: number) {
+  async function handleCropConfirm(crop: ProfilePhotoCrop) {
     if (!cropUri || cropConfirming) {
       return;
     }
 
     setCropConfirming(true);
     try {
-      const prepared = await prepareProfilePhoto(cropUri, rotationDegrees);
+      const prepared = await prepareProfilePhoto(cropUri, crop);
       const custom = createCustomAvatar(prepared.uri);
       setDraftCustom(custom);
       setDraftId(CUSTOM_AVATAR_ID);
       setCropVisible(false);
       setCropUri(null);
+      setCropImageSize({});
       onConfirm(custom);
       onClose();
     } catch {
@@ -196,6 +199,8 @@ export function AvatarPickerSheet({
       <AvatarCropSheet
         visible={cropVisible}
         uri={cropUri}
+        imageWidth={cropImageSize.width}
+        imageHeight={cropImageSize.height}
         confirming={cropConfirming}
         onCancel={() => {
           if (cropConfirming) {
@@ -203,9 +208,10 @@ export function AvatarPickerSheet({
           }
           setCropVisible(false);
           setCropUri(null);
+          setCropImageSize({});
         }}
-        onConfirm={(rotation) => {
-          void handleCropConfirm(rotation);
+        onConfirm={(crop) => {
+          void handleCropConfirm(crop);
         }}
       />
     </>

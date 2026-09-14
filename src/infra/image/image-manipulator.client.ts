@@ -1,5 +1,13 @@
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 
+export type ProfilePhotoCropInput = {
+  rotationDegrees: number;
+  originX: number;
+  originY: number;
+  width: number;
+  height: number;
+};
+
 export type PreparedProfilePhoto = {
   uri: string;
   width: number;
@@ -12,23 +20,19 @@ function normalizeRotation(degrees: number) {
 
 export async function cropRotateAndCompressWebp(
   uri: string,
-  rotationDegrees: number,
+  crop: ProfilePhotoCropInput,
 ): Promise<PreparedProfilePhoto> {
-  const rotation = normalizeRotation(rotationDegrees);
-  const rotated = await manipulateAsync(
-    uri,
-    rotation === 0 ? [] : [{ rotate: rotation }],
-    { compress: 1 },
-  );
-
-  const size = Math.min(rotated.width, rotated.height);
-  const originX = Math.round((rotated.width - size) / 2);
-  const originY = Math.round((rotated.height - size) / 2);
+  const rotation = normalizeRotation(crop.rotationDegrees);
+  const originX = Math.max(0, Math.round(crop.originX));
+  const originY = Math.max(0, Math.round(crop.originY));
+  const width = Math.max(1, Math.round(crop.width));
+  const height = Math.max(1, Math.round(crop.height));
 
   const result = await manipulateAsync(
-    rotated.uri,
+    uri,
     [
-      { crop: { originX, originY, width: size, height: size } },
+      { crop: { originX, originY, width, height } },
+      ...(rotation === 0 ? [] : [{ rotate: rotation }]),
       { resize: { width: 512, height: 512 } },
     ],
     {

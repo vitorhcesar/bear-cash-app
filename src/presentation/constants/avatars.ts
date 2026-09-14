@@ -7,7 +7,7 @@ export interface IAvatarOption {
   source: ImageSource;
 }
 
-/** Preset profile avatars — Metro requires static string literals in require() */
+/** Preset profile avatars shown in the picker — Metro requires static string literals in require() */
 export const DEFAULT_AVATARS: IAvatarOption[] = [
   { id: 'avatar-1', source: require('@/assets/images/auth/avatar-1.png') },
   { id: 'avatar-2', source: require('@/assets/images/auth/avatar-2.png') },
@@ -16,6 +16,9 @@ export const DEFAULT_AVATARS: IAvatarOption[] = [
   { id: 'avatar-5', source: require('@/assets/images/auth/avatar-5.png') },
   { id: 'avatar-6', source: require('@/assets/images/auth/avatar-6.png') },
   { id: 'avatar-7', source: require('@/assets/images/auth/avatar-7.png') },
+];
+
+const LEGACY_AVATARS: IAvatarOption[] = [
   { id: 'avatar-8', source: require('@/assets/images/auth/avatar-8.png') },
 ];
 
@@ -23,7 +26,7 @@ export function getAvatarOption(
   avatarKey: string | null | undefined,
   fallback: IAvatarOption = DEFAULT_AVATARS[0],
 ): IAvatarOption {
-  const match = DEFAULT_AVATARS.find((avatar) => avatar.id === avatarKey);
+  const match = [...DEFAULT_AVATARS, ...LEGACY_AVATARS].find((avatar) => avatar.id === avatarKey);
   return match ?? fallback;
 }
 
