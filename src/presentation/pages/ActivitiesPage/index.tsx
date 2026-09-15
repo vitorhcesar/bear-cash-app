@@ -1,16 +1,30 @@
+import { BlurTargetView } from "expo-blur";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  Easing,
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getErrorMessage } from "@/infra/http/get-error-message";
@@ -39,7 +53,8 @@ import {
   MONTHS_LONG,
   formatActivitySection,
 } from "@/presentation/components/ui/calendar";
-import { CashFlowCard } from "@/presentation/components/ui/cash-flow-card";
+import { ActivitiesStickyHeaderBackdrop } from "@/presentation/components/ui/activities-sticky-header-backdrop";
+import { CashFlowPair } from "@/presentation/components/ui/cash-flow-card";
 import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
@@ -49,6 +64,13 @@ import {
   BearCashTypography,
 } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
+import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
+import {
+  HARD_PULL_HOLD,
+  HARD_PULL_THRESHOLD,
+  pullSpinnerOpacity,
+  rubberbandPull,
+} from "@/presentation/constants/pull-refresh";
 
 const FILTERS = ["Entradas", "Saídas", "Pagamentos", "Cartão"] as const;
 
@@ -222,7 +244,86 @@ function matchesFilter(item: TransactionItem, filter: FilterId | null) {
   return Boolean(item.creditCardMetadata);
 }
 
+const STICKY_HEADER_FALLBACK_HEIGHT = 360;
+const FILTERS_EXPANDED_FALLBACK = 38;
+const COLLAPSE_AFTER_SCROLL = 132;
+const EXPAND_BELOW_SCROLL = 20;
+
 export function ActivitiesPage() {
+  const scrollRef = useRef<Animated.ScrollView>(null);
+  const listBlurRef = useRef<View | null>(null);
+  const scrollY = useSharedValue(0);
+  const compact = useSharedValue(0);
+  const collapsed = useSharedValue(0);
+  const androidPull = useSharedValue(0);
+  const refreshingSv = useSharedValue(false);
+  const pullTriggered = useSharedValue(false);
+  const filtersExpandedH = useSharedValue(FILTERS_EXPANDED_FALLBACK);
+  const headerExpandedH = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT);
+  const headerCollapsedH = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT - 120);
+  const headerHeightSv = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT);
+  const headerPhaseRef = useRef<"expanded" | "animating" | "collapsed">(
+    "expanded",
+  );
+  const setHeaderPhase = useCallback(
+    (phase: "expanded" | "animating" | "collapsed") => {
+      headerPhaseRef.current = phase;
+    },
+    [],
+  );
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const y = event.contentOffset.y;
+      scrollY.value = y;
+      if (refreshingSv.value || y < 0) {
+        return;
+      }
+      if (y >= COLLAPSE_AFTER_SCROLL && collapsed.value === 0) {
+        collapsed.value = 1;
+        runOnJS(setHeaderPhase)("animating");
+        compact.value = withTiming(1, {
+          duration: 340,
+          easing: Easing.out(Easing.cubic),
+        }, (finished) => {
+          if (finished) {
+            runOnJS(setHeaderPhase)("collapsed");
+          }
+        });
+        return;
+      }
+      if (y <= EXPAND_BELOW_SCROLL && collapsed.value === 1) {
+        collapsed.value = 0;
+        runOnJS(setHeaderPhase)("animating");
+        compact.value = withTiming(0, {
+          duration: 320,
+          easing: Easing.out(Easing.cubic),
+        }, (finished) => {
+          if (finished) {
+            runOnJS(setHeaderPhase)("expanded");
+          }
+        });
+      }
+    },
+  });
+  const filtersSlotStyle = useAnimatedStyle(() => {
+    const p = compact.value;
+    const expanded = filtersExpandedH.value;
+    return {
+      height: interpolate(p, [0, 1], [expanded, 0]),
+      opacity: interpolate(p, [0, 0.4, 0.85], [1, 0.4, 0], Extrapolation.CLAMP),
+      marginTop: interpolate(p, [0, 1], [16, 0]),
+    };
+  });
+  const headerSpacerStyle = useAnimatedStyle(() => ({
+    height: interpolate(
+      compact.value,
+      [0, 1],
+      [headerExpandedH.value, headerCollapsedH.value],
+    ),
+  }));
+  const [stickyHeaderHeight, setStickyHeaderHeight] = useState(
+    STICKY_HEADER_FALLBACK_HEIGHT,
+  );
   const router = useRouter();
   const api = useApiService();
   const [query, setQuery] = useState("");
@@ -360,6 +461,111 @@ export function ActivitiesPage() {
     }
   }, [api.modules.openFinance, loadBankOptions, loadTransactions, query]);
 
+  useEffect(() => {
+    refreshingSv.value = refreshing;
+    if (refreshing) {
+      if (Platform.OS === "android") {
+        androidPull.value = withTiming(HARD_PULL_HOLD, { duration: 180 });
+      } else {
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollTo({ y: -HARD_PULL_HOLD, animated: true });
+        });
+      }
+      return;
+    }
+    pullTriggered.value = false;
+    androidPull.value = withTiming(0, { duration: 220 });
+  }, [androidPull, pullTriggered, refreshing, refreshingSv]);
+
+  const armPullRefresh = useCallback(() => {
+    if (pullTriggered.value || refreshingSv.value) {
+      return;
+    }
+    pullTriggered.value = true;
+    void onRefresh();
+  }, [onRefresh, pullTriggered, refreshingSv]);
+
+  function handlePullEndDrag(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    if (Platform.OS !== "ios" || refreshing || pullTriggered.value) {
+      return;
+    }
+    if (-event.nativeEvent.contentOffset.y >= HARD_PULL_THRESHOLD) {
+      armPullRefresh();
+    }
+  }
+
+  function handlePullMomentumEnd(
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) {
+    if (Platform.OS !== "ios" || refreshing || pullTriggered.value) {
+      return;
+    }
+    if (-event.nativeEvent.contentOffset.y >= HARD_PULL_THRESHOLD) {
+      armPullRefresh();
+    }
+  }
+
+  const nativeScroll = Gesture.Native();
+  const pullPan = Gesture.Pan()
+    .enabled(Platform.OS === "android")
+    .activeOffsetY(16)
+    .failOffsetX([-18, 18])
+    .simultaneousWithExternalGesture(nativeScroll)
+    .onTouchesMove((_event, state) => {
+      if (scrollY.value > 2) {
+        state.fail();
+      }
+    })
+    .onUpdate((event) => {
+      if (refreshingSv.value || scrollY.value > 2 || event.translationY <= 0) {
+        return;
+      }
+      androidPull.value = rubberbandPull(event.translationY);
+    })
+    .onEnd(() => {
+      if (refreshingSv.value) {
+        return;
+      }
+      if (androidPull.value >= HARD_PULL_THRESHOLD) {
+        androidPull.value = withTiming(HARD_PULL_HOLD, { duration: 160 });
+        runOnJS(armPullRefresh)();
+        return;
+      }
+      androidPull.value = withTiming(0, { duration: 200 });
+    });
+
+  const androidPullStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: Platform.OS === "android" ? androidPull.value : 0 },
+    ],
+  }));
+
+  const pullSpinnerStyle = useAnimatedStyle(() => {
+    const isRefreshing = refreshingSv.value;
+    const pull =
+      Platform.OS === "ios"
+        ? Math.max(-scrollY.value, isRefreshing ? HARD_PULL_HOLD : 0)
+        : androidPull.value;
+    return {
+      top: headerHeightSv.value + 4,
+      opacity: pullSpinnerOpacity(pull, isRefreshing),
+      transform: [
+        {
+          translateY: isRefreshing
+            ? 0
+            : interpolate(pull, [0, HARD_PULL_THRESHOLD], [-18, 0]),
+        },
+      ],
+    };
+  });
+
+  const handleTabRepress = useCallback(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    void onRefresh();
+  }, [onRefresh]);
+
+  useTabRepressHandler("activities", handleTabRepress);
+
   const toggleIncomeVisibility = useCallback(() => {
     const next = !incomeVisible;
     setIncomeVisible(next);
@@ -470,222 +676,282 @@ export function ActivitiesPage() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        alwaysBounceVertical
-        overScrollMode="always"
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => void onRefresh()}
-            tintColor={BearCashColors.buttonFilled}
-            colors={[BearCashColors.buttonFilled]}
-            progressBackgroundColor={BearCashColors.surface}
+      <View style={styles.screen}>
+        <BlurTargetView ref={listBlurRef} style={styles.listTarget}>
+        <GestureDetector gesture={Gesture.Simultaneous(pullPan, nativeScroll)}>
+        <Animated.ScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          alwaysBounceVertical
+          bounces
+          overScrollMode={Platform.OS === "android" ? "never" : "always"}
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+          onScrollEndDrag={handlePullEndDrag}
+          onMomentumScrollEnd={handlePullMomentumEnd}
+          contentInset={
+            Platform.OS === "ios" && refreshing
+              ? { top: HARD_PULL_HOLD }
+              : undefined
+          }
+        >
+          <Animated.View style={androidPullStyle}>
+          <Animated.View
+            pointerEvents="none"
+            style={headerSpacerStyle}
           />
-        }
-      >
-        <View style={styles.topBlock}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Atividades</Text>
-            <Pressable
-              style={({ pressed }) => [
-                styles.addButton,
-                pressed && styles.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel="Nova transação"
-              onPress={() => router.push("/new-transaction")}
-            >
-              <PlusIcon size={24} />
-            </Pressable>
-          </View>
-
-          <View style={styles.toolbar}>
-            <View style={styles.searchRow}>
-              <View style={styles.searchField}>
-                {hasQuery ? (
-                  <View style={styles.floatingLabelRow} pointerEvents="none">
-                    <View style={styles.floatingLabelBackground}>
-                      <Text style={styles.floatingLabel}>Buscar atividades</Text>
-                    </View>
-                  </View>
-                ) : null}
-                <SearchIcon size={16} />
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Buscar atividades"
-                  placeholderTextColor={BearCashColors.textSoft}
-                  value={query}
-                  onChangeText={setQuery}
-                  autoCorrect={false}
-                  returnKeyType="search"
-                  accessibilityLabel="Buscar atividades"
-                />
-                {hasQuery ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Limpar busca"
-                    hitSlop={8}
-                    onPress={() => setQuery("")}
-                  >
-                    <FilterChipCloseIcon size={16} />
-                  </Pressable>
-                ) : null}
+          {loading && items.length === 0 ? (
+            <View style={styles.loading}>
+              <ActivityIndicator
+                color={BearCashColors.primary}
+                accessibilityLabel="Carregando atividades"
+              />
+            </View>
+          ) : empty ? (
+            <View style={styles.emptyState}>
+              <EmptyActivityIcon size={24} />
+              <View style={styles.emptyCopy}>
+                <Text style={styles.emptyTitle}>
+                  Nenhuma atividade encontrada
+                </Text>
+                <Text style={styles.emptySubtitle}>
+                  Você não possui nenhuma atividade financeira registrada
+                </Text>
               </View>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Filtros"
-                hitSlop={8}
-                onPress={() => setFiltersOpen(true)}
-              >
-                <View style={styles.filterButton}>
-                  <FilterSlidersIcon size={28} />
-                  {filterActive ? <View style={styles.filterDot} /> : null}
-                </View>
-              </Pressable>
             </View>
-
-            <View style={styles.filtersWrap}>
-              <ScrollView
-                horizontal
-                style={styles.filtersScroll}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filters}
-              >
-                {filterActive ? (
-                  <Pressable
-                    onPress={() => setFiltersOpen(true)}
-                    style={styles.chipFilters}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Filtros, ${filterCount} ativos`}
-                  >
-                    <FilterSlidersIcon
-                      size={16}
-                      color={BearCashColors.background}
-                    />
-                    <Text style={styles.chipFiltersText}>
-                      Filtros ({filterCount})
-                    </Text>
-                  </Pressable>
-                ) : null}
-                {FILTERS.map((filter) => {
-                  const selected = filter === activeFilter;
-                  return (
-                    <Pressable
-                      key={filter}
+          ) : (
+            grouped.map((section) => (
+              <View key={section.key} style={styles.section}>
+                <Text style={styles.sectionTitle}>{section.title}</Text>
+                <View style={styles.sectionList}>
+                  {section.data.map((item) => (
+                    <TransactionListItem
+                      key={item.id}
+                      item={item}
+                      leading="mark"
                       onPress={() =>
-                        setActiveFilter((current) =>
-                          current === filter ? null : filter,
-                        )
+                        router.push({
+                          pathname: "/transaction/[id]",
+                          params: { id: item.id },
+                        })
                       }
-                      style={[styles.chip, selected && styles.chipSelected]}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                    >
-                      <Text
-                        style={[
-                          styles.chipText,
-                          selected && styles.chipTextSelected,
-                        ]}
-                      >
-                        {filter}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
-
-            {filterActive ? (
-              <View style={styles.resultsBar}>
-                <View style={styles.resultsCopy}>
-                  <Text style={styles.resultsCount}>
-                    “{filteredItems.length}” Resultados para:
-                  </Text>
-                  <Text style={styles.resultsPeriod} numberOfLines={1}>
-                    {resultsPeriodLabel}
-                  </Text>
+                    />
+                  ))}
                 </View>
+              </View>
+            ))
+          )}
+          </Animated.View>
+        </Animated.ScrollView>
+        </GestureDetector>
+        </BlurTargetView>
+
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.pullSpinner, pullSpinnerStyle]}
+        >
+          <View style={styles.pullSpinnerBadge}>
+            <ActivityIndicator size="large" color={BearCashColors.buttonFilled} />
+          </View>
+        </Animated.View>
+
+        <View
+          style={styles.stickyHeader}
+          onLayout={(event) => {
+            const nextHeight = event.nativeEvent.layout.height;
+            headerHeightSv.value = nextHeight;
+            const phase = headerPhaseRef.current;
+            if (phase === "expanded") {
+              headerExpandedH.value = nextHeight;
+              if (Math.abs(nextHeight - stickyHeaderHeight) > 0.5) {
+                setStickyHeaderHeight(nextHeight);
+              }
+              return;
+            }
+            if (phase === "collapsed") {
+              headerCollapsedH.value = nextHeight;
+            }
+          }}
+          pointerEvents="box-none"
+        >
+          <View style={styles.stickyHeaderShell}>
+            <ActivitiesStickyHeaderBackdrop blurTarget={listBlurRef} />
+            <View style={styles.stickyHeaderContent}>
+            <View style={styles.topBlock}>
+              <View style={styles.header}>
+                <Text style={styles.title}>Atividades</Text>
                 <Pressable
+                  style={({ pressed }) => [
+                    styles.addButton,
+                    pressed && styles.pressed,
+                  ]}
                   accessibilityRole="button"
-                  accessibilityLabel="Limpar filtros"
-                  hitSlop={8}
-                  onPress={clearSheetFilters}
+                  accessibilityLabel="Nova transação"
+                  onPress={() => router.push("/new-transaction")}
                 >
-                  <FilterChipCloseIcon size={20} />
+                  <PlusIcon size={24} />
                 </Pressable>
               </View>
-            ) : null}
-          </View>
-        </View>
 
-        {loading && items.length === 0 ? (
-          <View style={styles.loading}>
-            <ActivityIndicator
-              color={BearCashColors.primary}
-              accessibilityLabel="Carregando atividades"
-            />
-          </View>
-        ) : (
-          <>
-            <View style={styles.summaryColumn}>
-              <CashFlowCard
-                label="Total entrada"
-                symbol={incomeAmount.symbol}
-                amount={incomeAmount.value}
-                hidden={!incomeVisible}
-                onToggleVisibility={toggleIncomeVisibility}
-                tone="income"
-              />
-              <CashFlowCard
-                label="Total saídas"
-                symbol={expenseAmount.symbol}
-                amount={expenseAmount.value}
-                hidden={!expenseVisible}
-                onToggleVisibility={toggleExpenseVisibility}
-                tone="expense"
-              />
+              <View style={styles.toolbar}>
+                <View style={styles.searchRow}>
+                  <View style={styles.searchField}>
+                    {hasQuery ? (
+                      <View style={styles.floatingLabelRow} pointerEvents="none">
+                        <View style={styles.floatingLabelBackground}>
+                          <Text style={styles.floatingLabel}>
+                            Buscar atividades
+                          </Text>
+                        </View>
+                      </View>
+                    ) : null}
+                    <SearchIcon size={16} />
+                    <TextInput
+                      style={styles.searchInput}
+                      placeholder="Buscar atividades"
+                      placeholderTextColor={BearCashColors.textSoft}
+                      value={query}
+                      onChangeText={setQuery}
+                      autoCorrect={false}
+                      returnKeyType="search"
+                      accessibilityLabel="Buscar atividades"
+                    />
+                    {hasQuery ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Limpar busca"
+                        hitSlop={8}
+                        onPress={() => setQuery("")}
+                      >
+                        <FilterChipCloseIcon size={16} />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Filtros"
+                    hitSlop={8}
+                    onPress={() => setFiltersOpen(true)}
+                  >
+                    <View style={styles.filterButton}>
+                      <FilterSlidersIcon size={28} />
+                      {filterActive ? <View style={styles.filterDot} /> : null}
+                    </View>
+                  </Pressable>
+                </View>
+
+                <Animated.View
+                  style={[styles.filtersSlot, filtersSlotStyle]}
+                  pointerEvents="box-none"
+                >
+                  <View
+                    style={styles.filtersWrap}
+                    onLayout={(event) => {
+                      if (headerPhaseRef.current !== "expanded") {
+                        return;
+                      }
+                      const next = event.nativeEvent.layout.height;
+                      if (next > 8) {
+                        filtersExpandedH.value = next;
+                      }
+                    }}
+                  >
+                  <ScrollView
+                    horizontal
+                    nestedScrollEnabled
+                    style={styles.filtersScroll}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.filters}
+                  >
+                    {filterActive ? (
+                      <Pressable
+                        onPress={() => setFiltersOpen(true)}
+                        style={styles.chipFilters}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Filtros, ${filterCount} ativos`}
+                      >
+                        <FilterSlidersIcon
+                          size={16}
+                          color={BearCashColors.background}
+                        />
+                        <Text style={styles.chipFiltersText}>
+                          Filtros ({filterCount})
+                        </Text>
+                      </Pressable>
+                    ) : null}
+                    {FILTERS.map((filter) => {
+                      const selected = filter === activeFilter;
+                      return (
+                        <Pressable
+                          key={filter}
+                          onPress={() =>
+                            setActiveFilter((current) =>
+                              current === filter ? null : filter,
+                            )
+                          }
+                          style={[styles.chip, selected && styles.chipSelected]}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
+                        >
+                          <Text
+                            style={[
+                              styles.chipText,
+                              selected && styles.chipTextSelected,
+                            ]}
+                          >
+                            {filter}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </ScrollView>
+                  </View>
+                </Animated.View>
+
+                {filterActive ? (
+                  <View style={styles.resultsBar}>
+                    <View style={styles.resultsCopy}>
+                      <Text style={styles.resultsCount}>
+                        “{filteredItems.length}” Resultados para:
+                      </Text>
+                      <Text style={styles.resultsPeriod} numberOfLines={1}>
+                        {resultsPeriodLabel}
+                      </Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Limpar filtros"
+                      hitSlop={8}
+                      onPress={clearSheetFilters}
+                    >
+                      <FilterChipCloseIcon size={20} />
+                    </Pressable>
+                  </View>
+                ) : null}
+              </View>
             </View>
 
-            {empty ? (
-              <View style={styles.emptyState}>
-                <EmptyActivityIcon size={24} />
-                <View style={styles.emptyCopy}>
-                  <Text style={styles.emptyTitle}>
-                    Nenhuma atividade encontrada
-                  </Text>
-                  <Text style={styles.emptySubtitle}>
-                    Você não possui nenhuma atividade financeira registrada
-                  </Text>
-                </View>
-              </View>
-            ) : (
-              grouped.map((section) => (
-                <View key={section.key} style={styles.section}>
-                  <Text style={styles.sectionTitle}>{section.title}</Text>
-                  <View style={styles.sectionList}>
-                    {section.data.map((item) => (
-                      <TransactionListItem
-                        key={item.id}
-                        item={item}
-                        leading="mark"
-                        onPress={() =>
-                          router.push({
-                            pathname: "/transaction/[id]",
-                            params: { id: item.id },
-                          })
-                        }
-                      />
-                    ))}
-                  </View>
-                </View>
-              ))
-            )}
-          </>
-        )}
-      </ScrollView>
+            <CashFlowPair
+              compact={compact}
+              income={{
+                symbol: incomeAmount.symbol,
+                amount: incomeAmount.value,
+                hidden: !incomeVisible,
+                onToggleVisibility: toggleIncomeVisibility,
+              }}
+              expense={{
+                symbol: expenseAmount.symbol,
+                amount: expenseAmount.value,
+                hidden: !expenseVisible,
+                onToggleVisibility: toggleExpenseVisibility,
+              }}
+            />
+            </View>
+          </View>
+        </View>
+      </View>
 
       <ActivitiesFilterSheet
         visible={filtersOpen}
@@ -703,11 +969,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BearCashColors.background,
   },
+  screen: {
+    flex: 1,
+  },
+  listTarget: {
+    flex: 1,
+  },
+  pullSpinner: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    zIndex: 5,
+    alignItems: "center",
+  },
+  pullSpinnerBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(10, 10, 11, 0.9)",
+    borderWidth: 1,
+    borderColor: BearCashColors.borderStrong,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 16,
-    paddingTop: 16,
     paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
+    gap: 20,
+  },
+  stickyHeader: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  stickyHeaderShell: {
+    position: "relative",
+    width: "100%",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  stickyHeaderContent: {
+    position: "relative",
+    zIndex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 16,
     gap: 20,
   },
   topBlock: {
@@ -720,7 +1034,7 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   toolbar: {
-    gap: 16,
+    gap: 0,
   },
   addButton: {
     width: 40,
@@ -762,7 +1076,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   floatingLabelBackground: {
-    backgroundColor: BearCashColors.background,
+    backgroundColor: "rgba(10, 10, 11, 0.88)",
     paddingHorizontal: 4,
   },
   floatingLabel: {
@@ -787,6 +1101,9 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: BearCashColors.primarySoft,
+  },
+  filtersSlot: {
+    overflow: "hidden",
   },
   filtersWrap: {
     flexGrow: 0,
@@ -840,6 +1157,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
+    marginTop: 16,
     backgroundColor: BearCashColors.surface,
     borderRadius: 4,
     paddingHorizontal: 6,

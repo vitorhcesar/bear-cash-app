@@ -35,6 +35,7 @@ import {
 import { SettingsChevronIcon, SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
 import { countSimilarTransactions } from '@/presentation/components/ui/similar-transactions';
 import { HintInfoIcon } from '@/presentation/components/ui/subscription-icons';
+import { SpinningAmount } from '@/presentation/components/ui/spinning-amount';
 import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
 import {
   BearCashColors,
@@ -107,13 +108,6 @@ function getPaymentMethodLabel(item: TransactionItem) {
     firstString(card, ['holder', 'cardNetwork', 'brand']) ??
     (item.source === 'MANUAL' ? 'Lançamento manual' : 'Não informado')
   );
-}
-
-function formatAbsoluteAmount(amount: number) {
-  return Math.abs(amount).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 function FactRow({
@@ -338,9 +332,10 @@ export function TransactionDetailsPage() {
                     {isCredit ? '+' : '-'}
                     {symbol}
                   </Text>
-                  <Text style={styles.amountValue}>
-                    {formatAbsoluteAmount(item.amount)}
-                  </Text>
+                  <SpinningAmount
+                    value={item.amount}
+                    style={styles.amountValue}
+                  />
                 </View>
                 <Text style={styles.date}>
                   {formatTransactionDetailsDate(new Date(item.date))}

@@ -1,11 +1,17 @@
-import { Image } from "expo-image";
+import { Image as ExpoImage } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useId, useMemo, useState } from "react";
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import {
   ActivityIndicator,
   Alert,
-  RefreshControl,
-  ScrollView,
+  Image,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -26,6 +32,10 @@ import { BankConnectionsChip } from "@/presentation/components/ui/bank-connectio
 import { BankSelectSheet } from "@/presentation/components/ui/bank-select-sheet";
 import { Button } from "@/presentation/components/ui/button";
 import { HomeConnectedDashboard } from "@/presentation/components/ui/home-connected-dashboard";
+import {
+  HomeHeroPullScroll,
+  type HomeHeroPullScrollHandle,
+} from "@/presentation/components/ui/home-hero-pull-scroll";
 import { HomePlusIcon } from "@/presentation/components/ui/home-icons";
 import {
   DEFAULT_AVATARS,
@@ -39,23 +49,12 @@ import {
   BearCashTypography,
 } from "@/presentation/constants/theme";
 import { useApiService } from "@/presentation/hooks/use-api-service";
+import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
 
-const AVATAR_SIZE = 44;
+const AVATAR_SIZE = 56;
 const HERO_PANDA = require("@/assets/images/home/hero-panda.jpg");
 const EMPTY_HERO_RATIO = 0.6;
 const EMPTY_COPY_MIN_HEIGHT = 300;
-
-function homeRefreshControl(refreshing: boolean, onRefresh: () => void) {
-  return (
-    <RefreshControl
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      tintColor={BearCashColors.buttonFilled}
-      colors={[BearCashColors.buttonFilled]}
-      progressBackgroundColor={BearCashColors.surface}
-    />
-  );
-}
 
 function firstNameFromSession(
   fullName?: string | null,
@@ -79,9 +78,7 @@ function HeroPanda({ width, height }: { width: number; height: number }) {
     <Image
       source={HERO_PANDA}
       style={{ position: "absolute", top: 0, left: 0, width, height }}
-      contentFit="cover"
-      contentPosition="center"
-      cachePolicy="memory-disk"
+      resizeMode="cover"
       accessibilityLabel="Mascote BearCash"
     />
   );
@@ -98,16 +95,21 @@ function HeroScrim() {
     }
   }
 
-  const svgHeight = size.height + 2;
+  const svgWidth = Math.ceil(size.width) + 16;
+  const svgHeight = Math.ceil(size.height) + 8;
 
   return (
-    <View pointerEvents="none" style={styles.heroScrim}>
-      <View onLayout={onLayout} style={StyleSheet.absoluteFill}>
+    <View pointerEvents="none" collapsable={false} style={styles.heroScrim}>
+      <View
+        onLayout={onLayout}
+        style={StyleSheet.absoluteFill}
+        collapsable={false}
+      >
         {size.width > 0 ? (
           <Svg
-            width={size.width}
+            width={svgWidth}
             height={svgHeight}
-            style={StyleSheet.absoluteFill}
+            style={styles.heroScrimSvg}
             preserveAspectRatio="none"
           >
             <Defs>
@@ -140,7 +142,9 @@ function HeroScrim() {
               </LinearGradient>
             </Defs>
             <Rect
-              width={size.width}
+              x={0}
+              y={0}
+              width={svgWidth}
               height={svgHeight}
               fill={`url(#hero${uid})`}
             />
@@ -152,14 +156,21 @@ function HeroScrim() {
   );
 }
 
-function ProfileAvatar({
-  source,
-}: {
-  source: IAvatarOption["source"];
-}) {
+function HeroGreeting({ firstName }: { firstName: string }) {
+  return (
+    <View style={styles.heroGreeting}>
+      <Text style={styles.heroHello}>
+        Olá, <Text style={styles.heroName}>{firstName}</Text>!
+      </Text>
+      <Text style={styles.heroWelcome}>Bem-vindo a suas finanças! 🖐️</Text>
+    </View>
+  );
+}
+
+function ProfileAvatar({ source }: { source: IAvatarOption["source"] }) {
   return (
     <View style={styles.avatarFrame}>
-      <Image
+      <ExpoImage
         source={source}
         style={styles.avatarImage}
         contentFit="cover"
@@ -177,6 +188,7 @@ function HomeEmptyState({
   onRefresh,
   onConnect,
   onOpenBankSelect,
+  scrollRef,
 }: {
   firstName: string;
   avatarSource: IAvatarOption["source"];
@@ -185,6 +197,7 @@ function HomeEmptyState({
   onRefresh: () => void;
   onConnect: () => void;
   onOpenBankSelect: () => void;
+  scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -199,45 +212,41 @@ function HomeEmptyState({
 
   return (
     <View style={styles.safeArea}>
-      <ScrollView
-        style={styles.emptyScroll}
-        contentContainerStyle={styles.emptyScrollContent}
-        showsVerticalScrollIndicator={false}
-        alwaysBounceVertical
-        overScrollMode="always"
-        refreshControl={homeRefreshControl(refreshing, onRefresh)}
-      >
-        <View style={styles.emptyRoot}>
-        <View
-          style={[styles.hero, { height: heroHeight }]}
-          onLayout={(event) => {
-            const { width, height } = event.nativeEvent.layout;
-            if (width !== heroSize.width || height !== heroSize.height) {
-              setHeroSize({ width, height });
-            }
-          }}
-        >
-          <HeroPanda width={heroSize.width} height={heroSize.height} />
-          <HeroScrim />
-
-          <View style={[styles.heroHeader, { top: insets.top + 16 }]}>
+      <HomeHeroPullScroll
+        ref={scrollRef}
+        heroHeight={heroHeight}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        hero={
+          <View
+            style={[styles.hero, { height: heroHeight }]}
+            onLayout={(event) => {
+              const { width, height } = event.nativeEvent.layout;
+              if (width !== heroSize.width || height !== heroSize.height) {
+                setHeroSize({ width, height });
+              }
+            }}
+          >
+            <HeroPanda width={heroSize.width} height={heroSize.height} />
+          </View>
+        }
+        header={
+          <View
+            pointerEvents="box-none"
+            style={[styles.heroHeader, { top: insets.top + 16 }]}
+          >
             <ProfileAvatar source={avatarSource} />
             <BankConnectionsChip
               connections={connections}
               onPress={onOpenBankSelect}
             />
           </View>
-
-          <View style={styles.heroGreeting}>
-            <Text style={styles.heroHello}>
-              Olá, <Text style={styles.heroName}>{firstName}</Text>!
-            </Text>
-            <Text style={styles.heroWelcome}>
-              Bem-vindo a suas finanças! 🖐️
-            </Text>
-          </View>
+        }
+      >
+        <View style={[styles.heroSpacer, { height: heroHeight }]}>
+          <HeroScrim />
+          <HeroGreeting firstName={firstName} />
         </View>
-
         <View style={styles.emptyCopy}>
           <View style={styles.emptyTitleBlock}>
             <Text style={styles.emptyTitle}>
@@ -259,8 +268,7 @@ function HomeEmptyState({
             onPress={onConnect}
           />
         </View>
-      </View>
-      </ScrollView>
+      </HomeHeroPullScroll>
     </View>
   );
 }
@@ -277,6 +285,7 @@ function HomeConnectedState({
   onPressLastTransaction,
   onPressTransactions,
   onPressCategories,
+  scrollRef,
 }: {
   firstName: string;
   avatarSource: IAvatarOption["source"];
@@ -289,6 +298,7 @@ function HomeConnectedState({
   onPressLastTransaction: (id: string) => void;
   onPressTransactions: () => void;
   onPressCategories: () => void;
+  scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
@@ -300,43 +310,41 @@ function HomeConnectedState({
 
   return (
     <View style={styles.safeArea}>
-      <ScrollView
-        contentContainerStyle={styles.connectedScroll}
-        showsVerticalScrollIndicator={false}
-        alwaysBounceVertical
-        overScrollMode="always"
-        refreshControl={homeRefreshControl(refreshing, onRefresh)}
-      >
-        <View
-          style={[styles.connectedHero, { height: heroHeight }]}
-          onLayout={(event) => {
-            const { width, height } = event.nativeEvent.layout;
-            if (width !== heroSize.width || height !== heroSize.height) {
-              setHeroSize({ width, height });
-            }
-          }}
-        >
-          <HeroPanda width={heroSize.width} height={heroSize.height} />
-          <HeroScrim />
-
-          <View style={[styles.heroHeader, { top: insets.top + 16 }]}>
+      <HomeHeroPullScroll
+        ref={scrollRef}
+        heroHeight={heroHeight}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        hero={
+          <View
+            style={[styles.hero, { height: heroHeight }]}
+            onLayout={(event) => {
+              const { width, height } = event.nativeEvent.layout;
+              if (width !== heroSize.width || height !== heroSize.height) {
+                setHeroSize({ width, height });
+              }
+            }}
+          >
+            <HeroPanda width={heroSize.width} height={heroSize.height} />
+          </View>
+        }
+        header={
+          <View
+            pointerEvents="box-none"
+            style={[styles.heroHeader, { top: insets.top + 16 }]}
+          >
             <ProfileAvatar source={avatarSource} />
             <BankConnectionsChip
               connections={chipConnections}
               onPress={onOpenBankSelect}
             />
           </View>
-
-          <View style={styles.heroGreeting}>
-            <Text style={styles.heroHello}>
-              Olá, <Text style={styles.heroName}>{firstName}</Text>!
-            </Text>
-            <Text style={styles.heroWelcome}>
-              Bem-vindo a suas finanças! 🖐️
-            </Text>
-          </View>
+        }
+      >
+        <View style={[styles.heroSpacer, { height: heroHeight }]}>
+          <HeroScrim />
+          <HeroGreeting firstName={firstName} />
         </View>
-
         <View style={styles.connectedDashboard}>
           <HomeConnectedDashboard
             connections={connections}
@@ -346,7 +354,7 @@ function HomeConnectedState({
             onPressCategories={onPressCategories}
           />
         </View>
-      </ScrollView>
+      </HomeHeroPullScroll>
     </View>
   );
 }
@@ -355,6 +363,7 @@ export function HomePage() {
   const router = useRouter();
   const api = useApiService();
   const { profile, user } = useAuthSession();
+  const scrollRef = useRef<HomeHeroPullScrollHandle>(null);
   const [connections, setConnections] = useState<
     OpenFinanceConnection[] | null
   >(null);
@@ -368,7 +377,12 @@ export function HomePage() {
     [profile?.displayName, profile?.fullName, user?.name],
   );
   const avatar = useMemo(
-    () => resolveAvatarSource(profile?.avatarKey, profile?.avatarUrl, DEFAULT_AVATARS[0]),
+    () =>
+      resolveAvatarSource(
+        profile?.avatarKey,
+        profile?.avatarUrl,
+        DEFAULT_AVATARS[0],
+      ),
     [profile?.avatarKey, profile?.avatarUrl],
   );
 
@@ -413,6 +427,13 @@ export function HomePage() {
       setRefreshing(false);
     }
   }, [api.modules.openFinance, api.modules.transactions, loadHomeData]);
+
+  const handleTabRepress = useCallback(() => {
+    scrollRef.current?.scrollToTop();
+    void onRefresh();
+  }, [onRefresh]);
+
+  useTabRepressHandler("home", handleTabRepress);
 
   if (connections === null) {
     return <HomeLoading />;
@@ -468,6 +489,7 @@ export function HomePage() {
           onRefresh={() => void onRefresh()}
           onConnect={() => router.push("/bank-connection")}
           onOpenBankSelect={() => setBankSelectOpen(true)}
+          scrollRef={scrollRef}
         />
         {bankSelectSheet}
       </>
@@ -490,6 +512,7 @@ export function HomePage() {
         }
         onPressTransactions={() => router.navigate("/(tabs)/activities")}
         onPressCategories={() => router.push("/categories")}
+        scrollRef={scrollRef}
       />
       {bankSelectSheet}
     </>
@@ -511,14 +534,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: BearCashColors.background,
   },
-  emptyRoot: {
-    flex: 1,
-  },
-  emptyScroll: {
-    flex: 1,
-  },
-  emptyScrollContent: {
-    flexGrow: 1,
+  heroSpacer: {
+    justifyContent: "flex-end",
+    position: "relative",
+    overflow: "hidden",
   },
   hero: {
     width: "100%",
@@ -529,15 +548,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     right: 0,
-    bottom: 0,
-    height: "72%",
+    bottom: -2,
+    height: "74%",
+    overflow: "visible",
+    zIndex: 1,
+  },
+  heroScrimSvg: {
+    position: "absolute",
+    top: 0,
+    left: -8,
   },
   heroScrimCap: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    height: 6,
+    height: 8,
     backgroundColor: BearCashColors.background,
   },
   heroHeader: {
@@ -545,19 +571,17 @@ const styles = StyleSheet.create({
     top: 16,
     left: 16,
     right: 16,
-    zIndex: 2,
+    zIndex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
   heroGreeting: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 4,
-    zIndex: 2,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
     gap: 3,
     maxWidth: 263,
+    zIndex: 2,
   },
   heroHello: {
     fontFamily: BearCashFonts.semiBold,
@@ -614,19 +638,12 @@ const styles = StyleSheet.create({
     width: AVATAR_SIZE,
     height: AVATAR_SIZE,
   },
-  connectedScroll: {
-    paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
-  },
-  connectedHero: {
-    width: "100%",
-    overflow: "hidden",
-    position: "relative",
-  },
   connectedDashboard: {
     zIndex: 2,
     marginTop: -2,
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
     gap: 16,
     backgroundColor: BearCashColors.background,
   },

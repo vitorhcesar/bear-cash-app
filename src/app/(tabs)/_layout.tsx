@@ -1,11 +1,15 @@
 import { BlurTargetView } from "expo-blur";
-import { Tabs, usePathname, useRouter } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { BlurTargetProvider } from "@/presentation/blur/blur-target-context";
 import { AppBottomBar, type AppTabKey } from "@/presentation/components/app-bottom-bar";
 import { BearCashColors } from "@/presentation/constants/theme";
+import {
+  TabRepressProvider,
+  useTabRepress,
+} from "@/presentation/navigation/tab-repress-context";
 
 export const unstable_settings = {
   initialRouteName: "index",
@@ -15,62 +19,69 @@ export default function TabsLayout() {
   const blurTargetRef = useRef<View | null>(null);
 
   return (
-    <BlurTargetProvider value={blurTargetRef}>
-      <View style={styles.root}>
-        <BlurTargetView ref={blurTargetRef} style={styles.blurTarget}>
-          <Tabs
-            tabBar={() => null}
-            screenOptions={{
-              headerShown: false,
-              tabBarStyle: {
-                display: "none",
-                backgroundColor: "transparent",
-                borderTopWidth: 0,
-                elevation: 0,
-                position: "absolute",
-              },
-              sceneStyle: {
-                backgroundColor: BearCashColors.background,
-              },
-            }}
-          >
-            <Tabs.Screen name="index" options={{ title: "Home" }} />
-            <Tabs.Screen name="activities" options={{ title: "Atividades" }} />
-            <Tabs.Screen name="community" options={{ title: "Comunidade" }} />
-          </Tabs>
-        </BlurTargetView>
+    <TabRepressProvider>
+      <BlurTargetProvider value={blurTargetRef}>
+        <View style={styles.root}>
+          <BlurTargetView ref={blurTargetRef} style={styles.blurTarget}>
+            <Tabs
+              tabBar={() => null}
+              screenOptions={{
+                headerShown: false,
+                tabBarStyle: {
+                  display: "none",
+                  backgroundColor: "transparent",
+                  borderTopWidth: 0,
+                  elevation: 0,
+                  position: "absolute",
+                },
+                sceneStyle: {
+                  backgroundColor: BearCashColors.background,
+                },
+              }}
+            >
+              <Tabs.Screen name="index" options={{ title: "Home" }} />
+              <Tabs.Screen name="activities" options={{ title: "Atividades" }} />
+              <Tabs.Screen name="community" options={{ title: "Comunidade" }} />
+            </Tabs>
+          </BlurTargetView>
 
-        <TabsChromeBar />
-      </View>
-    </BlurTargetProvider>
+          <TabsChromeBar />
+        </View>
+      </BlurTargetProvider>
+    </TabRepressProvider>
   );
 }
 
 function TabsChromeBar() {
-  const pathname = usePathname();
   const router = useRouter();
+  const { activeTab, setActiveTab, triggerTabRepress } = useTabRepress();
 
-  const activeTab: AppTabKey = pathname.includes("community")
-    ? "community"
-    : pathname.includes("activities")
-      ? "activities"
-      : "home";
+  function handleTabPress(tab: AppTabKey) {
+    if (tab === activeTab) {
+      if (tab === "home" || tab === "activities") {
+        triggerTabRepress(tab);
+      }
+      return;
+    }
+
+    setActiveTab(tab);
+
+    if (tab === "home") {
+      router.navigate("/(tabs)");
+      return;
+    }
+    if (tab === "activities") {
+      router.navigate("/(tabs)/activities");
+      return;
+    }
+    router.navigate("/(tabs)/community");
+  }
 
   return (
     <View style={styles.tabBarOverlay} pointerEvents="box-none">
       <AppBottomBar
         activeTab={activeTab}
-        onTabPress={(tab) => {
-          if (tab === "home") {
-            router.navigate("/(tabs)");
-            return;
-          }
-          if (tab === "activities") {
-            router.navigate("/(tabs)/activities");
-            return;
-          }
-          router.navigate("/(tabs)/community");
-        }}
+        onTabPress={handleTabPress}
         onAskAiPress={() => router.push("/bear-cash-ia")}
         onSettingsPress={() => router.push("/settings")}
       />

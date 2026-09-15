@@ -2,7 +2,6 @@ import { Image } from "expo-image";
 import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
-  runOnUI,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
@@ -48,6 +47,7 @@ export function AppBottomBar({
   const insets = useSafeAreaInsets();
   const slotWidth = useRef(0);
   const measured = useRef(false);
+  const lastSlotWidth = useRef(0);
   const pillX = useSharedValue(0);
   const pillW = useSharedValue(0);
 
@@ -57,24 +57,26 @@ export function AppBottomBar({
   }));
 
   function snapPill(tab: AppTabKey, width: number) {
-    const nextX = PILL_PAD + TAB_INDEX[tab] * width;
-    runOnUI((x: number, w: number) => {
-      "worklet";
-      pillX.value = x;
-      pillW.value = w;
-    })(nextX, width);
+    if (width <= 1) {
+      return;
+    }
+    lastSlotWidth.current = width;
+    pillX.value = PILL_PAD + TAB_INDEX[tab] * width;
+    pillW.value = width;
   }
 
   function animatePill(tab: AppTabKey, width: number) {
-    if (width <= 0) {
+    if (width <= 1) {
       return;
     }
     const nextX = PILL_PAD + TAB_INDEX[tab] * width;
-    runOnUI((x: number, w: number) => {
-      "worklet";
-      pillX.value = springPill(x);
-      pillW.value = springPill(w);
-    })(nextX, width);
+    if (lastSlotWidth.current <= 1) {
+      snapPill(tab, width);
+      return;
+    }
+    lastSlotWidth.current = width;
+    pillX.value = springPill(nextX);
+    pillW.value = springPill(width);
   }
 
   useEffect(() => {
@@ -118,10 +120,13 @@ export function AppBottomBar({
                 event.nativeEvent.layout.width - PILL_PAD * 2,
               );
               const width = inner / 3;
+              if (width <= 1) {
+                return;
+              }
               const widthChanged = Math.abs(width - slotWidth.current) > 0.5;
               slotWidth.current = width;
 
-              if (!measured.current) {
+              if (!measured.current || lastSlotWidth.current <= 1) {
                 measured.current = true;
                 snapPill(activeTab, width);
                 return;

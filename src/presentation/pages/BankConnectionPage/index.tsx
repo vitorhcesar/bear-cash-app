@@ -220,6 +220,27 @@ export function BankConnectionPage() {
     }
   }
 
+  async function handleSync(connection: OpenFinanceConnection) {
+    if (busyId) {
+      return;
+    }
+
+    setBusyId(connection.id);
+    try {
+      const updated = await api.modules.openFinance.syncConnection(connection.id);
+      setConnections((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (error) {
+      Alert.alert(
+        'Não foi possível sincronizar',
+        getErrorMessage(error, 'Tente novamente.'),
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   function handleDisconnect(connection: OpenFinanceConnection) {
     setDisconnectTarget(connection);
   }
@@ -333,16 +354,35 @@ export function BankConnectionPage() {
                 <View style={styles.connectionActions}>
                   {needsReconnect(connection) ? (
                     <Pressable
-                      disabled={busyId === connection.id}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Reconectar ${connection.institutionName}`}
+                      disabled={Boolean(busyId)}
                       onPress={() => {
                         void handleReconnect(connection);
                       }}
                     >
                       <Text style={styles.connectionAction}>Reconectar</Text>
                     </Pressable>
-                  ) : null}
+                  ) : (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Sincronizar ${connection.institutionName}`}
+                      disabled={Boolean(busyId)}
+                      onPress={() => {
+                        void handleSync(connection);
+                      }}
+                    >
+                      <Text style={styles.connectionAction}>
+                        {busyId === connection.id && !disconnectTarget
+                          ? 'Sincronizando…'
+                          : 'Sincronizar'}
+                      </Text>
+                    </Pressable>
+                  )}
                   <Pressable
-                    disabled={busyId === connection.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Desconectar ${connection.institutionName}`}
+                    disabled={Boolean(busyId)}
                     onPress={() => handleDisconnect(connection)}
                   >
                     <Text style={styles.connectionDanger}>Desconectar</Text>

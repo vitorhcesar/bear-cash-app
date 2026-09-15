@@ -12,7 +12,8 @@ import {
   BearCashTypography,
 } from "@/presentation/constants/theme";
 
-const MARK_SIZE = 20;
+const MARK_SIZE = 28;
+const MARK_OVERLAP = 10;
 const MAX_VISIBLE = 3;
 
 type BankConnectionsChipProps = {
@@ -53,7 +54,7 @@ function DashedAddMark() {
           strokeDasharray="2.4 1.8"
         />
       </Svg>
-      <HomePlusIcon size={12} color={BearCashColors.text} />
+      <HomePlusIcon size={14} color={BearCashColors.text} />
     </View>
   );
 }
@@ -88,7 +89,7 @@ export function BankConnectionsChip({
               style={[
                 styles.stackItem,
                 {
-                  marginLeft: index === 0 ? 0 : -8,
+                  marginLeft: index === 0 ? 0 : -MARK_OVERLAP,
                   zIndex: visible.length - index,
                 },
               ]}
@@ -105,7 +106,7 @@ export function BankConnectionsChip({
               style={[
                 styles.stackItem,
                 styles.more,
-                { marginLeft: -8, zIndex: 0 },
+                { marginLeft: -MARK_OVERLAP, zIndex: 0 },
               ]}
             >
               <Text style={styles.moreText}>+{remaining}</Text>
@@ -113,7 +114,7 @@ export function BankConnectionsChip({
           ) : null}
         </View>
       )}
-      <HomeChevronDownIcon size={12} color={BearCashColors.text} />
+      <HomeChevronDownIcon size={16} color={BearCashColors.text} />
     </Pressable>
   );
 }
@@ -122,12 +123,12 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 6,
     backgroundColor: BearCashColors.surface,
-    borderRadius: 24,
-    paddingLeft: 6,
-    paddingRight: 4,
-    paddingVertical: 4,
+    borderRadius: 32,
+    paddingLeft: 8,
+    paddingRight: 6,
+    paddingVertical: 6,
     overflow: "hidden",
   },
   pressed: {
@@ -157,6 +158,8 @@ const styles = StyleSheet.create({
   },
   moreText: {
     ...BearCashTypography.captionSmall,
+    fontSize: 11,
+    lineHeight: 14,
     color: BearCashColors.buttonFilledText,
   },
 });

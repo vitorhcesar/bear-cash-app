@@ -56,6 +56,8 @@ import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const NAV_ICON_COLOR = BearCashColors.iconAccent;
 const MAX_BANK_STACK = 4;
+const BANK_MARK_SIZE = 32;
+const BANK_MARK_OVERLAP = 8;
 
 type NavRowProps = {
   label: string;
@@ -157,7 +159,7 @@ function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
           style={[
             styles.bankDot,
             {
-              marginLeft: index === 0 ? 0 : -5,
+              marginLeft: index === 0 ? 0 : -BANK_MARK_OVERLAP,
               zIndex: visible.length - index,
             },
           ]}
@@ -165,7 +167,7 @@ function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
           <InstitutionMark
             name={connection.institutionName}
             logoUrl={connection.institutionLogoUrl}
-            size={20}
+            size={BANK_MARK_SIZE}
           />
         </View>
       ))}
@@ -174,7 +176,7 @@ function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
           style={[
             styles.bankDot,
             styles.bankMore,
-            { marginLeft: -5, zIndex: 0 },
+            { marginLeft: -BANK_MARK_OVERLAP, zIndex: 0 },
           ]}
         >
           <Text style={styles.bankMoreText}>+{remaining}</Text>
@@ -561,11 +563,11 @@ const styles = StyleSheet.create({
   bankStack: {
     flexDirection: "row",
     alignItems: "center",
-    height: 20,
+    height: BANK_MARK_SIZE,
   },
   bankDot: {
-    width: 20,
-    height: 20,
+    width: BANK_MARK_SIZE,
+    height: BANK_MARK_SIZE,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: BearCashColors.surface,
