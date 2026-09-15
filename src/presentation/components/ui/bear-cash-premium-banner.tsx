@@ -1,15 +1,15 @@
-import { useId, useState } from 'react';
+import { useId, useState } from "react";
 import {
   Pressable,
   StyleSheet,
   Text,
   View,
   type LayoutChangeEvent,
-} from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+} from "react-native";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
-import { SettingsCrownIcon } from '@/presentation/components/ui/settings-icons';
-import { BearCashColors, BearCashFonts } from '@/presentation/constants/theme';
+import { SettingsCrownIcon } from "@/presentation/components/ui/settings-icons";
+import { BearCashColors, BearCashFonts } from "@/presentation/constants/theme";
 
 const GOLD = BearCashColors.premiumGold;
 const GOLD_MUTED = BearCashColors.premiumGoldMuted;
@@ -19,7 +19,7 @@ type BearCashPremiumBannerProps = {
 };
 
 export function BearCashPremiumBanner({ onPress }: BearCashPremiumBannerProps) {
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   function onLayout(event: LayoutChangeEvent) {
@@ -90,9 +90,9 @@ export function BearCashPremiumBanner({ onPress }: BearCashPremiumBannerProps) {
 
 const styles = StyleSheet.create({
   shadow: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     borderRadius: 12,
-    shadowColor: '#000000',
+    shadowColor: "#000000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
@@ -102,32 +102,32 @@ const styles = StyleSheet.create({
     height: 112,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-    backgroundColor: '#121311',
+    borderColor: "rgba(255, 215, 0, 0.3)",
+    backgroundColor: "#121311",
     padding: 16,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    overflow: "hidden",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
   },
   left: {
     flex: 1,
     minWidth: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   iconBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+    borderColor: "rgba(255, 215, 0, 0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
   copy: {
     flex: 1,
@@ -148,9 +148,9 @@ const styles = StyleSheet.create({
   },
   cta: {
     flexShrink: 0,
-    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    backgroundColor: "rgba(255, 215, 0, 0.1)",
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
+    borderColor: "rgba(255, 215, 0, 0.3)",
     borderRadius: 24,
     paddingHorizontal: 10,
     paddingVertical: 6,

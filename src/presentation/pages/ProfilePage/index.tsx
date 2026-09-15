@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -6,32 +6,36 @@ import {
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getErrorMessage } from '@/infra/http/get-error-message';
-import { useAuthSession } from '@/presentation/auth/auth-session-context';
-import { LgpdCheckIcon } from '@/presentation/components/ui/auth-icons';
-import { BackButton } from '@/presentation/components/ui/back-button';
-import { DeleteAccountSheet } from '@/presentation/components/ui/delete-account-sheet';
+import { getErrorMessage } from "@/infra/http/get-error-message";
+import { useAuthSession } from "@/presentation/auth/auth-session-context";
+import { LgpdCheckIcon } from "@/presentation/components/ui/auth-icons";
+import { BackButton } from "@/presentation/components/ui/back-button";
+import { DeleteAccountSheet } from "@/presentation/components/ui/delete-account-sheet";
 import {
   TrashIcon,
   VerifiedBadgeIcon,
-} from '@/presentation/components/ui/profile-icons';
-import { TextField } from '@/presentation/components/ui/text-field';
-import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+} from "@/presentation/components/ui/profile-icons";
+import { TextField } from "@/presentation/components/ui/text-field";
+import {
+  BearCashColors,
+  BearCashTypography,
+} from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 function formatBirthDateDisplay(value: string | null | undefined) {
   if (!value) {
-    return '—';
+    return "—";
   }
 
   if (/^\d{4}-\d{2}-\d{2}/.test(value)) {
-    const [year, month, day] = value.slice(0, 10).split('-');
+    const [year, month, day] = value.slice(0, 10).split("-");
     return `${day}/${month}/${year}`;
   }
 
-  const digits = value.replace(/\D/g, '');
+  const digits = value.replace(/\D/g, "");
   if (digits.length === 8) {
     return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
   }
@@ -42,12 +46,12 @@ function formatBirthDateDisplay(value: string | null | undefined) {
 /** Masks CPF as 000.****.***-25 (keeps first 3 and last 2 digits). */
 function maskCpf(value: string | null | undefined) {
   if (!value) {
-    return '—';
+    return "—";
   }
 
-  const digits = value.replace(/\D/g, '');
+  const digits = value.replace(/\D/g, "");
   if (digits.length < 5) {
-    return digits || '—';
+    return digits || "—";
   }
 
   return `${digits.slice(0, 3)}.****.***-${digits.slice(-2)}`;
@@ -55,12 +59,12 @@ function maskCpf(value: string | null | undefined) {
 
 function formatPhoneDisplay(phone: string | null | undefined) {
   if (!phone) {
-    return '—';
+    return "—";
   }
 
-  const digits = phone.replace(/\D/g, '');
+  const digits = phone.replace(/\D/g, "");
   const national =
-    digits.startsWith('55') && digits.length > 11 ? digits.slice(2) : digits;
+    digits.startsWith("55") && digits.length > 11 ? digits.slice(2) : digits;
 
   if (national.length === 11) {
     return `+55 ${national.slice(0, 2)} ${national.slice(2, 7)}-${national.slice(7)}`;
@@ -70,19 +74,19 @@ function formatPhoneDisplay(phone: string | null | undefined) {
     return `+55 ${national.slice(0, 2)} ${national.slice(2, 6)}-${national.slice(6)}`;
   }
 
-  return phone.startsWith('+') ? phone : `+${digits}`;
+  return phone.startsWith("+") ? phone : `+${digits}`;
 }
 
 export function ProfilePage() {
+  const styles = useStyles();
   const { profile, user, deleteAccount } = useAuthSession();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const fullName =
-    profile?.fullName?.trim() || user?.name?.trim() || '—';
+  const fullName = profile?.fullName?.trim() || user?.name?.trim() || "—";
   const birthDate = formatBirthDateDisplay(profile?.birthDate);
   const cpf = maskCpf(profile?.cpf);
-  const email = user?.email?.trim() || '—';
+  const email = user?.email?.trim() || "—";
   const phone = formatPhoneDisplay(user?.phoneNumber);
   const phoneVerified = Boolean(user?.phoneNumberVerified);
   const emailVerified = Boolean(user?.emailVerified);
@@ -106,10 +110,10 @@ export function ProfilePage() {
       await deleteAccount();
     } catch (error) {
       Alert.alert(
-        'Erro',
+        "Erro",
         getErrorMessage(
           error,
-          'Não foi possível excluir a conta. Tente novamente.',
+          "Não foi possível excluir a conta. Tente novamente.",
         ),
       );
       setDeleting(false);
@@ -117,7 +121,7 @@ export function ProfilePage() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -211,65 +215,67 @@ export function ProfilePage() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: BearCashColors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 24,
-    gap: 24,
-  },
-  header: {
-    gap: 8,
-  },
-  headerCopy: {
-    gap: 8,
-  },
-  title: {
-    ...BearCashTypography.h1,
-    color: BearCashColors.text,
-  },
-  subtitle: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-  },
-  section: {
-    gap: 16,
-  },
-  sectionTitle: {
-    ...BearCashTypography.subheading,
-    color: BearCashColors.text,
-  },
-  fields: {
-    gap: 16,
-  },
-  securityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  securityText: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-  },
-  deleteButton: {
-    marginTop: 'auto',
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 8,
-  },
-  deleteLabel: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: BearCashColors.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 24,
+      gap: 24,
+    },
+    header: {
+      gap: 8,
+    },
+    headerCopy: {
+      gap: 8,
+    },
+    title: {
+      ...BearCashTypography.h1,
+      color: BearCashColors.text,
+    },
+    subtitle: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textSoft,
+    },
+    section: {
+      gap: 16,
+    },
+    sectionTitle: {
+      ...BearCashTypography.subheading,
+      color: BearCashColors.text,
+    },
+    fields: {
+      gap: 16,
+    },
+    securityRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 4,
+    },
+    securityText: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textSoft,
+    },
+    deleteButton: {
+      marginTop: "auto",
+      alignSelf: "center",
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingVertical: 8,
+    },
+    deleteLabel: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textSoft,
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+  }),
+);

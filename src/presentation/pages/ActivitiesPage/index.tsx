@@ -63,6 +63,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
 import {
@@ -250,6 +251,7 @@ const COLLAPSE_AFTER_SCROLL = 132;
 const EXPAND_BELOW_SCROLL = 20;
 
 export function ActivitiesPage() {
+  const styles = useStyles();
   const scrollRef = useRef<Animated.ScrollView>(null);
   const listBlurRef = useRef<View | null>(null);
   const scrollY = useSharedValue(0);
@@ -964,7 +966,7 @@ export function ActivitiesPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -1134,7 +1136,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   chipTextSelected: {
-    color: BearCashColors.buttonFilledText,
+    color: BearCashColors.onText,
   },
   chipFilters: {
     flexDirection: "row",
@@ -1231,4 +1233,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

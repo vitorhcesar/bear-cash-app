@@ -3,6 +3,9 @@ import { GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
 import { Platform, StyleSheet, View } from "react-native";
 
 import type { BlurTargetRef } from "@/presentation/blur/blur-target-context";
+import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
+import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 const FILL = {
   position: "absolute" as const,
@@ -17,6 +20,8 @@ export function ActivitiesStickyHeaderBackdrop({
 }: {
   blurTarget: BlurTargetRef;
 }) {
+  const styles = useStyles();
+  const { scheme } = useBearCashTheme();
   const useLiquidGlass = isLiquidGlassAvailable();
   const canBlurAndroid = Platform.OS === "android";
 
@@ -26,18 +31,18 @@ export function ActivitiesStickyHeaderBackdrop({
         <GlassView
           style={styles.fill}
           glassEffectStyle="regular"
-          colorScheme="dark"
-          tintColor="rgba(18, 17, 19, 0.35)"
+          colorScheme={scheme}
+          tintColor={BearCashColors.glassTint}
         />
       ) : Platform.OS === "ios" ? (
-        <BlurView intensity={64} tint="dark" style={styles.fill} />
+        <BlurView intensity={64} tint={scheme} style={styles.fill} />
       ) : canBlurAndroid ? (
         <BlurView
           blurTarget={blurTarget}
           blurMethod="dimezisBlurViewSdk31Plus"
           blurReductionFactor={2}
           intensity={64}
-          tint="dark"
+          tint={scheme}
           style={styles.fill}
         />
       ) : null}
@@ -46,11 +51,13 @@ export function ActivitiesStickyHeaderBackdrop({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: FILL,
-  fill: FILL,
-  tint: {
-    ...FILL,
-    backgroundColor: "rgba(10, 10, 11, 0.72)",
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    backdrop: FILL,
+    fill: FILL,
+    tint: {
+      ...FILL,
+      backgroundColor: BearCashColors.headerScrim,
+    },
+  }),
+);

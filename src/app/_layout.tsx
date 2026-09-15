@@ -3,14 +3,7 @@ import {
   Poppins_600SemiBold,
   useFonts,
 } from "@expo-google-fonts/poppins";
-import {
-  DarkTheme,
-  Stack,
-  ThemeProvider,
-  router,
-  usePathname,
-  type Theme,
-} from "expo-router";
+import { Stack, ThemeProvider, router, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -28,29 +21,23 @@ import { SessionTransitionProvider } from "@/presentation/auth/session-transitio
 import { BiometricLockGate } from "@/presentation/biometrics/biometric-lock-gate";
 import { AnimatedSplashOverlay } from "@/presentation/components/animated-icon";
 import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { usePushRegistration } from "@/presentation/hooks/use-push-registration";
 import { HomeLoading } from "@/presentation/pages/HomePage";
+import {
+  BearCashThemeProvider,
+  useBearCashTheme,
+} from "@/presentation/theme/bear-cash-theme-context";
 
 SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ duration: 0, fade: false });
 setupNotificationHandler();
 
-const BearCashNavigationTheme: Theme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: BearCashColors.background,
-    card: BearCashColors.background,
-    border: BearCashColors.borderSoft,
-    primary: BearCashColors.primary,
-    text: BearCashColors.text,
-  },
-};
-
 const pushFromRight = { animation: "slide_from_right" as const };
 const noAnimation = { animation: "none" as const };
 
 function RootNavigator() {
+  const styles = useStyles();
   const { isLoading, isAuthenticated, hasCompletedOnboarding, user } =
     useAuthSession();
   const pathname = usePathname();
@@ -88,12 +75,12 @@ function RootNavigator() {
   return (
     <BiometricLockGate>
       <Stack
-        screenOptions={{
+        screenOptions={() => ({
           headerShown: false,
           animation: "none",
           animationTypeForReplace: "push",
           contentStyle: styles.screen,
-        }}
+        })}
       >
         <Stack.Protected guard={canUseApp}>
           <Stack.Screen name="(tabs)" options={noAnimation} />
@@ -121,7 +108,10 @@ function RootNavigator() {
           <Stack.Screen name="new-transaction" options={pushFromRight} />
           <Stack.Screen name="edit-transaction" options={pushFromRight} />
           <Stack.Screen name="transaction/[id]" options={pushFromRight} />
-          <Stack.Screen name="transaction/[id]/similar" options={pushFromRight} />
+          <Stack.Screen
+            name="transaction/[id]/similar"
+            options={pushFromRight}
+          />
           <Stack.Screen name="categories" options={pushFromRight} />
           <Stack.Screen name="category/[id]" options={pushFromRight} />
         </Stack.Protected>
@@ -143,25 +133,26 @@ function RootNavigator() {
   );
 }
 
-export default function RootLayout() {
+function RootLayoutInner() {
+  const styles = useStyles();
+  const { ready, scheme, navigationTheme } = useBearCashTheme();
   const [fontsLoaded, fontError] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
-    // After adding assets/fonts/LumenScript-Heavy.otf, uncomment:
     "LumenScript-Heavy": require("@/assets/fonts/LumenScript-Heavy.otf"),
   });
 
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || !ready) {
     return <View style={styles.root} />;
   }
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ThemeProvider value={BearCashNavigationTheme}>
+      <ThemeProvider value={navigationTheme}>
         <AuthDraftProvider>
           <SessionTransitionProvider>
             <AuthSessionProvider>
-              <StatusBar style="light" />
+              <StatusBar style={scheme === "dark" ? "light" : "dark"} />
               <AnimatedSplashOverlay />
               <RootNavigator />
             </AuthSessionProvider>
@@ -172,12 +163,22 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: BearCashColors.background,
-  },
-  screen: {
-    backgroundColor: BearCashColors.background,
-  },
-});
+export default function RootLayout() {
+  return (
+    <BearCashThemeProvider>
+      <RootLayoutInner />
+    </BearCashThemeProvider>
+  );
+}
+
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: BearCashColors.background,
+    },
+    screen: {
+      backgroundColor: BearCashColors.background,
+    },
+  }),
+);

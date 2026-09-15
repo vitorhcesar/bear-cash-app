@@ -4,8 +4,12 @@ import { useRef } from "react";
 import { StyleSheet, View } from "react-native";
 
 import { BlurTargetProvider } from "@/presentation/blur/blur-target-context";
-import { AppBottomBar, type AppTabKey } from "@/presentation/components/app-bottom-bar";
+import {
+  AppBottomBar,
+  type AppTabKey,
+} from "@/presentation/components/app-bottom-bar";
 import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import {
   TabRepressProvider,
   useTabRepress,
@@ -16,6 +20,7 @@ export const unstable_settings = {
 };
 
 export default function TabsLayout() {
+  const styles = useStyles();
   const blurTargetRef = useRef<View | null>(null);
 
   return (
@@ -25,7 +30,7 @@ export default function TabsLayout() {
           <BlurTargetView ref={blurTargetRef} style={styles.blurTarget}>
             <Tabs
               tabBar={() => null}
-              screenOptions={{
+              screenOptions={() => ({
                 headerShown: false,
                 tabBarStyle: {
                   display: "none",
@@ -37,10 +42,13 @@ export default function TabsLayout() {
                 sceneStyle: {
                   backgroundColor: BearCashColors.background,
                 },
-              }}
+              })}
             >
               <Tabs.Screen name="index" options={{ title: "Home" }} />
-              <Tabs.Screen name="activities" options={{ title: "Atividades" }} />
+              <Tabs.Screen
+                name="activities"
+                options={{ title: "Atividades" }}
+              />
               <Tabs.Screen name="community" options={{ title: "Comunidade" }} />
             </Tabs>
           </BlurTargetView>
@@ -53,6 +61,7 @@ export default function TabsLayout() {
 }
 
 function TabsChromeBar() {
+  const styles = useStyles();
   const router = useRouter();
   const { activeTab, setActiveTab, triggerTabRepress } = useTabRepress();
 
@@ -89,19 +98,21 @@ function TabsChromeBar() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: BearCashColors.background,
-  },
-  blurTarget: {
-    flex: 1,
-  },
-  tabBarOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "transparent",
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: BearCashColors.background,
+    },
+    blurTarget: {
+      flex: 1,
+    },
+    tabBarOverlay: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "transparent",
+    },
+  }),
+);

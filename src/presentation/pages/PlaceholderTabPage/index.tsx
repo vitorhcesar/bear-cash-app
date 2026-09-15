@@ -7,6 +7,7 @@ import { useAuthDraft } from '@/presentation/auth/auth-draft-context';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { Button } from '@/presentation/components/ui/button';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export function PlaceholderTabPage({
   title,
@@ -19,6 +20,7 @@ export function PlaceholderTabPage({
   showLogout?: boolean;
   showBankConnection?: boolean;
 }) {
+  const styles = useStyles();
   const router = useRouter();
   const { signOut } = useAuthSession();
   const { resetDraft } = useAuthDraft();
@@ -59,7 +61,7 @@ export function PlaceholderTabPage({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -80,4 +82,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
     textAlign: 'center',
   },
-});
+}));

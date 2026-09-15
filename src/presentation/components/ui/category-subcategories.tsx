@@ -13,6 +13,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const PREVIEW_LIMIT = 5;
 
@@ -36,6 +37,7 @@ export function CategorySubcategories({
   onOpenTransaction: (item: TransactionItem) => void;
   onSeeAll: (categoryId: string) => void;
 }) {
+  const styles = useStyles();
   const [openId, setOpenId] = useState<string | null>(null);
 
   const signature = items.map((item) => item.id).join("|");
@@ -140,7 +142,7 @@ export function CategorySubcategories({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   list: {
     gap: 16,
   },
@@ -217,4 +219,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

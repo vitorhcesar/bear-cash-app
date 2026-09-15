@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
 import { View } from 'react-native';
-import Svg, { Circle, Path, SvgXml } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
+
+import { FigmaSvgIcon, useIconColor } from '@/presentation/components/ui/figma-svg-icon';
+import { BearCashColors } from '@/presentation/constants/theme';
 
 type IconProps = {
   size?: number;
@@ -14,7 +16,8 @@ const HINT_INFO_XML =
   '<svg overflow="visible" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="Icon">\n<circle id="Vector" opacity="0.5" cx="8" cy="8" r="6.66667" stroke="#0C84FC"/>\n<path id="Vector_2" d="M8 11.3333V7.33333" stroke="#0C84FC" stroke-linecap="round"/>\n<circle id="Vector_3" cx="8" cy="5.33333" r="0.666667" fill="#0C84FC"/>\n</g>\n</svg>';
 
 /** Outline ghost used in the subscription empty state */
-export function GhostIcon({ size = 20, color = '#767D73' }: IconProps) {
+export function GhostIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color ?? BearCashColors.textSoft);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Path
@@ -36,29 +39,11 @@ export function GhostIcon({ size = 20, color = '#767D73' }: IconProps) {
 }
 
 export function FeatureCheckIcon({ size = 16, color = '#B385E0' }: IconProps) {
-  const xml = useMemo(
-    () => FEATURE_CHECK_XML.replace(/#B385E0/gi, color),
-    [color],
-  );
-
-  return (
-    <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={xml} width={size} height={size} />
-    </View>
-  );
+  return <FigmaSvgIcon xml={FEATURE_CHECK_XML} size={size} color={color} />;
 }
 
 export function HintInfoIcon({ size = 16, color = '#0C84FC' }: IconProps) {
-  const xml = useMemo(
-    () => HINT_INFO_XML.replace(/#0C84FC/gi, color),
-    [color],
-  );
-
-  return (
-    <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={xml} width={size} height={size} />
-    </View>
-  );
+  return <FigmaSvgIcon xml={HINT_INFO_XML} size={size} color={color} />;
 }
 
 export function ReviewStarIcon({ size = 12, color = '#2FB70D' }: IconProps) {
@@ -81,16 +66,17 @@ export function PlanRadioIcon({
   selected?: boolean;
   selectedColor?: string;
 }) {
+  useIconColor();
   const cx = size / 2;
   const outerR = size * 0.4;
   const innerR = selected ? size * 0.2 : size * 0.325;
-  const outer = selected ? selectedColor : '#59565D';
+  const outer = selected ? selectedColor : BearCashColors.iconMuted;
 
   return (
     <View style={{ width: size, height: size, overflow: 'hidden' }}>
       <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} fill="none">
         <Circle cx={cx} cy={cx} r={outerR} fill={outer} />
-        <Circle cx={cx} cy={cx} r={innerR} fill="#0A0A0B" />
+        <Circle cx={cx} cy={cx} r={innerR} fill={BearCashColors.background} />
       </Svg>
     </View>
   );

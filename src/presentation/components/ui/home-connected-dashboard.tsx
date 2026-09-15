@@ -24,6 +24,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const CATEGORIES_BEAR = require("@/assets/images/home/categories-bear.jpg");
 const OUTFLOW_AMOUNT = "#ffa9aa";
@@ -112,7 +113,7 @@ function bankAccentColor(name: string) {
     return "#ea1d25";
   }
   if (/\bc6\b/.test(normalized) || normalized.includes("c6 bank")) {
-    return "#f5f4f5";
+    return BearCashColors.text;
   }
   if (normalized.includes("banco do brasil") || normalized.includes("bb ")) {
     return "#fde100";
@@ -157,6 +158,7 @@ function GlassCard({
   style?: object;
   contentStyle?: object | object[];
 }) {
+  const styles = useStyles();
   return (
     <View style={[styles.glass, style]}>
       <HighlightCardBorder />
@@ -166,6 +168,7 @@ function GlassCard({
 }
 
 function IconHold({ children }: { children: ReactNode }) {
+  const styles = useStyles();
   return <View style={styles.iconHold}>{children}</View>;
 }
 
@@ -178,6 +181,7 @@ function MoneyRow({
   color?: string;
   amountStyle?: object;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.moneyRow}>
       <Text style={[styles.coin, { color }]}>
@@ -197,6 +201,7 @@ export function HomeConnectedDashboard({
   onPressTransactions,
   onPressCategories,
 }: HomeConnectedDashboardProps) {
+  const styles = useStyles();
   const now = new Date();
   const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
@@ -509,7 +514,7 @@ export function HomeConnectedDashboard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     gap: 16,
   },
@@ -677,7 +682,11 @@ const styles = StyleSheet.create({
     opacity: 0.92,
   },
   categoriesDim: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   categoriesInner: {
@@ -762,4 +771,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

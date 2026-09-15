@@ -21,6 +21,7 @@ import {
   BearCashIaPlusIcon,
 } from "@/presentation/components/ui/bear-cash-ia-icons";
 import { BearCashColors, BearCashFonts, BearCashTypography } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const BEAR_CASH_AVATAR = require("@/assets/images/bear-cash-ia/avatar.png");
@@ -56,6 +57,7 @@ function formatConversationTime(iso: string, now = new Date()) {
 }
 
 export function BearCashIaHistoryPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const [query, setQuery] = useState("");
@@ -209,7 +211,7 @@ export function BearCashIaHistoryPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -347,4 +349,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

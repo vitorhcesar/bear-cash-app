@@ -19,11 +19,13 @@ import { Button } from '@/presentation/components/ui/button';
 import { PasswordField } from '@/presentation/components/ui/password-field';
 import { VerifiedBadgeIcon } from '@/presentation/components/ui/profile-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const MIN_PASSWORD_LENGTH = 8;
 
 export function ChangePasswordPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const { draft, setVerificationToken, setOtpDevHint } = useAuthDraft();
@@ -170,7 +172,7 @@ export function ChangePasswordPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -213,4 +215,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

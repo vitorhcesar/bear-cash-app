@@ -12,7 +12,6 @@ import {
   StyleSheet,
   View,
   useWindowDimensions,
-  type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
   type ScrollView,
@@ -27,16 +26,18 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
-import { BearCashColors } from "@/presentation/constants/theme";
 import {
   HARD_PULL_HOLD,
   HARD_PULL_THRESHOLD,
   pullSpinnerOpacity,
   rubberbandPull,
 } from "@/presentation/constants/pull-refresh";
+import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
+import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 const REFRESH_HOLD = HARD_PULL_HOLD;
 const PULL_THRESHOLD = HARD_PULL_THRESHOLD;
@@ -58,31 +59,32 @@ function HomeHeaderScrollScrim({
   width: number;
   height: number;
 }) {
+  const { scheme } = useBearCashTheme();
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const fill = BearCashColors.background;
 
   if (width <= 0 || height <= 0) {
     return null;
   }
 
   return (
-    <Svg width={width} height={height} preserveAspectRatio="none">
+    <Svg
+      key={`${scheme}:${fill}`}
+      width={width}
+      height={height}
+      preserveAspectRatio="none"
+    >
       <Defs>
-        <LinearGradient id={`headerScrim${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <Stop
-            offset="0"
-            stopColor={BearCashColors.background}
-            stopOpacity={1}
-          />
-          <Stop
-            offset="0.52"
-            stopColor={BearCashColors.background}
-            stopOpacity={1}
-          />
-          <Stop
-            offset="1"
-            stopColor={BearCashColors.background}
-            stopOpacity={0}
-          />
+        <LinearGradient
+          id={`headerScrim${uid}${scheme}`}
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1"
+        >
+          <Stop offset="0" stopColor={fill} stopOpacity={1} />
+          <Stop offset="0.52" stopColor={fill} stopOpacity={1} />
+          <Stop offset="1" stopColor={fill} stopOpacity={0} />
         </LinearGradient>
       </Defs>
       <Rect
@@ -90,7 +92,7 @@ function HomeHeaderScrollScrim({
         y={0}
         width={width}
         height={height}
-        fill={`url(#headerScrim${uid})`}
+        fill={`url(#headerScrim${uid}${scheme})`}
       />
     </Svg>
   );
@@ -116,6 +118,7 @@ export const HomeHeroPullScroll = forwardRef<
   { heroHeight, refreshing, onRefresh, hero, header, children },
   ref,
 ) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const scrollRef = useRef<ScrollView>(null);
@@ -226,9 +229,7 @@ export const HomeHeroPullScroll = forwardRef<
       Platform.OS === "ios"
         ? Math.max(-scrollY.value, isRefreshing ? REFRESH_HOLD : 0)
         : androidPull.value;
-    const progress = isRefreshing
-      ? 1
-      : pullSpinnerOpacity(pull, false);
+    const progress = isRefreshing ? 1 : pullSpinnerOpacity(pull, false);
     return {
       opacity: progress,
       transform: [
@@ -245,7 +246,12 @@ export const HomeHeroPullScroll = forwardRef<
         {
           scale: isRefreshing
             ? 1
-            : interpolate(pull, [0, PULL_THRESHOLD], [0.88, 1], Extrapolation.CLAMP),
+            : interpolate(
+                pull,
+                [0, PULL_THRESHOLD],
+                [0.88, 1],
+                Extrapolation.CLAMP,
+              ),
         },
       ],
     };
@@ -323,61 +329,63 @@ export const HomeHeroPullScroll = forwardRef<
   );
 });
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-  },
-  heroLayer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 0,
-    overflow: "hidden",
-    backgroundColor: BearCashColors.background,
-  },
-  headerLayer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 3,
-  },
-  headerScrim: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 0,
-  },
-  scroll: {
-    flex: 1,
-    zIndex: 1,
-    backgroundColor: "transparent",
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  spinner: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    zIndex: 4,
-    alignItems: "center",
-  },
-  spinnerBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(10, 10, 11, 0.9)",
-    borderWidth: 1,
-    borderColor: BearCashColors.borderStrong,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    root: {
+      flex: 1,
+    },
+    heroLayer: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 0,
+      overflow: "hidden",
+      backgroundColor: BearCashColors.background,
+    },
+    headerLayer: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 3,
+    },
+    headerScrim: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 0,
+    },
+    scroll: {
+      flex: 1,
+      zIndex: 1,
+      backgroundColor: "transparent",
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    spinner: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      zIndex: 4,
+      alignItems: "center",
+    },
+    spinnerBadge: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(10, 10, 11, 0.9)",
+      borderWidth: 1,
+      borderColor: BearCashColors.borderStrong,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.45,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+  }),
+);

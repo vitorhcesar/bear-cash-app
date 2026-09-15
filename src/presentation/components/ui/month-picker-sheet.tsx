@@ -15,6 +15,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 export type MonthPickerSheetProps = {
   visible: boolean;
@@ -47,6 +48,7 @@ export function PeriodFilterChip({
   value: MonthValue;
   onClear: () => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.chip}>
       <View style={styles.chipCopy}>
@@ -78,6 +80,7 @@ export function MonthPickerSheet({
   confirmLabel = "Selecionar",
   clearLabel = "Limpar filtro",
 }: MonthPickerSheetProps) {
+  const styles = useStyles();
   const fallback = monthValueFromDate(new Date());
   const [viewYear, setViewYear] = useState(value?.year ?? fallback.year);
   const [draft, setDraft] = useState<MonthValue>(value ?? fallback);
@@ -128,7 +131,7 @@ export function MonthPickerSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   sheet: {
     paddingHorizontal: 16,
     borderTopLeftRadius: 16,
@@ -171,4 +174,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
     flexShrink: 1,
   },
-});
+}));

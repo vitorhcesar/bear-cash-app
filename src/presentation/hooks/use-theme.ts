@@ -4,11 +4,9 @@
  */
 
 import { Colors } from '@/presentation/constants/theme';
-import { useColorScheme } from '@/presentation/hooks/use-color-scheme';
+import { useBearCashTheme } from '@/presentation/theme/bear-cash-theme-context';
 
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  const { scheme } = useBearCashTheme();
+  return Colors[scheme];
 }

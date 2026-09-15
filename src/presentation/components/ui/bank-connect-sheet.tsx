@@ -12,6 +12,7 @@ import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { SettingsBiometricsIcon } from '@/presentation/components/ui/settings-icons';
 import { Sheet } from '@/presentation/components/ui/sheet';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type BankConnectTarget = {
   id: string;
@@ -41,6 +42,7 @@ function InfoCard({
   title: string;
   subtitle: string;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={styles.cardRow}>
@@ -64,6 +66,7 @@ export function BankConnectSheet({
   onClose,
   onConnect,
 }: BankConnectSheetProps) {
+  const styles = useStyles();
   const lastBankRef = useRef(bank);
   if (bank) {
     lastBankRef.current = bank;
@@ -137,7 +140,7 @@ export function BankConnectSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   sheet: {
     paddingHorizontal: 16,
   },
@@ -211,4 +214,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
   },
-});
+}));

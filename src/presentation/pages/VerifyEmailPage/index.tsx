@@ -29,6 +29,7 @@ import { VerifiedBadgeIcon } from '@/presentation/components/ui/profile-icons';
 import { StepGroup } from '@/presentation/components/ui/step-group';
 import { TimerIcon } from '@/presentation/components/ui/timer-icon';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const RESEND_SECONDS = 21;
@@ -47,6 +48,7 @@ function stepForPhase(phase: Phase) {
 }
 
 export function VerifyEmailPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const { user, refreshSession } = useAuthSession();
@@ -328,7 +330,7 @@ export function VerifyEmailPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -427,4 +429,4 @@ const styles = StyleSheet.create({
   successAction: {
     alignSelf: 'stretch',
   },
-});
+}));

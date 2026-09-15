@@ -15,6 +15,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 function formatAbsoluteAmount(amount: number) {
   return Math.abs(amount).toLocaleString('pt-BR', {
@@ -38,6 +39,7 @@ export function TransactionListItem({
   iconColor?: string;
   categoryLabel?: string;
 }) {
+  const styles = useStyles();
   const category = item.categoryId
     ? getCategoryDisplay(item.categoryId)
     : undefined;
@@ -162,7 +164,7 @@ export function TransactionListItem({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   row: {
     alignSelf: 'stretch',
     width: '100%',
@@ -263,4 +265,4 @@ const styles = StyleSheet.create({
   expense: {
     color: BearCashColors.dangerVivid,
   },
-});
+}));

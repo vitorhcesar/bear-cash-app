@@ -36,6 +36,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const PERIODS = [
   { id: "today", label: "Hoje" },
@@ -108,6 +109,7 @@ function Chip({
   onPress: () => void;
   icon?: ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -124,6 +126,7 @@ function Chip({
 }
 
 function Checkbox({ checked }: { checked: boolean }) {
+  const styles = useStyles();
   return (
     <View style={styles.checkboxOuter} accessibilityState={{ checked }}>
       {checked ? (
@@ -144,6 +147,7 @@ function RemovableChip({
   label: string;
   onRemove: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -168,6 +172,7 @@ function FilterToggle({
   value: boolean;
   onValueChange: (next: boolean) => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="switch"
@@ -187,6 +192,7 @@ export function ActivitiesFilterSheet({
   onClose,
   onApply,
 }: ActivitiesFilterSheetProps) {
+  const styles = useStyles();
   const { height } = useWindowDimensions();
   const [draft, setDraft] = useState<ActivitiesFilters>(value);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
@@ -457,7 +463,7 @@ export function ActivitiesFilterSheet({
                       iconKey={category.iconKey}
                       color={
                         selected
-                          ? BearCashColors.buttonFilledText
+                          ? BearCashColors.onText
                           : category.color
                       }
                       size={12}
@@ -534,7 +540,7 @@ export function ActivitiesFilterSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   sheet: {
     paddingHorizontal: 16,
     borderTopLeftRadius: 16,
@@ -585,7 +591,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   chipTextSelected: {
-    color: BearCashColors.buttonFilledText,
+    color: BearCashColors.onText,
   },
   selectedChip: {
     flexDirection: "row",
@@ -693,4 +699,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
   },
-});
+}));

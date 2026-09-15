@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 type ButtonVariant = 'filled' | 'stroke' | 'danger';
 
@@ -32,6 +33,7 @@ export function Button({
   style,
   ...rest
 }: ButtonProps) {
+  const styles = useStyles();
   const isDisabled = disabled || loading;
   const isFilled = variant === 'filled';
   const isDanger = variant === 'danger';
@@ -82,7 +84,7 @@ export function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   base: {
     minHeight: 50,
     borderRadius: 24,
@@ -136,4 +138,4 @@ const styles = StyleSheet.create({
   dangerLabel: {
     color: BearCashColors.text,
   },
-});
+}));

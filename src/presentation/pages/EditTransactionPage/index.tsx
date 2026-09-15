@@ -44,6 +44,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const ICON_WRAP_IDLE = '#171816';
@@ -56,6 +57,7 @@ function formatAmountMask(cents: number) {
 }
 
 export function EditTransactionPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -339,7 +341,7 @@ export function EditTransactionPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -463,4 +465,4 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 24,
   },
-});
+}));

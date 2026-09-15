@@ -25,9 +25,11 @@ import { useGoogleSignIn } from '@/presentation/auth/use-google-sign-in';
 import { useAppleSignIn } from '@/presentation/auth/use-apple-sign-in';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { BearCashColors } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export function LoginPasswordPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const { applyAuthResult } = useAuthSession();
@@ -155,7 +157,7 @@ export function LoginPasswordPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -185,4 +187,4 @@ const styles = StyleSheet.create({
   scene: {
     alignSelf: 'stretch',
   },
-});
+}));

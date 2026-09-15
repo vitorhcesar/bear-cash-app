@@ -11,6 +11,7 @@ import {
   type IAvatarOption,
 } from '@/presentation/constants/avatars';
 import { BearCashColors } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 import { RefreshIcon } from './auth-icons';
 import { Button } from './button';
@@ -38,6 +39,7 @@ export function AvatarPickerSheet({
   avatars = DEFAULT_AVATARS,
   currentAvatar,
 }: IAvatarPickerSheetProps) {
+  const styles = useStyles();
   const [draftId, setDraftId] = useState(selectedId ?? avatars[0]?.id);
   const [draftCustom, setDraftCustom] = useState<IAvatarOption | null>(
     currentAvatar?.id === CUSTOM_AVATAR_ID ? currentAvatar : null,
@@ -142,7 +144,7 @@ export function AvatarPickerSheet({
             style={styles.previewAction}
             onPress={handleCyclePreview}
           >
-            <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
+            <RefreshIcon size={12} color={BearCashColors.onText} />
           </Pressable>
         </View>
 
@@ -218,7 +220,7 @@ export function AvatarPickerSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   previewWrap: {
     width: PREVIEW_SIZE,
     height: PREVIEW_SIZE,
@@ -276,5 +278,5 @@ const styles = StyleSheet.create({
     lineHeight: 40,
     fontWeight: '300',
   },
-});
+}));
 

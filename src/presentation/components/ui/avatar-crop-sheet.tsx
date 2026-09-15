@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RefreshIcon } from '@/presentation/components/ui/auth-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const CORNER_ARM = 28;
 const CORNER_STROKE = 2.5;
@@ -76,6 +77,7 @@ export function AvatarCropSheet({
   onCancel,
   onConfirm,
 }: AvatarCropSheetProps) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { width: windowWidth } = useWindowDimensions();
   const cropSize = Math.min(windowWidth - 64, 280);
@@ -407,7 +409,7 @@ function CropCorners({ size }: { size: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   flex: {
     flex: 1,
   },
@@ -493,4 +495,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

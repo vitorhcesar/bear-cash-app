@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
-import { View } from 'react-native';
-import Svg, { Circle, Path, SvgXml } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
+
+import { FigmaSvgIcon } from '@/presentation/components/ui/figma-svg-icon';
+import { BearCashColors } from '@/presentation/constants/theme';
+import { useBearCashTheme } from '@/presentation/theme/bear-cash-theme-context';
 
 type IconProps = {
   size?: number;
@@ -15,12 +17,13 @@ export function VerifiedBadgeIcon({
   size = 16,
   color = '#49dc14',
 }: IconProps) {
+  useBearCashTheme();
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <Circle cx={8} cy={8} r={7.25} fill={color} />
       <Path
         d="M4.8 8.2L6.9 10.2L11.2 5.8"
-        stroke="#0A0B0A"
+        stroke={BearCashColors.buttonFilledText}
         strokeWidth={1.4}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -31,14 +34,5 @@ export function VerifiedBadgeIcon({
 
 /** Trash can from Figma Perfil (12px leaf). */
 export function TrashIcon({ size = 12, color }: IconProps) {
-  const xml = useMemo(
-    () => (color ? PROFILE_TRASH_XML.replace(/#59565D|#E0DFE2/gi, color) : PROFILE_TRASH_XML),
-    [color],
-  );
-
-  return (
-    <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={xml} width={size} height={size} />
-    </View>
-  );
+  return <FigmaSvgIcon xml={PROFILE_TRASH_XML} size={size} color={color} />;
 }

@@ -20,6 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { BearCashColors } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 type SessionTransitionKind = 'enter' | 'leave';
 
@@ -56,6 +57,7 @@ function wait(ms: number) {
 }
 
 export function SessionTransitionProvider({ children }: { children: ReactNode }) {
+  const styles = useStyles();
   const overlayOpacity = useSharedValue(0);
   const markOpacity = useSharedValue(0);
   const markScale = useSharedValue(0.82);
@@ -188,6 +190,7 @@ function SessionCover({
   fillStyle: object;
   markStyle: object;
 }) {
+  const styles = useStyles();
   const layer = (
     <View
       pointerEvents="auto"
@@ -226,7 +229,7 @@ export function useSessionTransition() {
   return context;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
   },
@@ -257,5 +260,5 @@ const styles = StyleSheet.create({
     width: 57,
     height: 59,
   },
-});
+}));
 

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type ContentDividerProps = {
   label?: string;
@@ -8,6 +9,7 @@ export type ContentDividerProps = {
 };
 
 export function ContentDivider({ label = 'Ou', style }: ContentDividerProps) {
+  const styles = useStyles();
   return (
     <View style={[styles.container, style]}>
       <View style={styles.line} />
@@ -17,7 +19,7 @@ export function ContentDivider({ label = 'Ou', style }: ContentDividerProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -35,4 +37,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

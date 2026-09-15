@@ -17,11 +17,13 @@ import {
   BiometricsFingerprintIcon,
 } from '@/presentation/components/ui/biometrics-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { HomeLoading } from '@/presentation/pages/HomePage';
 
 type Gate = 'pending' | 'open' | 'locked';
 
 export function BiometricLockGate({ children }: { children: ReactNode }) {
+  const styles = useStyles();
   const { isAuthenticated, hasCompletedOnboarding, signOut } = useAuthSession();
   const lockEnabled = isAuthenticated && hasCompletedOnboarding;
   const [gate, setGate] = useState<Gate>(lockEnabled ? 'pending' : 'open');
@@ -203,6 +205,7 @@ export function BiometricLockGate({ children }: { children: ReactNode }) {
 
 /** iOS: native screens and Liquid Glass ignore sibling zIndex; attach to the window. */
 function AppLockCover({ children }: { children: ReactNode }) {
+  const styles = useStyles();
   const layer = (
     <View
       style={Platform.OS === 'ios' ? styles.coverWindow : styles.coverHost}
@@ -223,7 +226,7 @@ function AppLockCover({ children }: { children: ReactNode }) {
   return layer;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
   },
@@ -283,4 +286,4 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     gap: 12,
   },
-});
+}));

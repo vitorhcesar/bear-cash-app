@@ -20,9 +20,11 @@ import { CreateApiKeySheet } from '@/presentation/components/ui/create-api-key-s
 import { DeleteApiKeySheet } from '@/presentation/components/ui/delete-api-key-sheet';
 import { TrashIcon } from '@/presentation/components/ui/profile-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export function ApiKeysPage() {
+  const styles = useStyles();
   const api = useApiService();
   const [query, setQuery] = useState('');
   const [keys, setKeys] = useState<ApiKeyItem[]>([]);
@@ -217,7 +219,7 @@ export function ApiKeysPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -316,4 +318,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

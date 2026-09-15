@@ -9,23 +9,24 @@ import { Platform } from "react-native";
 
 export const Colors = {
   light: {
-    text: "#000000",
-    background: "#ffffff",
-    backgroundElement: "#F0F0F3",
-    backgroundSelected: "#E0E1E6",
-    textSecondary: "#60646C",
+    text: "#0a0a0b",
+    background: "#f5f4f5",
+    backgroundElement: "#ffffff",
+    backgroundSelected: "#e6e4e8",
+    textSecondary: "#78737d",
   },
   dark: {
-    text: "#ffffff",
-    background: "#000000",
-    backgroundElement: "#212225",
-    backgroundSelected: "#2E3135",
-    textSecondary: "#B0B4BA",
+    text: "#f5f4f5",
+    background: "#0a0a0b",
+    backgroundElement: "#121113",
+    backgroundSelected: "#2e2c30",
+    textSecondary: "#78737d",
   },
 } as const;
 
-/** Design tokens from Otto Figma (Autenticação) */
-export const BearCashColors = {
+export type BearCashScheme = "light" | "dark";
+
+const darkBearCashColors = {
   background: "#0a0a0b",
   surface: "#121113",
   text: "#f5f4f5",
@@ -39,6 +40,7 @@ export const BearCashColors = {
   buttonFilledDisabled: "#cc9afe",
   buttonFilledText: "#0a0a0b",
   iconAccent: "#b366ff",
+  iconMuted: "#e0dfe2",
   bannerMuted: "#38363a",
   primary: "#49dc14",
   primarySoft: "#95ff52",
@@ -59,7 +61,99 @@ export const BearCashColors = {
   expense: "#ff6b6b",
   neutralBlackSoft: "#1C1D1B",
   greenUseHighlight: "#95FF52",
+  onText: "#0a0a0b",
+  highlightStroke: "rgba(255,255,255,0.1)",
+  headerScrim: "rgba(10, 10, 11, 0.72)",
+  glassFallback: "rgba(18,17,19,0.28)",
+  glassFill: "rgb(18,17,19)",
+  glassTint: "rgba(18, 17, 19, 0.35)",
 } as const;
+
+/** Light tokens invert the dark neutrals and keep brand/status hues. */
+const lightBearCashColors = {
+  background: "#f5f4f5",
+  surface: "#ffffff",
+  text: "#0a0a0b",
+  textMid: "#4a464e",
+  textSoft: "#78737d",
+  textAccent: "#8d5bc4",
+  textDisabled: "#8a8790",
+  borderSoft: "#e6e4e8",
+  borderStrong: "#d0ced3",
+  buttonFilled: "#cc9afe",
+  buttonFilledDisabled: "#cc9afe",
+  buttonFilledText: "#0a0a0b",
+  iconAccent: "#9b4de8",
+  iconMuted: "#59565d",
+  bannerMuted: "#6f6b74",
+  primary: "#3bb80f",
+  primarySoft: "#6fd62a",
+  stepInactive: "#e4e4e2",
+  neutralBase: "#ecebed",
+  neutralLight: "#d6d5d8",
+  error: "#f04438",
+  errorSoft: "#d92d20",
+  danger: "#c33a22",
+  dangerBase: "#e36a3d",
+  dangerVivid: "#e11d20",
+  dangerStrongest: "#c33a22",
+  warning: "#E8C547",
+  warningText: "#0a0b0a",
+  premiumGold: "#C9A400",
+  premiumGoldMuted: "#C47A10",
+  income: "#1a9a5c",
+  expense: "#d64545",
+  neutralBlackSoft: "#e6e7e4",
+  greenUseHighlight: "#3bb80f",
+  onText: "#f5f4f5",
+  highlightStroke: "rgba(10,10,11,0.12)",
+  headerScrim: "rgba(245, 244, 245, 0.78)",
+  glassFallback: "rgba(255,255,255,0.55)",
+  glassFill: "rgb(255,255,255)",
+  glassTint: "rgba(245, 244, 245, 0.45)",
+} as const;
+
+export type BearCashColorTokens = {
+  [K in keyof typeof darkBearCashColors]: string;
+};
+
+export const BearCashColorSchemes: Record<BearCashScheme, BearCashColorTokens> =
+  {
+    dark: { ...darkBearCashColors },
+    light: { ...lightBearCashColors },
+  };
+
+/** Live palette. Mutated by `applyBearCashColorScheme` when the user toggles theme. */
+export const BearCashColors: BearCashColorTokens = {
+  ...darkBearCashColors,
+};
+
+let currentScheme: BearCashScheme = "dark";
+
+export function getBearCashScheme(): BearCashScheme {
+  return currentScheme;
+}
+
+let themeVersion = 0;
+const themeListeners = new Set<() => void>();
+
+export function subscribeBearCashScheme(onStoreChange: () => void) {
+  themeListeners.add(onStoreChange);
+  return () => {
+    themeListeners.delete(onStoreChange);
+  };
+}
+
+export function getBearCashThemeVersion() {
+  return themeVersion;
+}
+
+export function applyBearCashColorScheme(scheme: BearCashScheme) {
+  currentScheme = scheme;
+  Object.assign(BearCashColors, BearCashColorSchemes[scheme]);
+  themeVersion += 1;
+  themeListeners.forEach((listener) => listener());
+}
 
 export const BearCashFonts = {
   regular: "Poppins_400Regular",

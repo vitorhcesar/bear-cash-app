@@ -10,6 +10,7 @@ import {
 } from "react-native";
 
 import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const MONTH_LABELS = [
   "JAN",
@@ -44,6 +45,7 @@ export function CategoryMonthChart({
   accentColor: string;
   onSelectMonth: (month: number) => void;
 }) {
+  const styles = useStyles();
   const scrollRef = useRef<ScrollView>(null);
   const [trackWidth, setTrackWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
@@ -128,7 +130,7 @@ export function CategoryMonthChart({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   wrap: {
     alignSelf: "stretch",
     gap: 12,
@@ -184,4 +186,4 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: SCROLLBAR_COLOR,
   },
-});
+}));

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-na
 import { BrazilFlag } from '@/presentation/components/ui/brazil-flag';
 import { TextField } from '@/presentation/components/ui/text-field';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type PhoneFieldProps = {
   value: string;
@@ -54,6 +55,7 @@ export function formatBrazilPhoneDisplay(digits: string) {
 }
 
 export function PhoneField({ value, onChangeText, containerStyle }: PhoneFieldProps) {
+  const styles = useStyles();
   return (
     <View style={[styles.row, containerStyle]}>
       <View style={styles.countryCode}>
@@ -75,7 +77,7 @@ export function PhoneField({ value, onChangeText, containerStyle }: PhoneFieldPr
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -101,4 +103,4 @@ const styles = StyleSheet.create({
   phoneInput: {
     flex: 1,
   },
-});
+}));

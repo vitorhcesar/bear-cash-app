@@ -13,6 +13,7 @@ import {
 
 import { OtpErrorIcon } from '@/presentation/components/ui/auth-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type OtpFieldProps = {
   length?: number;
@@ -36,6 +37,7 @@ export function OtpField({
   containerStyle,
   autoFocus = true,
 }: OtpFieldProps) {
+  const styles = useStyles();
   const inputRefs = useRef<Array<TextInput | null>>([]);
   const digitsRef = useRef<string[]>(toDigitList(value, length));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -186,7 +188,7 @@ export function OtpField({
 const CELL_HEIGHT = 46;
 const INPUT_HEIGHT = 26;
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   container: {
     alignSelf: 'stretch',
     flexGrow: 0,
@@ -250,4 +252,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
     flex: 1,
   },
-});
+}));

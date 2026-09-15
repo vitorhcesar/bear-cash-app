@@ -22,6 +22,8 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
+import { useBearCashTheme } from '@/presentation/theme/bear-cash-theme-context';
 
 const VISIBLE_ROWS = 5;
 const ROW_HEIGHT = 38;
@@ -48,6 +50,7 @@ function windowStartForOffset(offset: number) {
 }
 
 function Checkbox({ checked }: { checked: boolean }) {
+  const styles = useStyles();
   return (
     <View style={styles.checkboxOuter} accessibilityState={{ checked }}>
       {checked ? (
@@ -70,6 +73,8 @@ const CurrencyRow = memo(function CurrencyRow({
   checked: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
+  useBearCashTheme();
   return (
     <Pressable
       accessibilityRole="radio"
@@ -95,6 +100,7 @@ export function CurrencyPicker({
   onChange,
   label,
 }: CurrencyPickerProps) {
+  const styles = useStyles();
   const selected = getCurrency(value);
   const listRef = useRef<ScrollView>(null);
   const thumbRef = useRef<View>(null);
@@ -234,7 +240,7 @@ export function CurrencyPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   labelRow: {
     position: 'absolute',
     top: -8,
@@ -344,4 +350,4 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 2,
   },
-});
+}));

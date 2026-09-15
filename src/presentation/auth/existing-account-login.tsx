@@ -12,6 +12,7 @@ import { formatBrazilPhoneDisplay } from '@/presentation/components/ui/phone-fie
 import { TextField } from '@/presentation/components/ui/text-field';
 import { resolveAvatarSource } from '@/presentation/constants/avatars';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const AVATAR_SIZE = 72;
 
@@ -50,6 +51,7 @@ export function ExistingAccountLogin({
   onApplePress,
   onForgotPassword,
 }: ExistingAccountLoginProps) {
+  const styles = useStyles();
   const phoneDisplay = useMemo(() => formatBrazilPhoneDisplay(phone), [phone]);
   const avatar = useMemo(
     () => resolveAvatarSource(avatarKey, avatarUrl),
@@ -178,7 +180,7 @@ export function ExistingAccountLogin({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     alignSelf: 'stretch',
     alignItems: 'center',
@@ -216,4 +218,4 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     gap: 15,
   },
-});
+}));

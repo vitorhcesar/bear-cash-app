@@ -9,6 +9,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 export type MonthValue = {
   year: number;
@@ -58,6 +59,7 @@ export function MonthPicker({
   onYearChange,
   onSelectMonth,
 }: MonthPickerProps) {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -114,7 +116,7 @@ export function MonthPicker({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   card: {
     alignSelf: "stretch",
     backgroundColor: BearCashColors.surface,
@@ -163,4 +165,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.buttonFilledText,
     fontFamily: BearCashFonts.semiBold,
   },
-});
+}));

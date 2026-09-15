@@ -17,6 +17,7 @@ import {
   BearCashColors,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const EXPANDED_GAP = 12;
 const COLLAPSED_GAP = 8;
@@ -38,6 +39,7 @@ export function CashFlowCard({
   tone: "income" | "expense";
   compact: SharedValue<number>;
 }) {
+  const styles = useStyles();
   const cardStyle = useAnimatedStyle(() => ({
     paddingHorizontal: interpolate(compact.value, [0, 1], [12, 8]),
     paddingVertical: interpolate(compact.value, [0, 1], [8, 4]),
@@ -104,6 +106,7 @@ export function CashFlowPair({
     onToggleVisibility: () => void;
   };
 }) {
+  const styles = useStyles();
   const rowWidth = useSharedValue(0);
   const cardHeight = useSharedValue(56);
   const lastCardHeight = useRef(56);
@@ -206,7 +209,7 @@ export function CashFlowPair({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   pair: {
     width: "100%",
     position: "relative",
@@ -255,4 +258,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textMid,
     flexShrink: 1,
   },
-});
+}));

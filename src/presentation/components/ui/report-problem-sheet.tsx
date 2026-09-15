@@ -12,6 +12,7 @@ import { PROBLEM_REPORT_MAX_LENGTH } from '@/infra/http/services/api/modules/sup
 import { Button } from '@/presentation/components/ui/button';
 import { Sheet } from '@/presentation/components/ui/sheet';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export type ReportProblemSheetProps = {
@@ -25,6 +26,7 @@ export function ReportProblemSheet({
   onClose,
   onSubmitted,
 }: ReportProblemSheetProps) {
+  const styles = useStyles();
   const api = useApiService();
   const [message, setMessage] = useState('');
   const [focused, setFocused] = useState(false);
@@ -124,7 +126,7 @@ export function ReportProblemSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   disclaimer: {
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
@@ -174,4 +176,4 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginTop: 8,
   },
-});
+}));

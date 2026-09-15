@@ -18,6 +18,9 @@ import Svg, {
 } from "react-native-svg";
 
 import { useBlurTarget } from "@/presentation/blur/blur-target-context";
+import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
+import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 /**
  * Gradient/Navigation Bar Background + Glass.
@@ -55,6 +58,8 @@ export function GlassSurface({
   tintColor,
   bottomGlow = false,
 }: GlassSurfaceProps) {
+  const styles = useStyles();
+  const { scheme } = useBearCashTheme();
   const blurTarget = useBlurTarget();
   const useLiquidGlass = isLiquidGlassAvailable();
   const canBlurAndroid = Platform.OS === "android" && blurTarget != null;
@@ -82,8 +87,8 @@ export function GlassSurface({
           pointerEvents="none"
           style={shape}
           glassEffectStyle={glassEffectStyle}
-          colorScheme="dark"
-          tintColor={tintColor}
+          colorScheme={scheme}
+          tintColor={tintColor ?? BearCashColors.glassTint}
         />
       ) : canBlurAndroid ? (
         <BlurView
@@ -92,14 +97,14 @@ export function GlassSurface({
           blurMethod="dimezisBlurView"
           blurReductionFactor={1}
           intensity={FigmaNavGlass.frost}
-          tint="dark"
+          tint={scheme}
           style={shape}
         />
       ) : Platform.OS === "ios" ? (
         <BlurView
           pointerEvents="none"
           intensity={FigmaNavGlass.frost}
-          tint="dark"
+          tint={scheme}
           style={shape}
         />
       ) : (
@@ -154,7 +159,11 @@ function FigmaGlassChrome({
     >
       <Defs>
         <LinearGradient id={fillId} x1="0" y1="0.17857" x2="0" y2="1.5446">
-          <Stop offset="0" stopColor="rgb(18,17,19)" stopOpacity={0.15} />
+          <Stop
+            offset="0"
+            stopColor={BearCashColors.glassFill}
+            stopOpacity={0.15}
+          />
           <Stop offset="1" stopColor="rgb(59,22,122)" stopOpacity={0.15} />
         </LinearGradient>
         <LinearGradient id={rimId} x1="0" y1="0" x2="0" y2="1">
@@ -179,14 +188,34 @@ function FigmaGlassChrome({
               fx="50%"
               fy="108%"
             >
-              <Stop offset="0" stopColor="rgb(179,102,255)" stopOpacity={0.18} />
-              <Stop offset="0.42" stopColor="rgb(179,102,255)" stopOpacity={0.08} />
+              <Stop
+                offset="0"
+                stopColor="rgb(179,102,255)"
+                stopOpacity={0.18}
+              />
+              <Stop
+                offset="0.42"
+                stopColor="rgb(179,102,255)"
+                stopOpacity={0.08}
+              />
               <Stop offset="1" stopColor="rgb(179,102,255)" stopOpacity={0} />
             </RadialGradient>
             <LinearGradient id={`${glowId}Wash`} x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="rgb(179,102,255)" stopOpacity={0.02} />
-              <Stop offset="0.45" stopColor="rgb(179,102,255)" stopOpacity={0.04} />
-              <Stop offset="1" stopColor="rgb(179,102,255)" stopOpacity={0.09} />
+              <Stop
+                offset="0"
+                stopColor="rgb(179,102,255)"
+                stopOpacity={0.02}
+              />
+              <Stop
+                offset="0.45"
+                stopColor="rgb(179,102,255)"
+                stopOpacity={0.04}
+              />
+              <Stop
+                offset="1"
+                stopColor="rgb(179,102,255)"
+                stopOpacity={0.09}
+              />
             </LinearGradient>
           </>
         ) : null}
@@ -233,21 +262,23 @@ function FigmaGlassChrome({
   );
 }
 
-const styles = StyleSheet.create({
-  base: {
-    overflow: "hidden",
-    borderRadius: FigmaNavGlass.radius,
-    backgroundColor: "transparent",
-  },
-  fallback: {
-    backgroundColor: "rgba(18,17,19,0.28)",
-  },
-  content: {
-    position: "relative",
-    zIndex: 1,
-  },
-  padded: {
-    paddingHorizontal: FigmaNavGlass.paddingX,
-    paddingVertical: FigmaNavGlass.paddingY,
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    base: {
+      overflow: "hidden",
+      borderRadius: FigmaNavGlass.radius,
+      backgroundColor: "transparent",
+    },
+    fallback: {
+      backgroundColor: BearCashColors.glassFallback,
+    },
+    content: {
+      position: "relative",
+      zIndex: 1,
+    },
+    padded: {
+      paddingHorizontal: FigmaNavGlass.paddingX,
+      paddingVertical: FigmaNavGlass.paddingY,
+    },
+  }),
+);

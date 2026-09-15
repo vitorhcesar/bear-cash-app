@@ -13,6 +13,7 @@ import {
 } from '@/presentation/components/ui/activities-icons';
 import { springPill } from '@/presentation/components/ui/pill-motion';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const PILL_PAD = 4;
 const PILL_BG = '#212220';
@@ -26,6 +27,7 @@ export function TransactionTypeSwitch({
   value,
   onChange,
 }: TransactionTypeSwitchProps) {
+  const styles = useStyles();
   const pillX = useSharedValue(PILL_PAD);
   const pillW = useSharedValue(0);
   const slotWidth = useRef(0);
@@ -121,7 +123,7 @@ export function TransactionTypeSwitch({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   track: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -156,4 +158,4 @@ const styles = StyleSheet.create({
   labelSelected: {
     color: BearCashColors.text,
   },
-});
+}));

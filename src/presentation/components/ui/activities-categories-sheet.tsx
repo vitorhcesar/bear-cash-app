@@ -31,6 +31,8 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
+import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 export type ActivitiesCategoriesSheetProps = {
   visible: boolean;
@@ -70,6 +72,7 @@ function rowEntering(index: number, animate: boolean) {
 }
 
 function Checkbox({ checked }: { checked: boolean }) {
+  const styles = useStyles();
   return (
     <View style={styles.checkboxOuter} accessibilityState={{ checked }}>
       {checked ? (
@@ -111,6 +114,7 @@ function flattenGroups(
 }
 
 export function ActivitiesCategoriesHeader({ onClose }: { onClose: () => void }) {
+  const styles = useStyles();
   return (
     <Animated.View
       entering={FadeIn.duration(220).easing(Easing.out(Easing.cubic))}
@@ -129,6 +133,7 @@ export function ActivitiesCategoriesSheet({
   onClose: _onClose,
   onToggle,
 }: ActivitiesCategoriesSheetProps) {
+  const styles = useStyles();
   const [query, setQuery] = useState("");
   const [listReady, setListReady] = useState(false);
   const staggerRef = useRef(true);
@@ -272,6 +277,8 @@ const ParentRow = memo(function ParentRow({
   entering?: ReturnType<typeof rowEntering>;
   onToggle: (id: string) => void;
 }) {
+  const styles = useStyles();
+  useBearCashTheme();
   return (
     <Animated.View entering={entering}>
       <Pressable
@@ -310,6 +317,8 @@ const ChildRow = memo(function ChildRow({
   entering?: ReturnType<typeof rowEntering>;
   onToggle: (id: string) => void;
 }) {
+  const styles = useStyles();
+  useBearCashTheme();
   return (
     <Animated.View entering={entering}>
       <Pressable
@@ -336,7 +345,7 @@ const ChildRow = memo(function ChildRow({
   );
 });
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   panel: {
     flex: 1,
     gap: 16,
@@ -437,4 +446,4 @@ const styles = StyleSheet.create({
     borderRadius: 2.6,
     backgroundColor: BearCashColors.background,
   },
-});
+}));

@@ -20,6 +20,7 @@ import {
   ReviewStarIcon,
 } from '@/presentation/components/ui/subscription-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const HERO_HEIGHT = 209;
 const REVIEW_CARD_WIDTH = 250;
@@ -75,6 +76,7 @@ function PlanCard({
   accent,
   onPress,
 }: PlanCardProps) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="radio"
@@ -136,6 +138,7 @@ function ReviewCard({
   place,
   fullWidth,
 }: SubscriptionReview & { fullWidth?: boolean }) {
+  const styles = useStyles();
   return (
     <View style={[styles.reviewCard, fullWidth && styles.reviewCardFull]}>
       <View style={styles.stars}>
@@ -165,6 +168,7 @@ export function SubscriptionOfferScreen({
 }: {
   content: SubscriptionOfferContent;
 }) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const [plan, setPlan] = useState<SubscriptionPlanId>('yearly');
   const singleReview = content.reviews.length === 1;
@@ -281,7 +285,7 @@ export function SubscriptionOfferScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -516,4 +520,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

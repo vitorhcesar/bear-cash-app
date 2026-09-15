@@ -5,6 +5,7 @@ import {
   BearCashColors,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const SIZE = 48;
 const STROKE = 4;
@@ -16,6 +17,7 @@ export function CategoryPercentDonut({
   percent: number;
   color: string;
 }) {
+  const styles = useStyles();
   const radius = (SIZE - STROKE) / 2;
   const center = SIZE / 2;
   const circumference = 2 * Math.PI * radius;
@@ -54,7 +56,7 @@ export function CategoryPercentDonut({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   wrap: {
     width: SIZE,
     height: SIZE,
@@ -62,7 +64,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   labelHold: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -71,4 +77,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textMid,
     textAlign: "center",
   },
-});
+}));

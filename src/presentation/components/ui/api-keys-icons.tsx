@@ -1,11 +1,15 @@
 import Svg, { Path, Rect } from 'react-native-svg';
 
+import { useIconColor } from '@/presentation/components/ui/figma-svg-icon';
+import { BearCashColors } from '@/presentation/constants/theme';
+
 type IconProps = {
   size?: number;
   color?: string;
 };
 
-export function ApiKeyGlyphIcon({ size = 16, color = '#CBCECA' }: IconProps) {
+export function ApiKeyGlyphIcon({ size = 16, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <Path
@@ -35,7 +39,8 @@ export function ApiKeyGlyphIcon({ size = 16, color = '#CBCECA' }: IconProps) {
   );
 }
 
-export function CopyIcon({ size = 16, color = '#0A0B0A' }: IconProps) {
+export function CopyIcon({ size = 16, color }: IconProps) {
+  color = useIconColor(color ?? BearCashColors.buttonFilledText);
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <Rect
@@ -81,7 +86,8 @@ export function InfoCircleIcon({ size = 16, color = '#5B8DEF' }: IconProps) {
   );
 }
 
-export function CalendarIcon({ size = 16, color = '#767D73' }: IconProps) {
+export function CalendarIcon({ size = 16, color }: IconProps) {
+  color = useIconColor(color ?? BearCashColors.textSoft);
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <Rect

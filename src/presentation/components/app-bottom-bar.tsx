@@ -16,6 +16,7 @@ import {
 import { GlassSurface } from "@/presentation/components/ui/glass-surface";
 import { springPill } from "@/presentation/components/ui/pill-motion";
 import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 export type AppTabKey = "home" | "activities" | "community";
 
@@ -27,8 +28,6 @@ type AppBottomBarProps = {
   communityBadgeCount?: number;
 };
 
-const INACTIVE_ICON = BearCashColors.textMid;
-const ACTIVE_ICON = BearCashColors.text;
 const PILL_PAD = 4;
 const PILL_RADIUS = 24;
 const TAB_INDEX: Record<AppTabKey, number> = {
@@ -44,6 +43,7 @@ export function AppBottomBar({
   onSettingsPress,
   communityBadgeCount = 2,
 }: AppBottomBarProps) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const slotWidth = useRef(0);
   const measured = useRef(false);
@@ -164,7 +164,11 @@ export function AppBottomBar({
             >
               <HomeTabGlyph
                 size={24}
-                color={activeTab === "home" ? ACTIVE_ICON : INACTIVE_ICON}
+                color={
+                  activeTab === "home"
+                    ? BearCashColors.text
+                    : BearCashColors.textMid
+                }
               />
             </Pressable>
 
@@ -182,7 +186,9 @@ export function AppBottomBar({
               <WalletTabGlyph
                 size={24}
                 color={
-                  activeTab === "activities" ? ACTIVE_ICON : INACTIVE_ICON
+                  activeTab === "activities"
+                    ? BearCashColors.text
+                    : BearCashColors.textMid
                 }
               />
             </Pressable>
@@ -248,7 +254,7 @@ export function AppBottomBar({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   wrap: {
     gap: 12,
     width: "100%",
@@ -389,4 +395,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-});
+}));

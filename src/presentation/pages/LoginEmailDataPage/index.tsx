@@ -35,6 +35,7 @@ import {
   type IAvatarOption,
 } from "@/presentation/constants/avatars";
 import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 /** Formats digits as DD/MM/YYYY */
@@ -99,6 +100,7 @@ function isCompleteCpf(value: string) {
 }
 
 export function LoginEmailDataPage() {
+  const styles = useStyles();
   const api = useApiService();
   const { applyAuthResult, user, profile, isAuthenticated } = useAuthSession();
   const { draft, resetDraft } = useAuthDraft();
@@ -280,7 +282,7 @@ export function LoginEmailDataPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -345,4 +347,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

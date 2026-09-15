@@ -10,6 +10,7 @@ import {
   isUrlExpired,
 } from '@/presentation/open-finance/connect-bank';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type BankSyncSheetProps = {
   visible: boolean;
@@ -97,6 +98,7 @@ export function BankSyncSheet({
   onClose,
   onRecreate,
 }: BankSyncSheetProps) {
+  const styles = useStyles();
   const copy = copyFor(consent);
   const expired = Boolean(consent && isAwaitingAuthorization(consent) && isUrlExpired(consent));
   const canDismiss =
@@ -141,7 +143,7 @@ export function BankSyncSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   content: {
     paddingHorizontal: 16,
   },
@@ -155,4 +157,4 @@ const styles = StyleSheet.create({
   actions: {
     gap: 8,
   },
-});
+}));

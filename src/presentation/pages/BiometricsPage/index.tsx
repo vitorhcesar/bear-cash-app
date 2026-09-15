@@ -24,11 +24,13 @@ import { BiometricsGridIcon } from '@/presentation/components/ui/biometrics-icon
 import { HighlightCardBorder } from '@/presentation/components/ui/highlight-card-border';
 import { PreferenceToggle } from '@/presentation/components/ui/preferences-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const ICON_OFF = '#E0DFE2';
 const ICON_ON = '#B385E0';
 
 export function BiometricsPage() {
+  const styles = useStyles();
   const [enabled, setEnabled] = useState(
     DEFAULT_PREFERENCES.biometricsEnabled,
   );
@@ -150,7 +152,7 @@ export function BiometricsPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -225,4 +227,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

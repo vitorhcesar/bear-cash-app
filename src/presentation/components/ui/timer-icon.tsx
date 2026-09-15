@@ -1,12 +1,16 @@
 import Svg, { Path } from 'react-native-svg';
 
+import { useIconColor } from '@/presentation/components/ui/figma-svg-icon';
+import { BearCashColors } from '@/presentation/constants/theme';
+
 type TimerIconProps = {
   size?: number;
   color?: string;
 };
 
 /** Clock icon for resend countdown (matches Figma auth Step 2) */
-export function TimerIcon({ size = 16, color = '#78737d' }: TimerIconProps) {
+export function TimerIcon({ size = 16, color }: TimerIconProps) {
+  color = useIconColor(color ?? BearCashColors.textSoft);
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <Path

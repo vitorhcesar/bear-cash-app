@@ -48,8 +48,10 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
+import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 const AVATAR_SIZE = 56;
 const HERO_PANDA = require("@/assets/images/home/hero-panda.jpg");
@@ -85,8 +87,11 @@ function HeroPanda({ width, height }: { width: number; height: number }) {
 }
 
 function HeroScrim() {
+  const styles = useStyles();
+  const { scheme } = useBearCashTheme();
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const fill = BearCashColors.background;
 
   function onLayout(event: LayoutChangeEvent) {
     const { width, height } = event.nativeEvent.layout;
@@ -97,6 +102,7 @@ function HeroScrim() {
 
   const svgWidth = Math.ceil(size.width) + 16;
   const svgHeight = Math.ceil(size.height) + 8;
+  const gradientId = `hero${uid}${scheme}`;
 
   return (
     <View pointerEvents="none" collapsable={false} style={styles.heroScrim}>
@@ -107,38 +113,19 @@ function HeroScrim() {
       >
         {size.width > 0 ? (
           <Svg
+            key={`${scheme}:${fill}`}
             width={svgWidth}
             height={svgHeight}
             style={styles.heroScrimSvg}
             preserveAspectRatio="none"
           >
             <Defs>
-              <LinearGradient id={`hero${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <Stop
-                  offset="0.07276"
-                  stopColor={BearCashColors.background}
-                  stopOpacity={0}
-                />
-                <Stop
-                  offset="0.36963"
-                  stopColor={BearCashColors.background}
-                  stopOpacity={0.637}
-                />
-                <Stop
-                  offset="0.60764"
-                  stopColor={BearCashColors.background}
-                  stopOpacity={0.882}
-                />
-                <Stop
-                  offset="0.78936"
-                  stopColor={BearCashColors.background}
-                  stopOpacity={1}
-                />
-                <Stop
-                  offset="1"
-                  stopColor={BearCashColors.background}
-                  stopOpacity={1}
-                />
+              <LinearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0.07276" stopColor={fill} stopOpacity={0} />
+                <Stop offset="0.36963" stopColor={fill} stopOpacity={0.637} />
+                <Stop offset="0.60764" stopColor={fill} stopOpacity={0.882} />
+                <Stop offset="0.78936" stopColor={fill} stopOpacity={1} />
+                <Stop offset="1" stopColor={fill} stopOpacity={1} />
               </LinearGradient>
             </Defs>
             <Rect
@@ -146,7 +133,7 @@ function HeroScrim() {
               y={0}
               width={svgWidth}
               height={svgHeight}
-              fill={`url(#hero${uid})`}
+              fill={`url(#${gradientId})`}
             />
           </Svg>
         ) : null}
@@ -157,6 +144,7 @@ function HeroScrim() {
 }
 
 function HeroGreeting({ firstName }: { firstName: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.heroGreeting}>
       <Text style={styles.heroHello}>
@@ -168,6 +156,7 @@ function HeroGreeting({ firstName }: { firstName: string }) {
 }
 
 function ProfileAvatar({ source }: { source: IAvatarOption["source"] }) {
+  const styles = useStyles();
   return (
     <View style={styles.avatarFrame}>
       <ExpoImage
@@ -199,6 +188,7 @@ function HomeEmptyState({
   onOpenBankSelect: () => void;
   scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const heroHeight = Math.min(
@@ -300,6 +290,7 @@ function HomeConnectedState({
   onPressCategories: () => void;
   scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const heroHeight = Math.max(280, Math.round(windowHeight * 0.38));
@@ -360,6 +351,7 @@ function HomeConnectedState({
 }
 
 export function HomePage() {
+  useStyles();
   const router = useRouter();
   const api = useApiService();
   const { profile, user } = useAuthSession();
@@ -520,6 +512,7 @@ export function HomePage() {
 }
 
 export function HomeLoading() {
+  const styles = useStyles();
   return (
     <View style={styles.loadingRoot}>
       <SafeAreaView style={styles.loadingSafeArea}>
@@ -529,131 +522,133 @@ export function HomeLoading() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: BearCashColors.background,
-  },
-  heroSpacer: {
-    justifyContent: "flex-end",
-    position: "relative",
-    overflow: "hidden",
-  },
-  hero: {
-    width: "100%",
-    overflow: "hidden",
-    position: "relative",
-  },
-  heroScrim: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: -2,
-    height: "74%",
-    overflow: "visible",
-    zIndex: 1,
-  },
-  heroScrimSvg: {
-    position: "absolute",
-    top: 0,
-    left: -8,
-  },
-  heroScrimCap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 8,
-    backgroundColor: BearCashColors.background,
-  },
-  heroHeader: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    right: 16,
-    zIndex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  heroGreeting: {
-    paddingHorizontal: 16,
-    paddingBottom: 4,
-    gap: 3,
-    maxWidth: 263,
-    zIndex: 2,
-  },
-  heroHello: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 24,
-    lineHeight: 32,
-    color: BearCashColors.text,
-  },
-  heroName: {
-    fontFamily: BearCashFonts.script,
-    fontSize: 24,
-    lineHeight: 32,
-    color: BearCashColors.textAccent,
-  },
-  heroWelcome: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textMid,
-  },
-  emptyCopy: {
-    flex: 1,
-    zIndex: 2,
-    marginTop: -2,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
-    gap: 24,
-    backgroundColor: BearCashColors.background,
-  },
-  emptyTitleBlock: {
-    gap: 6,
-  },
-  emptyTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 20,
-    lineHeight: 24,
-    color: BearCashColors.textMid,
-  },
-  emptyTitleAccent: {
-    color: BearCashColors.textAccent,
-  },
-  emptySubtitle: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-  },
-  avatarFrame: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-    borderRadius: AVATAR_SIZE / 2,
-    overflow: "hidden",
-    borderWidth: 0.55,
-    borderColor: BearCashColors.borderSoft,
-    backgroundColor: BearCashColors.surface,
-  },
-  avatarImage: {
-    width: AVATAR_SIZE,
-    height: AVATAR_SIZE,
-  },
-  connectedDashboard: {
-    zIndex: 2,
-    marginTop: -2,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
-    gap: 16,
-    backgroundColor: BearCashColors.background,
-  },
-  loadingRoot: {
-    flex: 1,
-    backgroundColor: BearCashColors.background,
-  },
-  loadingSafeArea: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: BearCashColors.background,
+    },
+    heroSpacer: {
+      justifyContent: "flex-end",
+      position: "relative",
+      overflow: "hidden",
+    },
+    hero: {
+      width: "100%",
+      overflow: "hidden",
+      position: "relative",
+    },
+    heroScrim: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: -2,
+      height: "74%",
+      overflow: "visible",
+      zIndex: 1,
+    },
+    heroScrimSvg: {
+      position: "absolute",
+      top: 0,
+      left: -8,
+    },
+    heroScrimCap: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: 8,
+      backgroundColor: BearCashColors.background,
+    },
+    heroHeader: {
+      position: "absolute",
+      top: 16,
+      left: 16,
+      right: 16,
+      zIndex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    heroGreeting: {
+      paddingHorizontal: 16,
+      paddingBottom: 4,
+      gap: 3,
+      maxWidth: 263,
+      zIndex: 2,
+    },
+    heroHello: {
+      fontFamily: BearCashFonts.semiBold,
+      fontSize: 24,
+      lineHeight: 32,
+      color: BearCashColors.text,
+    },
+    heroName: {
+      fontFamily: BearCashFonts.script,
+      fontSize: 24,
+      lineHeight: 32,
+      color: BearCashColors.textAccent,
+    },
+    heroWelcome: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textMid,
+    },
+    emptyCopy: {
+      flex: 1,
+      zIndex: 2,
+      marginTop: -2,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
+      gap: 24,
+      backgroundColor: BearCashColors.background,
+    },
+    emptyTitleBlock: {
+      gap: 6,
+    },
+    emptyTitle: {
+      fontFamily: BearCashFonts.semiBold,
+      fontSize: 20,
+      lineHeight: 24,
+      color: BearCashColors.textMid,
+    },
+    emptyTitleAccent: {
+      color: BearCashColors.textAccent,
+    },
+    emptySubtitle: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textSoft,
+    },
+    avatarFrame: {
+      width: AVATAR_SIZE,
+      height: AVATAR_SIZE,
+      borderRadius: AVATAR_SIZE / 2,
+      overflow: "hidden",
+      borderWidth: 0.55,
+      borderColor: BearCashColors.borderSoft,
+      backgroundColor: BearCashColors.surface,
+    },
+    avatarImage: {
+      width: AVATAR_SIZE,
+      height: AVATAR_SIZE,
+    },
+    connectedDashboard: {
+      zIndex: 2,
+      marginTop: -2,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
+      gap: 16,
+      backgroundColor: BearCashColors.background,
+    },
+    loadingRoot: {
+      flex: 1,
+      backgroundColor: BearCashColors.background,
+    },
+    loadingSafeArea: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+  }),
+);

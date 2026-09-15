@@ -31,6 +31,7 @@ import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { BankSyncSheet } from '@/presentation/components/ui/bank-sync-sheet';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 import {
   isAwaitingAuthorization,
@@ -48,6 +49,7 @@ type FeatureCardProps = {
 };
 
 function FeatureCard({ title, description, icon, badge }: FeatureCardProps) {
+  const styles = useStyles();
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
@@ -123,6 +125,7 @@ function formatDueDate(value?: string | null) {
 }
 
 export function BankConnectionPage() {
+  const styles = useStyles();
   const router = useRouter();
   const { consentId: returningConsentId } = useLocalSearchParams<{ consentId?: string }>();
   const api = useApiService();
@@ -458,7 +461,7 @@ export function BankConnectionPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -596,4 +599,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

@@ -11,6 +11,7 @@ import {
   SantanderLogo,
 } from '@/presentation/components/ui/bank-logos';
 import { BearCashColors, BearCashFonts } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 type InstitutionMarkProps = {
   name: string;
@@ -55,6 +56,7 @@ function localLogoFor(name: string): ComponentType<LogoProps> | null {
 }
 
 export function InstitutionMark({ name, logoUrl, size = 32 }: InstitutionMarkProps) {
+  const styles = useStyles();
   const LocalLogo = localLogoFor(name);
   const initial = name.trim().charAt(0).toUpperCase() || 'B';
 
@@ -101,7 +103,7 @@ export function InstitutionMark({ name, logoUrl, size = 32 }: InstitutionMarkPro
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   frame: {
     overflow: 'hidden',
     borderWidth: 0.4,
@@ -118,4 +120,4 @@ const styles = StyleSheet.create({
     fontFamily: BearCashFonts.semiBold,
     color: BearCashColors.textMid,
   },
-});
+}));

@@ -15,6 +15,7 @@ import {
   BearCashTypography,
   Fonts,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const MARKED_OPTIONS = {
   gfm: true,
@@ -26,6 +27,7 @@ type MarkdownMessageProps = {
 };
 
 export function MarkdownMessage({ content }: MarkdownMessageProps) {
+  const styles = useStyles();
   const tokens = useMemo(
     () => Lexer.lex(content, MARKED_OPTIONS),
     [content],
@@ -41,6 +43,7 @@ export function MarkdownMessage({ content }: MarkdownMessageProps) {
 }
 
 function BlockToken({ token }: { token: Token }) {
+  const styles = useStyles();
   switch (token.type) {
     case "space":
       return null;
@@ -114,6 +117,7 @@ function BlockToken({ token }: { token: Token }) {
 }
 
 function MarkdownList({ token }: { token: Tokens.List }) {
+  const styles = useStyles();
   const start = typeof token.start === "number" ? token.start : 1;
 
   return (
@@ -139,6 +143,7 @@ function MarkdownList({ token }: { token: Tokens.List }) {
 }
 
 function ListItemContent({ item }: { item: Tokens.ListItem }) {
+  const styles = useStyles();
   const tokens = item.tokens.filter((token) => token.type !== "space");
   const [first] = tokens;
 
@@ -164,6 +169,7 @@ function ListItemContent({ item }: { item: Tokens.ListItem }) {
 }
 
 function MarkdownTable({ token }: { token: Tokens.Table }) {
+  const styles = useStyles();
   return (
     <View style={styles.table}>
       <View style={[styles.tableRow, styles.tableHeaderRow]}>
@@ -210,6 +216,7 @@ function InlineTokens({ tokens }: { tokens?: Token[] }) {
 }
 
 function InlineToken({ token }: { token: Token }) {
+  const styles = useStyles();
   switch (token.type) {
     case "text":
       return token.tokens ? (
@@ -271,6 +278,7 @@ function InlineToken({ token }: { token: Token }) {
 }
 
 function headingStyle(depth: number) {
+  const styles = useStyles();
   if (depth <= 1) {
     return styles.h1;
   }
@@ -281,6 +289,7 @@ function headingStyle(depth: number) {
 }
 
 function alignmentStyle(align: Tokens.Table["align"][number]) {
+  const styles = useStyles();
   if (align === "center") {
     return styles.alignCenter;
   }
@@ -309,7 +318,7 @@ async function openMarkdownUrl(href: string) {
   });
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     gap: 8,
   },
@@ -435,4 +444,4 @@ const styles = StyleSheet.create({
   alignRight: {
     textAlign: "right",
   },
-});
+}));

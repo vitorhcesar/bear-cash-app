@@ -6,8 +6,10 @@ import { BackButton } from '@/presentation/components/ui/back-button';
 import { Button } from '@/presentation/components/ui/button';
 import { GhostIcon } from '@/presentation/components/ui/subscription-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export function SubscriptionPage() {
+  const styles = useStyles();
   const router = useRouter();
 
   return (
@@ -44,7 +46,7 @@ export function SubscriptionPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -88,4 +90,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
     textAlign: 'center',
   },
-});
+}));

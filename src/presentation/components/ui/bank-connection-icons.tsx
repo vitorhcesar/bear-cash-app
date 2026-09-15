@@ -1,45 +1,51 @@
 import Svg, { Path, Rect } from 'react-native-svg';
 
+import { useIconColor } from '@/presentation/components/ui/figma-svg-icon';
+import { BearCashColors } from '@/presentation/constants/theme';
+
 type IconProps = {
   size?: number;
   color?: string;
 };
 
 /** BearCash bear mascot from the app logo */
-export function BearCashMascotIcon({ size = 80, color = '#E0E2DF' }: IconProps) {
+export function BearCashMascotIcon({ size = 80, color }: IconProps) {
+  const body = useIconColor(color);
+  const snout = BearCashColors.onText;
   const height = (28.0003 / 27.4251) * size;
   return (
     <Svg width={size} height={height} viewBox="0 0 27.4251 28.0003" fill="none">
       <Path
         d="M13.7129 2.16639H13.877C20.7149 2.16639 26.2607 7.71044 26.2607 14.5502V18.0678C26.2589 23.183 22.1128 27.3284 17 27.3285H10.5898C5.47681 27.3284 1.3291 23.1826 1.3291 18.0678V14.5502C1.3291 7.71227 6.87315 2.16639 13.7129 2.16639Z"
-        stroke={color}
+        stroke={body}
         strokeWidth={1.34246}
       />
       <Path
         d="M9.67928 1.42331C5.84203 2.60581 2.71349 5.40936 1.0944 9.03321C0.405261 8.09543 0 6.94622 0 5.70498C0 2.55491 2.60973 0 5.82832 0C7.30449 0 8.6534 0.53839 9.67928 1.42331Z"
-        fill={color}
+        fill={body}
       />
       <Path
         d="M27.4251 5.80485C27.4251 6.98931 27.057 8.08762 26.4266 8.99799C24.8036 5.39175 21.6868 2.60387 17.8613 1.42528C18.8735 0.5991 20.1754 0.0998654 21.5968 0.0998654C24.8154 0.0998654 27.4251 2.65477 27.4251 5.80485Z"
-        fill={color}
+        fill={body}
       />
       <Path
         d="M13.7682 20.7175C15.9469 20.7175 17.7131 19.2879 17.7131 17.5243C17.7131 15.7608 15.9469 14.3312 13.7682 14.3312C11.5894 14.3312 9.82324 15.7608 9.82324 17.5243C9.82324 19.2879 11.5894 20.7175 13.7682 20.7175Z"
-        fill={color}
+        fill={body}
       />
       <Path
         d="M15.9114 18.7515C15.8937 18.82 15.8565 18.8787 15.8056 18.9218L15.8096 18.9257C15.0969 19.517 14.1219 19.7754 13.1528 19.5405C12.1935 19.3094 11.4496 18.6458 11.0796 17.8078C11.0698 17.7863 11.0619 17.7648 11.0521 17.7452C11.0521 17.7452 11.0521 17.7452 11.0521 17.7432C11.0365 17.6904 11.0345 17.6336 11.0482 17.5768C11.0893 17.4065 11.2597 17.3027 11.43 17.3438C11.4829 17.3575 11.5298 17.383 11.567 17.4163C11.5925 17.4535 11.6199 17.4907 11.6473 17.5279C12.0565 18.0721 12.6517 18.4833 13.3662 18.6555C13.4113 18.6673 13.4563 18.6771 13.5013 18.6849C13.5483 18.5224 13.6071 18.215 13.4661 17.9194C13.4054 17.7922 13.3251 17.708 13.2742 17.6571C12.7143 17.1128 11.708 16.9484 11.708 16.6312C11.708 16.0439 12.6517 15.5701 13.8146 15.5701C14.9775 15.5701 15.9212 16.0458 15.9212 16.6312C15.9212 16.9581 14.86 17.0932 14.3549 17.6571C14.2884 17.7315 14.2238 17.8215 14.1728 17.937C14.0436 18.2346 14.0887 18.5263 14.1259 18.683C14.1259 18.6888 14.9246 18.6634 15.3847 18.4461C15.4395 18.4206 15.4944 18.3932 15.5453 18.3638C15.5883 18.356 15.6334 18.356 15.6784 18.3678C15.8487 18.4108 15.9525 18.5812 15.9114 18.7515Z"
-        fill="#0A0B0A"
+        fill={snout}
       />
       <Path
         d="M16.8035 12.7153C16.8038 13.1889 17.1893 13.5747 17.6629 13.5747H18.1346C18.6082 13.5747 18.9937 13.1909 18.994 12.7153V11.7095H22.1639C22.3086 11.7095 22.3637 11.8966 22.243 11.9751L18.7713 14.2134C18.239 14.5557 17.5576 14.5557 17.0272 14.2134L13.7684 12.1118L10.5106 14.2134C9.98018 14.5557 9.29681 14.5557 8.76643 14.2134L5.29475 11.9751C5.17393 11.8966 5.22918 11.7095 5.37385 11.7095H8.54377V12.7144C8.54377 13.1881 8.92938 13.5747 9.40315 13.5747H9.87483C10.3506 13.5747 10.7342 13.1901 10.7342 12.7144V11.7095H16.8035V12.7153Z"
-        fill={color}
+        fill={body}
       />
     </Svg>
   );
 }
 
-export function BankShieldIcon({ size = 20, color = '#CBCECA' }: IconProps) {
+export function BankShieldIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Path
@@ -52,7 +58,8 @@ export function BankShieldIcon({ size = 20, color = '#CBCECA' }: IconProps) {
   );
 }
 
-export function BankSparkleIcon({ size = 20, color = '#CBCECA' }: IconProps) {
+export function BankSparkleIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Path
@@ -71,7 +78,8 @@ export function BankSparkleIcon({ size = 20, color = '#CBCECA' }: IconProps) {
   );
 }
 
-export function BankDashboardIcon({ size = 20, color = '#CBCECA' }: IconProps) {
+export function BankDashboardIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Rect
@@ -114,7 +122,8 @@ export function BankDashboardIcon({ size = 20, color = '#CBCECA' }: IconProps) {
   );
 }
 
-export function BankCrownIcon({ size = 20, color = '#CBCECA' }: IconProps) {
+export function BankCrownIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Path

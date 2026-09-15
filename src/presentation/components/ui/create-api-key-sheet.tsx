@@ -19,6 +19,7 @@ import {
 import { Button } from '@/presentation/components/ui/button';
 import { Sheet } from '@/presentation/components/ui/sheet';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export type CreateApiKeySheetProps = {
@@ -43,6 +44,7 @@ export function CreateApiKeySheet({
   onClose,
   onCreated,
 }: CreateApiKeySheetProps) {
+  const styles = useStyles();
   const api = useApiService();
   const [name, setName] = useState('');
   const [focused, setFocused] = useState(false);
@@ -174,7 +176,7 @@ export function CreateApiKeySheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   fieldWrap: {
     alignSelf: 'stretch',
     position: 'relative',
@@ -240,4 +242,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.textSoft,
     flex: 1,
   },
-});
+}));

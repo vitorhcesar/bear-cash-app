@@ -52,9 +52,9 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
-const NAV_ICON_COLOR = BearCashColors.iconAccent;
 const MAX_BANK_STACK = 4;
 const BANK_MARK_SIZE = 32;
 const BANK_MARK_OVERLAP = 8;
@@ -83,6 +83,7 @@ function uniqueInstitutions(connections: OpenFinanceConnection[]) {
 }
 
 function NavRow({ label, icon, onPress, badge }: NavRowProps) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="button"
@@ -104,6 +105,7 @@ function NavRow({ label, icon, onPress, badge }: NavRowProps) {
 }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -119,6 +121,7 @@ function SettingsPlanBanner({
   hasPlan: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.planBanner}>
       <View style={styles.planBannerCopy}>
@@ -148,6 +151,7 @@ function SettingsPlanBanner({
 }
 
 function BankStack({ connections }: { connections: OpenFinanceConnection[] }) {
+  const styles = useStyles();
   const visible = connections.slice(0, MAX_BANK_STACK);
   const remaining = connections.length - visible.length;
 
@@ -198,6 +202,7 @@ function appVersionLabel() {
 }
 
 export function SettingsPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const { profile, user, signOut, updateAvatar, uploadAvatarPhoto } = useAuthSession();
@@ -376,7 +381,7 @@ export function SettingsPage() {
           <Section title="Conexões">
             <NavRow
               label="Bancos"
-              icon={<SettingsBankIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsBankIcon size={16} color={BearCashColors.iconAccent} />}
               badge={connections.length}
               onPress={() => router.push("/bank-connection")}
             />
@@ -385,28 +390,28 @@ export function SettingsPage() {
           <Section title="Geral">
             <NavRow
               label="Perfil"
-              icon={<SettingsProfileIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsProfileIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => router.push("/profile")}
             />
             <NavRow
               label="Assinatura"
-              icon={<SettingsCardIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsCardIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => router.push("/subscription")}
             />
             <NavRow
               label="Preferências"
-              icon={<SettingsSlidersIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsSlidersIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => router.push("/preferences")}
             />
             {/* Não deve aparecer no app por enquanto */}
             {/* <NavRow
               label="Chave API"
-              icon={<SettingsKeyIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsKeyIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => router.push('/api-keys')}
             /> */}
             <NavRow
               label="Avalie o BearCash"
-              icon={<SettingsStarIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsStarIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => comingSoon("Avalie o BearCash")}
             />
           </Section>
@@ -414,22 +419,22 @@ export function SettingsPage() {
           <Section title="Segurança e Suporte">
             <NavRow
               label="Alterar senha"
-              icon={<SettingsPasswordIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsPasswordIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => router.push("/change-password-code")}
             />
             <NavRow
               label="Biometria"
-              icon={<SettingsBiometricsIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsBiometricsIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => router.push("/biometrics")}
             />
             <NavRow
               label="Reportar um problema"
-              icon={<SettingsReportIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsReportIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => setReportSheetOpen(true)}
             />
             <NavRow
               label="Suporte"
-              icon={<SettingsSupportIcon size={16} color={NAV_ICON_COLOR} />}
+              icon={<SettingsSupportIcon size={16} color={BearCashColors.iconAccent} />}
               onPress={() => comingSoon("Suporte")}
             />
           </Section>
@@ -461,7 +466,7 @@ export function SettingsPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -575,13 +580,13 @@ const styles = StyleSheet.create({
   },
   bankMore: {
     backgroundColor: BearCashColors.text,
-    borderColor: "#212022",
+    borderColor: BearCashColors.background,
     alignItems: "center",
     justifyContent: "center",
   },
   bankMoreText: {
     ...BearCashTypography.captionSmall,
-    color: BearCashColors.buttonFilledText,
+    color: BearCashColors.onText,
   },
   navRow: {
     alignSelf: "stretch",
@@ -700,4 +705,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

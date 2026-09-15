@@ -23,9 +23,10 @@ import {
   VibrationPhoneIcon,
 } from '@/presentation/components/ui/preferences-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
+import { useBearCashTheme } from '@/presentation/theme/bear-cash-theme-context';
 
-const ICON_OFF = '#E0DFE2';
 const ICON_ON = '#9941F1';
 
 type PreferenceRowProps = {
@@ -43,6 +44,7 @@ function PreferenceRow({
   value,
   onValueChange,
 }: PreferenceRowProps) {
+  const styles = useStyles();
   return (
     <View style={value ? styles.rowOnOuter : undefined}>
       {value ? <HighlightCardBorder /> : null}
@@ -61,7 +63,9 @@ function PreferenceRow({
 }
 
 export function PreferencesPage() {
+  const styles = useStyles();
   const api = useApiService();
+  const { lightModeEnabled, setLightModeEnabled } = useBearCashTheme();
   const [preferences, setPreferences] = useState<AppPreferences>(
     DEFAULT_PREFERENCES,
   );
@@ -89,15 +93,15 @@ export function PreferencesPage() {
   }, []);
 
   async function handleToggleSounds(value: boolean) {
-    await persist({ ...preferences, soundsEnabled: value });
+    await persist({ ...preferences, soundsEnabled: value, lightModeEnabled });
   }
 
   async function handleToggleVibrations(value: boolean) {
-    await persist({ ...preferences, vibrationsEnabled: value });
+    await persist({ ...preferences, vibrationsEnabled: value, lightModeEnabled });
   }
 
   async function handleTogglePush(value: boolean) {
-    await persist({ ...preferences, pushEnabled: value });
+    await persist({ ...preferences, pushEnabled: value, lightModeEnabled });
     if (value) {
       await registerPushForCurrentUser(api.modules.push);
       return;
@@ -106,7 +110,8 @@ export function PreferencesPage() {
   }
 
   async function handleToggleLightMode(value: boolean) {
-    await persist({ ...preferences, lightModeEnabled: value });
+    setPreferences((prev) => ({ ...prev, lightModeEnabled: value }));
+    await setLightModeEnabled(value);
   }
 
   async function handleRestore() {
@@ -116,6 +121,7 @@ export function PreferencesPage() {
       activitiesExpenseVisible: preferences.activitiesExpenseVisible,
     };
     await persist(next);
+    await setLightModeEnabled(next.lightModeEnabled);
     if (next.pushEnabled) {
       await registerPushForCurrentUser(api.modules.push);
       return;
@@ -124,7 +130,7 @@ export function PreferencesPage() {
   }
 
   function iconColor(enabled: boolean) {
-    return enabled ? ICON_ON : ICON_OFF;
+    return enabled ? ICON_ON : BearCashColors.iconMuted;
   }
 
   return (
@@ -173,8 +179,8 @@ export function PreferencesPage() {
           <PreferenceRow
             title="Modo Claro"
             description="Exibe o aplicativo com um tema claro."
-            icon={<SunIcon size={12} color={iconColor(preferences.lightModeEnabled)} />}
-            value={preferences.lightModeEnabled}
+            icon={<SunIcon size={12} color={iconColor(lightModeEnabled)} />}
+            value={lightModeEnabled}
             onValueChange={handleToggleLightMode}
           />
         </View>
@@ -193,7 +199,7 @@ export function PreferencesPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -284,4 +290,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

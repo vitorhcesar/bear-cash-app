@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { SvgXml } from 'react-native-svg';
 
 import {
   AI_ICON_XML,
@@ -8,54 +6,43 @@ import {
   BEAR_CASH_MARK_XML,
   WALLET_ICON_XML,
 } from '@/presentation/components/ui/figma-tab-icon-xml';
+import { FigmaSvgIcon } from '@/presentation/components/ui/figma-svg-icon';
 import { BearCashColors } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 type TintableIconProps = {
   size?: number;
   color: string;
 };
 
-function tintFigmaIcon(xml: string, color: string) {
-  return xml.replace(/#(?:E0E2DF|95FF52)/gi, color);
-}
-
-function TintableFigmaIcon({
-  xml,
-  size = 24,
-  color,
-}: TintableIconProps & { xml: string }) {
-  const tintedXml = useMemo(() => tintFigmaIcon(xml, color), [xml, color]);
-
-  return (
-    <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={tintedXml} width={size} height={size} />
-    </View>
-  );
-}
-
 export function HomeTabGlyph({ size = 24, color }: TintableIconProps) {
-  return <TintableFigmaIcon xml={HOME_ICON_XML} size={size} color={color} />;
+  return <FigmaSvgIcon xml={HOME_ICON_XML} size={size} color={color} />;
 }
 
 export function WalletTabGlyph({ size = 24, color }: TintableIconProps) {
-  return <TintableFigmaIcon xml={WALLET_ICON_XML} size={size} color={color} />;
+  return <FigmaSvgIcon xml={WALLET_ICON_XML} size={size} color={color} />;
 }
 
 export function AiAskGlyph({ size = 24, color }: TintableIconProps) {
-  return <TintableFigmaIcon xml={AI_ICON_XML} size={size} color={color} />;
+  return <FigmaSvgIcon xml={AI_ICON_XML} size={size} color={color} />;
 }
 
 export function BearCashMarkGlyph() {
+  const styles = useStyles();
   return (
     <View style={styles.markWrap}>
-      <SvgXml xml={BEAR_CASH_MARK_XML} width={27.425} height={28} />
+      <FigmaSvgIcon
+        xml={BEAR_CASH_MARK_XML}
+        size={28}
+        glyphWidth={27.425}
+        glyphHeight={28}
+        box={28}
+      />
     </View>
   );
 }
 
 export function BearCashMarkBadge({ size = 20 }: { size?: number }) {
-  const scale = size / 28;
-
   return (
     <View
       style={{
@@ -70,19 +57,23 @@ export function BearCashMarkBadge({ size = 20 }: { size?: number }) {
         justifyContent: 'center',
       }}
     >
-      <SvgXml
+      <FigmaSvgIcon
         xml={BEAR_CASH_MARK_XML}
-        width={27.425 * scale}
-        height={28 * scale}
+        size={size}
+        glyphWidth={27.425}
+        glyphHeight={28}
+        box={28}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  markWrap: {
-    width: 27.425,
-    height: 28,
-    overflow: 'hidden',
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    markWrap: {
+      width: 27.425,
+      height: 28,
+      overflow: 'hidden',
+    },
+  }),
+);

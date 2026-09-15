@@ -5,6 +5,7 @@ import { Button } from '@/presentation/components/ui/button';
 import { Sheet } from '@/presentation/components/ui/sheet';
 import { PlanRadioIcon } from '@/presentation/components/ui/subscription-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export const BANK_KIND_FILTERS = [
   { id: 'all', label: 'Todos' },
@@ -34,6 +35,7 @@ function RadioRow({
   selected: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       accessibilityRole="radio"
@@ -53,6 +55,7 @@ export function BankFilterSheet({
   onClose,
   onApply,
 }: BankFilterSheetProps) {
+  const styles = useStyles();
   const [draft, setDraft] = useState<BankKindFilter>(value);
 
   const handleOpen = useCallback(() => {
@@ -96,7 +99,7 @@ export function BankFilterSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   sheet: {
     paddingHorizontal: 16,
   },
@@ -119,4 +122,4 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
   },
-});
+}));

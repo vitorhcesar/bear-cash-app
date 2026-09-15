@@ -11,6 +11,7 @@ import Animated, {
 
 import { CategoryChipIcon } from "@/presentation/components/ui/activities-category-icons";
 import { BearCashColors, BearCashFonts } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 export type CategoryBubbleSpec = {
   id: string;
@@ -207,6 +208,7 @@ function PhysicsBubble({
   onSelect: (id: string) => void;
   onDragActive: (active: boolean) => void;
 }) {
+  const styles = useStyles();
   const size = selected ? selectedSize(spec.size) : spec.size;
   const iconSize = selected ? Math.round(size * 0.308) : spec.icon;
   const percentSize = Math.max(12, Math.round(size * 0.192));
@@ -481,7 +483,7 @@ export function CategoryBubbleField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   bubble: {
     position: "absolute",
     left: 0,
@@ -501,4 +503,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.background,
     textAlign: "center",
   },
-});
+}));

@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CloseIcon } from '@/presentation/components/ui/auth-icons';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const SHEET_RADIUS = 24;
 const ANIM_MS = 280;
@@ -61,6 +62,7 @@ export function Sheet({
   onOpen,
   animateLayout = false,
 }: SheetProps) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
   const progress = useSharedValue(0);
@@ -220,7 +222,7 @@ export function Sheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -271,4 +273,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: -4,
   },
-});
+}));

@@ -26,10 +26,12 @@ import { Button } from "@/presentation/components/ui/button";
 import { PasswordField } from "@/presentation/components/ui/password-field";
 import { TextField } from "@/presentation/components/ui/text-field";
 import { BearCashColors, BearCashTypography } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const MIN_PASSWORD_LENGTH = 6;
 
 export function LoginEmailProfilePage() {
+  const styles = useStyles();
   const router = useRouter();
   const { setEmail, setPassword, setPhone, setMethod, draft } = useAuthDraft();
   const { user, profile, isAuthenticated } = useAuthSession();
@@ -162,7 +164,7 @@ export function LoginEmailProfilePage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -216,4 +218,4 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     gap: 16,
   },
-});
+}));

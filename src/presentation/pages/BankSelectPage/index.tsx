@@ -38,7 +38,9 @@ import {
 import { InstitutionMark } from '@/presentation/components/ui/institution-mark';
 import { SettingsChevronIcon } from '@/presentation/components/ui/settings-icons';
 import { BearCashColors, BearCashFonts, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
+import { useBearCashTheme } from '@/presentation/theme/bear-cash-theme-context';
 import {
   connectOpenFinanceInstitution,
   isOpenFinanceConnectionLimitReached,
@@ -93,6 +95,8 @@ const BankRow = memo(function BankRow({
   selected: boolean;
   onPress: (bank: OpenFinanceInstitution) => void;
 }) {
+  const styles = useStyles();
+  useBearCashTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -165,6 +169,7 @@ function sortInstitutions(left: OpenFinanceInstitution, right: OpenFinanceInstit
 }
 
 export function BankSelectPage() {
+  const styles = useStyles();
   const api = useApiService();
   const { profile, user } = useAuthSession();
   const [query, setQuery] = useState('');
@@ -483,10 +488,11 @@ export function BankSelectPage() {
 }
 
 function BankRowSeparator() {
+  const styles = useStyles();
   return <View style={styles.separator} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -626,4 +632,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 24,
   },
-});
+}));

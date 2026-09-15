@@ -21,12 +21,14 @@ import { OtpField } from '@/presentation/components/ui/otp-field';
 import { formatBrazilPhoneDisplay } from '@/presentation/components/ui/phone-field';
 import { TimerIcon } from '@/presentation/components/ui/timer-icon';
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 const RESEND_SECONDS = 21;
 const CODE_LENGTH = 6;
 
 export function ChangePasswordOtpPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const { user } = useAuthSession();
@@ -208,7 +210,7 @@ export function ChangePasswordOtpPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -262,4 +264,4 @@ const styles = StyleSheet.create({
     color: BearCashColors.text,
     textDecorationLine: 'underline',
   },
-});
+}));

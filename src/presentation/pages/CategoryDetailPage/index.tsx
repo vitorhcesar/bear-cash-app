@@ -38,6 +38,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const LATEST_LIMIT = 8;
@@ -63,6 +64,7 @@ function paramValue(value: string | string[] | undefined) {
 }
 
 export function CategoryDetailPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const params = useLocalSearchParams<{
@@ -318,7 +320,7 @@ export function CategoryDetailPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -416,7 +418,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   tabActive: {
-    backgroundColor: "#212022",
+    backgroundColor: BearCashColors.surface,
   },
   tabLabel: {
     ...BearCashTypography.caption,
@@ -433,4 +435,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

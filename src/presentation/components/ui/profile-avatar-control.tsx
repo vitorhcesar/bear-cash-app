@@ -1,15 +1,16 @@
-import { Image } from 'expo-image';
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Image } from "expo-image";
+import { useState } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
-import { AvatarPickerSheet } from '@/presentation/components/ui/avatar-picker-sheet';
-import { RefreshIcon } from '@/presentation/components/ui/auth-icons';
-import { SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
+import { RefreshIcon } from "@/presentation/components/ui/auth-icons";
+import { AvatarPickerSheet } from "@/presentation/components/ui/avatar-picker-sheet";
+import { SettingsEditIcon } from "@/presentation/components/ui/settings-icons";
 import {
   DEFAULT_AVATARS,
   type IAvatarOption,
-} from '@/presentation/constants/avatars';
-import { BearCashColors } from '@/presentation/constants/theme';
+} from "@/presentation/constants/avatars";
+import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const ACTION_SIZE = 28;
 const EDIT_BADGE_SIZE = 32;
@@ -20,7 +21,7 @@ export type ProfileAvatarControlProps = {
   onChange: (avatar: IAvatarOption) => void;
   size?: number;
   avatars?: IAvatarOption[];
-  action?: 'refresh' | 'edit';
+  action?: "refresh" | "edit";
 };
 
 /** Avatar + action badge + picker sheet — same control used in auth onboarding. */
@@ -29,10 +30,11 @@ export function ProfileAvatarControl({
   onChange,
   size = 112,
   avatars = DEFAULT_AVATARS,
-  action = 'refresh',
+  action = "refresh",
 }: ProfileAvatarControlProps) {
+  const styles = useStyles();
   const [pickerOpen, setPickerOpen] = useState(false);
-  const isEdit = action === 'edit';
+  const isEdit = action === "edit";
 
   return (
     <>
@@ -70,9 +72,9 @@ export function ProfileAvatarControl({
           onPress={() => setPickerOpen(true)}
         >
           {isEdit ? (
-            <SettingsEditIcon size={16} color={BearCashColors.buttonFilledText} />
+            <SettingsEditIcon size={16} color={BearCashColors.onText} />
           ) : (
-            <RefreshIcon size={12} color={BearCashColors.buttonFilledText} />
+            <RefreshIcon size={12} color={BearCashColors.onText} />
           )}
         </Pressable>
       </View>
@@ -89,27 +91,29 @@ export function ProfileAvatarControl({
   );
 }
 
-const styles = StyleSheet.create({
-  avatarAction: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: ACTION_SIZE,
-    height: ACTION_SIZE,
-    borderRadius: ACTION_SIZE / 2,
-    backgroundColor: BearCashColors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarActionEdit: {
-    position: 'absolute',
-    width: EDIT_BADGE_SIZE,
-    height: EDIT_BADGE_SIZE,
-    borderRadius: 24,
-    borderWidth: 4,
-    borderColor: BearCashColors.background,
-    backgroundColor: BearCashColors.text,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    avatarAction: {
+      position: "absolute",
+      right: 0,
+      bottom: 0,
+      width: ACTION_SIZE,
+      height: ACTION_SIZE,
+      borderRadius: ACTION_SIZE / 2,
+      backgroundColor: BearCashColors.text,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarActionEdit: {
+      position: "absolute",
+      width: EDIT_BADGE_SIZE,
+      height: EDIT_BADGE_SIZE,
+      borderRadius: 24,
+      borderWidth: 4,
+      borderColor: BearCashColors.background,
+      backgroundColor: BearCashColors.text,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  }),
+);

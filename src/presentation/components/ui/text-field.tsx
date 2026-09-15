@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type TextFieldProps = TextInputProps & {
   label: string;
@@ -35,6 +36,7 @@ export function TextField({
   placeholderTextColor = BearCashColors.textSoft,
   ...rest
 }: TextFieldProps) {
+  const styles = useStyles();
   const [focused, setFocused] = useState(false);
   const isDisabled = editable === false;
   const isStatic = appearance === 'static';
@@ -93,7 +95,7 @@ export function TextField({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   container: {
     alignSelf: 'stretch',
     position: 'relative',
@@ -158,4 +160,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.errorSoft,
   },
-});
+}));

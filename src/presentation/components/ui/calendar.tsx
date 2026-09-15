@@ -22,6 +22,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as const;
 
@@ -229,6 +230,7 @@ export function Calendar({
   month: monthProp,
   onMonthChange,
 }: CalendarProps) {
+  const styles = useStyles();
   const today = useMemo(() => startOfDay(new Date()), []);
   const [view, setView] = useState<'days' | 'months'>('days');
   const [paneReady, setPaneReady] = useState(false);
@@ -500,7 +502,7 @@ export function Calendar({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   card: {
     alignSelf: 'stretch',
     backgroundColor: BearCashColors.surface,
@@ -608,4 +610,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+}));

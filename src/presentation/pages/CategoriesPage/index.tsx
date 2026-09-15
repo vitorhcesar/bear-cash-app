@@ -41,6 +41,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const CHART_HEIGHT = 168;
@@ -80,6 +81,7 @@ function CategoryRow({
   selected: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   const color = categoryAccentColor(item.id, item.color);
 
   return (
@@ -110,6 +112,7 @@ function CategoryRow({
 }
 
 export function CategoriesPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const [monthDate, setMonthDate] = useState(() => new Date());
@@ -305,7 +308,7 @@ export function CategoriesPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -452,4 +455,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type OutlineSelectProps = {
   label: string;
@@ -20,6 +21,7 @@ export function OutlineSelect({
   expanded = false,
   onPress,
 }: OutlineSelectProps) {
+  const styles = useStyles();
   const filled = value.trim().length > 0;
 
   return (
@@ -47,7 +49,7 @@ export function OutlineSelect({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   labelRow: {
     position: 'absolute',
     top: -8,
@@ -91,4 +93,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
-});
+}));

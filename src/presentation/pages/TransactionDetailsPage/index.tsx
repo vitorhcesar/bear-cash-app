@@ -42,6 +42,7 @@ import {
   BearCashFonts,
   BearCashTypography,
 } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -121,6 +122,7 @@ function FactRow({
   value: string;
   trailing?: ReactNode;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.factRow}>
       {icon}
@@ -134,6 +136,7 @@ function FactRow({
 }
 
 export function TransactionDetailsPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -516,7 +519,7 @@ export function TransactionDetailsPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -681,4 +684,4 @@ const styles = StyleSheet.create({
   selectButton: {
     backgroundColor: '#E0DFE2',
   },
-});
+}));

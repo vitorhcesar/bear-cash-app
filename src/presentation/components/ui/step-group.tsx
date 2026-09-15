@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BearCashColors, BearCashTypography } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 
 export type StepGroupProps = {
   total: number;
@@ -12,6 +13,7 @@ export type StepGroupProps = {
 const STEP_SIZE = 32;
 
 export function StepGroup({ total, current, style }: StepGroupProps) {
+  const styles = useStyles();
   return (
     <View style={[styles.container, style]}>
       {Array.from({ length: total }, (_, index) => {
@@ -53,7 +55,7 @@ export function StepGroup({ total, current, style }: StepGroupProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -100,4 +102,4 @@ const styles = StyleSheet.create({
   labelUpcoming: {
     color: BearCashColors.text,
   },
-});
+}));

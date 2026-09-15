@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
-import { View } from 'react-native';
-import Svg, { Circle, Path, Rect, SvgXml } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
+
+import { FigmaSvgIcon, useIconColor } from '@/presentation/components/ui/figma-svg-icon';
 
 type IconProps = {
   size?: number;
@@ -12,23 +12,12 @@ const BIOMETRICS_GRID_XML =
 
 /** 12px face-grid from Figma Biometria toggle card. */
 export function BiometricsGridIcon({ size = 12, color = '#B385E0' }: IconProps) {
-  const xml = useMemo(
-    () => BIOMETRICS_GRID_XML.replace(/#B385E0/gi, color),
-    [color],
-  );
-
-  return (
-    <View style={{ width: size, height: size, overflow: 'hidden' }}>
-      <SvgXml xml={xml} width={size} height={size} />
-    </View>
-  );
+  return <FigmaSvgIcon xml={BIOMETRICS_GRID_XML} size={size} color={color} />;
 }
 
 /** Face-grid / biometric glyph matching the Biometria settings design */
-export function BiometricsFaceIcon({
-  size = 20,
-  color = '#CBCECA',
-}: IconProps) {
+export function BiometricsFaceIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Rect
@@ -86,10 +75,8 @@ export function BiometricsFaceIcon({
   );
 }
 
-export function BiometricsFingerprintIcon({
-  size = 20,
-  color = '#CBCECA',
-}: IconProps) {
+export function BiometricsFingerprintIcon({ size = 20, color }: IconProps) {
+  color = useIconColor(color);
   return (
     <Svg width={size} height={size} viewBox="0 0 20 20" fill="none">
       <Path

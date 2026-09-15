@@ -11,6 +11,7 @@ import {
   BearCashColors,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const BANK_MARK_SIZE = 40;
 const CHECKBOX_ON_XML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -98,6 +99,7 @@ function formatLastSynced(iso: string | null) {
 }
 
 function Checkbox({ checked }: { checked: boolean }) {
+  const styles = useStyles();
   return (
     <View style={styles.checkboxOuter} accessibilityState={{ checked }}>
       {checked ? (
@@ -121,6 +123,7 @@ export function BankSelectSheet({
   onSelect,
   onAddAccount,
 }: BankSelectSheetProps) {
+  const styles = useStyles();
   const banks = useMemo(
     () => uniqueActiveConnections(connections),
     [connections],
@@ -221,7 +224,7 @@ export function BankSelectSheet({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   sheet: {
     paddingHorizontal: 16,
     gap: 24,
@@ -288,4 +291,4 @@ const styles = StyleSheet.create({
   selectButton: {
     backgroundColor: "#e0dfe2",
   },
-});
+}));

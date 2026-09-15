@@ -6,6 +6,7 @@ import {
   BearCashColors,
   BearCashTypography,
 } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const DEFAULT_SIZE = 20;
 const DEFAULT_OVERLAP = 5;
@@ -23,6 +24,7 @@ export function BankMarkStack({
   overlap = DEFAULT_OVERLAP,
   maxVisible = 3,
 }: BankMarkStackProps) {
+  const styles = useStyles();
   const visible = connections.slice(0, maxVisible);
   const remaining = connections.length - visible.length;
 
@@ -76,7 +78,7 @@ export function BankMarkStack({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   stack: {
     flexDirection: "row",
     alignItems: "center",
@@ -93,6 +95,6 @@ const styles = StyleSheet.create({
   },
   moreText: {
     ...BearCashTypography.captionSmall,
-    color: BearCashColors.buttonFilledText,
+    color: BearCashColors.onText,
   },
-});
+}));

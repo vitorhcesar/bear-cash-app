@@ -4,6 +4,8 @@ import { SvgXml } from "react-native-svg";
 
 import { CATEGORY_ICON_XML } from "@/presentation/components/ui/activities-category-icon-xml";
 import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
+import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 const PARENT_GLYPH = "#212220";
 const CLIP_FILL = /fill="(?:white|#fff(?:fff)?)"/gi;
@@ -51,7 +53,12 @@ const CategoryGlyph = memo(function CategoryGlyph({
 
   return (
     <View style={{ width: size, height: size, overflow: "hidden" }}>
-      <SvgXml xml={xml} width={size} height={size} />
+      <SvgXml
+        key={`${iconKey}:${color}`}
+        xml={xml}
+        width={size}
+        height={size}
+      />
     </View>
   );
 });
@@ -75,6 +82,8 @@ export const CategoryParentIcon = memo(function CategoryParentIcon({
   iconKey: string;
   color: string;
 }) {
+  const styles = useStyles();
+  useBearCashTheme();
   return (
     <View style={[styles.box, { backgroundColor: color }]}>
       <CategoryGlyph iconKey={iconKey} color={PARENT_GLYPH} size={12} />
@@ -89,6 +98,8 @@ export const CategoryChildIcon = memo(function CategoryChildIcon({
   iconKey: string;
   color: string;
 }) {
+  const styles = useStyles();
+  useBearCashTheme();
   return (
     <View style={[styles.box, styles.childBox]}>
       <CategoryGlyph iconKey={iconKey} color={color} size={12} />
@@ -96,16 +107,18 @@ export const CategoryChildIcon = memo(function CategoryChildIcon({
   );
 });
 
-const styles = StyleSheet.create({
-  box: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    padding: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  childBox: {
-    backgroundColor: BearCashColors.borderSoft,
-  },
-});
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    box: {
+      width: 24,
+      height: 24,
+      borderRadius: 8,
+      padding: 6,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    childBox: {
+      backgroundColor: BearCashColors.borderSoft,
+    },
+  }),
+);

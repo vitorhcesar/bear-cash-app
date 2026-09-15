@@ -22,9 +22,11 @@ import {
   BearCashColors,
   BearCashTypography,
 } from '@/presentation/constants/theme';
+import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { useApiService } from '@/presentation/hooks/use-api-service';
 
 export function SimilarTransactionsPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -108,7 +110,7 @@ export function SimilarTransactionsPage() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -150,4 +152,4 @@ const styles = StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
-});
+}));

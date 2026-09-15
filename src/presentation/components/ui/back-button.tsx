@@ -2,7 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import { BackArrowIcon } from '@/presentation/components/ui/activities-icons';
-import { BearCashColors } from '@/presentation/constants/theme';
+import { useIconColor } from '@/presentation/components/ui/figma-svg-icon';
 
 export type BackButtonProps = Omit<PressableProps, 'children' | 'onPress'> & {
   onPress?: () => void;
@@ -18,12 +18,13 @@ export function BackButton({
   onPress,
   fallbackHref = '/(tabs)',
   size = 28,
-  color = BearCashColors.text,
+  color,
   accessibilityLabel = 'Voltar',
   hitSlop = 8,
   ...rest
 }: BackButtonProps) {
   const router = useRouter();
+  const resolvedColor = useIconColor(color);
 
   function handlePress() {
     if (onPress) {
@@ -47,7 +48,7 @@ export function BackButton({
       onPress={handlePress}
       {...rest}
     >
-      <BackArrowIcon size={size} color={color} />
+      <BackArrowIcon size={size} color={resolvedColor} />
     </Pressable>
   );
 }

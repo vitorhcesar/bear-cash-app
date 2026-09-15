@@ -6,11 +6,13 @@ import Animated, { Easing, Keyframe } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { BearCashColors } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const INITIAL_SCALE_FACTOR = Dimensions.get("screen").height / 90;
 const DURATION = 600;
 
 export function AnimatedSplashOverlay() {
+  const styles = useStyles();
   const [animate, setAnimate] = useState(false);
   const [visible, setVisible] = useState(true);
 
@@ -105,6 +107,7 @@ const glowKeyframe = new Keyframe({
 });
 
 export function AnimatedIcon() {
+  const styles = useStyles();
   return (
     <View style={styles.iconContainer}>
       <Animated.View
@@ -134,7 +137,7 @@ export function AnimatedIcon() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   imageContainer: {
     justifyContent: "center",
     alignItems: "center",
@@ -170,4 +173,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 1000,
   },
-});
+}));

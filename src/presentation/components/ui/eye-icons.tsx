@@ -1,5 +1,7 @@
 import Svg, { G, Path } from 'react-native-svg';
 
+import { useIconColor } from '@/presentation/components/ui/figma-svg-icon';
+
 type EyeIconProps = {
   size?: number;
 };
@@ -26,18 +28,19 @@ export function EyeClosedIcon({ size = 16 }: EyeIconProps) {
 
 /** Open eye (visible password) — Figma auth Step 3, neutral stroke */
 export function EyeOpenIcon({ size = 16 }: EyeIconProps) {
+  const stroke = useIconColor();
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
       <G transform="translate(0.83335, 2.66665)" opacity={0.5}>
         <Path
           d="M1.34993 8.03045C0.78331 7.29432 0.5 6.92625 0.5 5.83333C0.5 4.74042 0.783309 4.37235 1.34993 3.63622C2.48131 2.16637 4.37874 0.5 7.16667 0.5C9.95459 0.5 11.852 2.16637 12.9834 3.63622C13.55 4.37235 13.8333 4.74042 13.8333 5.83333C13.8333 6.92625 13.55 7.29432 12.9834 8.03045C11.852 9.50029 9.95459 11.1667 7.16667 11.1667C4.37874 11.1667 2.48131 9.50029 1.34993 8.03045Z"
-          stroke="#E0E2DF"
+          stroke={stroke}
         />
       </G>
       <G transform="translate(5.5, 5.5)">
         <Path
           d="M4.5 2.5C4.5 3.60457 3.60457 4.5 2.5 4.5C1.39543 4.5 0.5 3.60457 0.5 2.5C0.5 1.39543 1.39543 0.5 2.5 0.5C3.60457 0.5 4.5 1.39543 4.5 2.5Z"
-          stroke="#E0E2DF"
+          stroke={stroke}
         />
       </G>
     </Svg>

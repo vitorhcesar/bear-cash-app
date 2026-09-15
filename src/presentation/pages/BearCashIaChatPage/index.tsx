@@ -28,6 +28,7 @@ import {
   BearCashIaSendIcon,
 } from "@/presentation/components/ui/bear-cash-ia-icons";
 import { BearCashColors, BearCashFonts, BearCashTypography } from "@/presentation/constants/theme";
+import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
 const BEAR_CASH_AVATAR = require("@/assets/images/bear-cash-ia/avatar.png");
@@ -99,6 +100,7 @@ function toChatMessages(items: AiMessage[]): ChatMessage[] {
 }
 
 export function BearCashIaChatPage() {
+  const styles = useStyles();
   const router = useRouter();
   const api = useApiService();
   const insets = useSafeAreaInsets();
@@ -455,6 +457,7 @@ export function BearCashIaChatPage() {
 }
 
 function TypingDots() {
+  const styles = useStyles();
   const opacities = useRef([
     new Animated.Value(0.25),
     new Animated.Value(0.25),
@@ -512,6 +515,7 @@ function Composer({
   canSend: boolean;
   sending: boolean;
 }) {
+  const styles = useStyles();
   return (
     <View style={styles.composerRow}>
       <View style={styles.inputPill}>
@@ -552,6 +556,7 @@ function Composer({
 }
 
 function InsightBlock({ monthLabel }: { monthLabel: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.bearCashBlock}>
       <View style={styles.bubbleAvatar}>
@@ -602,7 +607,7 @@ function InsightBlock({ monthLabel }: { monthLabel: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = createThemedStyles(() => StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: BearCashColors.background,
@@ -914,4 +919,4 @@ const styles = StyleSheet.create({
   sendDisabled: {
     opacity: 0.45,
   },
-});
+}));
