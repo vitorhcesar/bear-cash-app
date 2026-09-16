@@ -1,7 +1,8 @@
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
+import { API_BASE_URL } from '@/infra/http/services/api/api-env';
 import type {
   IOpenFinanceModule,
   OpenFinanceConsent,
@@ -84,11 +85,25 @@ export function openFinanceConnectionLimitMessage() {
   return `Você pode conectar no máximo ${MAX_OPEN_FINANCE_CONNECTIONS} bancos por enquanto. Desconecte um para adicionar outro.`;
 }
 
+export function openFinanceHttpsCallbackUrl(consentId?: string) {
+  const url = new URL('/api/v1/open-finance/callback', `${API_BASE_URL}/`);
+  if (consentId) {
+    url.searchParams.set('consentId', consentId);
+  }
+  return url.toString();
+}
+
 export function openFinanceCallbackUrl(consentId?: string) {
-  return Linking.createURL(
-    'open-finance/callback',
-    consentId ? { queryParams: { consentId } } : undefined,
-  );
+  // iOS ASWebAuthenticationSession intercepts the custom scheme after the
+  // HTTPS callback 302. Android Custom Tabs can close on the HTTPS URL itself.
+  if (Platform.OS !== 'android') {
+    return Linking.createURL(
+      'open-finance/callback',
+      consentId ? { queryParams: { consentId } } : undefined,
+    );
+  }
+
+  return openFinanceHttpsCallbackUrl(consentId);
 }
 
 function dismissAuthorizationBrowser() {
