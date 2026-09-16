@@ -28,6 +28,9 @@ export const HOME_DASH_INFLOW_12_XML =
 export const HOME_DASH_INFLOW_24_XML =
   '<svg overflow="visible" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="Icon">\n<path id="Vector" opacity="0.5" d="M6.53033 5.46967C6.23744 5.17678 5.76256 5.17678 5.46967 5.46967C5.17678 5.76256 5.17678 6.23744 5.46967 6.53033L6 6L6.53033 5.46967ZM6 6L5.46967 6.53033L17.4697 18.5303L18 18L18.5303 17.4697L6.53033 5.46967L6 6Z" fill="#A3E263"/>\n<path id="Vector_2" d="M18 9L18 18L9 18" stroke="#A3E263" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n</g>\n</svg>';
 
+export const HOME_DASH_OUTFLOW_12_XML =
+  '<svg overflow="visible" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="Icon">\n<path id="Vector" opacity="0.5" d="M8.73483 9.26517C8.88128 9.41161 9.11872 9.41161 9.26517 9.26517C9.41161 9.11872 9.41161 8.88128 9.26517 8.73483L9 9L8.73483 9.26517ZM9 9L9.26517 8.73483L3.26517 2.73483L3 3L2.73483 3.26517L8.73483 9.26517L9 9Z" fill="#FF7E80"/>\n<path id="Vector_2" d="M7.5 3H3V7.5" stroke="#FF7E80" stroke-width="0.75" stroke-linecap="round" stroke-linejoin="round"/>\n</g>\n</svg>';
+
 export const HOME_DASH_OUTFLOW_24_XML =
   '<svg overflow="visible" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">\n<g id="Icon">\n<path id="Vector" opacity="0.5" d="M17.4697 18.5303C17.7626 18.8232 18.2374 18.8232 18.5303 18.5303C18.8232 18.2374 18.8232 17.7626 18.5303 17.4697L18 18L17.4697 18.5303ZM18 18L18.5303 17.4697L6.53033 5.46967L6 6L5.46967 6.53033L17.4697 18.5303L18 18Z" fill="#FF2E31"/>\n<path id="Vector_2" d="M15 6H6V15" stroke="#FF2E31" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>\n</g>\n</svg>';
 

@@ -9,6 +9,7 @@ import {
   HOME_DASH_INFLOW_24_XML,
   HOME_DASH_INSTALLMENTS_12_XML,
   HOME_DASH_INSTALLMENTS_16_XML,
+  HOME_DASH_OUTFLOW_12_XML,
   HOME_DASH_OUTFLOW_24_XML,
   HOME_DASH_SUBSCRIPTIONS_XML,
   HOME_DASH_WALLET_12_XML,
@@ -92,6 +93,12 @@ export function HomeDashInflowIcon({ size = 12, color }: IconProps) {
 }
 
 export function HomeDashOutflowIcon({ size = 24, color }: IconProps) {
+  if (size <= 12) {
+    return (
+      <FigmaSvgIcon xml={HOME_DASH_OUTFLOW_12_XML} size={size} color={color} />
+    );
+  }
+
   return (
     <FigmaSvgIcon xml={HOME_DASH_OUTFLOW_24_XML} size={size} color={color} />
   );

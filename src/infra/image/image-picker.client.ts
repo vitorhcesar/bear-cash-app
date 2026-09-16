@@ -17,6 +17,7 @@ export async function pickProfilePhotoFromLibrary(): Promise<PickedImage | null>
     allowsEditing: false,
     quality: 1,
     exif: false,
+    presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
   });
 
   if (result.canceled || !result.assets[0]?.uri) {

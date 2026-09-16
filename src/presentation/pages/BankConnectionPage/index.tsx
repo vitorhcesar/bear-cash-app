@@ -15,6 +15,7 @@ import type {
   OpenFinanceConsent,
   OpenFinanceConnection,
 } from '@/infra/http/services/api/modules/open-finance.module';
+import { setOpenFinanceConnections } from '@/infra/open-finance/connections-store';
 import { useAuthSession } from '@/presentation/auth/auth-session-context';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import {
@@ -172,8 +173,9 @@ export function BankConnectionPage() {
           }
         }
         setConnections(items);
+        setOpenFinanceConnections(items);
       } catch {
-        setConnections([]);
+        // Keep the last known list; a transient refresh must not hide a live connection.
       }
     },
     [api.modules.openFinance, returningConsentId],
@@ -231,9 +233,11 @@ export function BankConnectionPage() {
     setBusyId(connection.id);
     try {
       const updated = await api.modules.openFinance.syncConnection(connection.id);
-      setConnections((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
-      );
+      setConnections((current) => {
+        const next = current.map((item) => (item.id === updated.id ? updated : item));
+        setOpenFinanceConnections(next);
+        return next;
+      });
     } catch (error) {
       Alert.alert(
         'Não foi possível sincronizar',
@@ -338,11 +342,12 @@ export function BankConnectionPage() {
                     ))}
                     {connection.creditCards.map((card) => {
                       const due = formatDueDate(card.currentBill?.dueDate);
+                      const amount = card.usedAmount ?? card.currentBill?.totalAmount;
                       const billTotal =
-                        card.currentBill?.totalAmount != null
+                        amount != null
                           ? formatCurrencyAmount(
-                              card.currentBill.totalAmount,
-                              card.currentBill.currency ?? 'BRL',
+                              amount,
+                              card.currentBill?.currency ?? 'BRL',
                             )
                           : null;
                       return (

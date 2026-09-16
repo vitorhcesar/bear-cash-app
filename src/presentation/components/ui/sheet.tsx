@@ -43,6 +43,8 @@ export type SheetProps = {
   contentStyle?: StyleProp<ViewStyle>;
   /** Fires when the sheet begins opening */
   onOpen?: () => void;
+  /** Fires after the close animation finishes and the modal unmounts */
+  onExited?: () => void;
   /** Animate height/layout when the sheet content size changes */
   animateLayout?: boolean;
 };
@@ -60,6 +62,7 @@ export function Sheet({
   closeOnBackdropPress = true,
   contentStyle,
   onOpen,
+  onExited,
   animateLayout = false,
 }: SheetProps) {
   const styles = useStyles();
@@ -69,12 +72,17 @@ export function Sheet({
   const [mounted, setMounted] = useState(false);
   const [layoutLive, setLayoutLive] = useState(false);
   const onOpenRef = useRef(onOpen);
+  const onExitedRef = useRef(onExited);
   const didShowRef = useRef(false);
   const mountedRef = useRef(false);
 
   useEffect(() => {
     onOpenRef.current = onOpen;
   }, [onOpen]);
+
+  useEffect(() => {
+    onExitedRef.current = onExited;
+  }, [onExited]);
 
   useEffect(() => {
     if (visible) {
@@ -112,6 +120,7 @@ export function Sheet({
     const timeout = setTimeout(() => {
       mountedRef.current = false;
       setMounted(false);
+      onExitedRef.current?.();
     }, ANIM_MS);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `progress` is a stable SharedValue

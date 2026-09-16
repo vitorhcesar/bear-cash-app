@@ -6,6 +6,7 @@ import type {
   IOpenFinanceModule,
   OpenFinanceConsent,
 } from '@/infra/http/services/api/modules/open-finance.module';
+import { patchOpenFinanceConsent } from '@/infra/open-finance/connections-store';
 
 export const MAX_OPEN_FINANCE_CONNECTIONS = 5;
 
@@ -28,6 +29,13 @@ function beginOpenFinanceBrowserSession() {
 function endOpenFinanceBrowserSession() {
   openFinanceBrowserSessions = Math.max(0, openFinanceBrowserSessions - 1);
   skipBiometricUntil = Date.now() + 15_000;
+}
+
+export function isAuthorisedConnection(item: {
+  revokedAt?: string | null;
+  status?: string;
+}) {
+  return !item.revokedAt && item.status === 'AUTHORISED';
 }
 
 export function isAuthRejected(status: string) {
@@ -94,9 +102,9 @@ export function openFinanceHttpsCallbackUrl(consentId?: string) {
 }
 
 export function openFinanceIosAuthRedirectUrl() {
-  // Polp never sees this URL. Their redirectUrl is HTTPS only.
-  // ASWebAuthenticationSession cannot use `https` as callbackURLScheme,
-  // so the HTTPS callback page hops here to close the iOS sheet.
+  // Used only to close ASWebAuthenticationSession if a custom Polp
+  // redirectUrl hops back into the app. With Polp's default success page,
+  // the session is dismissed when poll sees AUTHORISED.
   return 'bear-cash://open-finance/callback';
 }
 
@@ -127,9 +135,8 @@ async function readConsent(client: IOpenFinanceModule, consentId: string) {
 
 async function openAuthorization(url: string) {
   if (Platform.OS === 'ios') {
-    // iPhone: in-app Safari stays in-process; AppState background→active is
-    // not a dismiss. Auth Session ends on Cancel or `bear-cash://` after the
-    // Polp HTTPS redirectUrl has loaded.
+    // In-app Safari stays in-process. Polling dismisses the sheet when the
+    // bank authorizes; Polp's default success page does not hop back here.
     return WebBrowser.openAuthSessionAsync(url, openFinanceIosAuthRedirectUrl(), {
       preferEphemeralSession: false,
       showInRecents: true,
@@ -255,6 +262,7 @@ export async function authorizeOpenFinanceConsent(
   options?: AuthorizeOpenFinanceOptions,
 ) {
   const emit = (next: OpenFinanceConsent) => {
+    patchOpenFinanceConsent(next);
     options?.onUpdate?.(next);
     return next;
   };
@@ -307,6 +315,7 @@ export async function connectOpenFinanceInstitution(
     created = await client.recreateConsent(created.id);
   }
   options?.onUpdate?.(created);
+  patchOpenFinanceConsent(created);
   return authorizeOpenFinanceConsent(client, created, options);
 }
 
@@ -322,6 +331,7 @@ export async function reconnectOpenFinanceConsent(
     current = await client.getConsent(consentId);
   }
   options?.onUpdate?.(current);
+  patchOpenFinanceConsent(current);
 
   if (isSyncSettled(current) || current.status === 'AUTHORISED') {
     return authorizeOpenFinanceConsent(client, current, options);
@@ -329,5 +339,6 @@ export async function reconnectOpenFinanceConsent(
 
   const recreated = await client.recreateConsent(consentId);
   options?.onUpdate?.(recreated);
+  patchOpenFinanceConsent(recreated);
   return authorizeOpenFinanceConsent(client, recreated, options);
 }

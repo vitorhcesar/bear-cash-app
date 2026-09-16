@@ -46,6 +46,8 @@ type HomeConnectedDashboardProps = {
   onPressLastTransaction?: (id: string) => void;
   onPressTransactions?: () => void;
   onPressCategories?: () => void;
+  onPressInflow?: () => void;
+  onPressOutflow?: () => void;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -182,8 +184,12 @@ type BillEntry = {
   card: OpenFinanceConnection["creditCards"][number];
 };
 
+function invoiceAmount(card: BillEntry["card"]) {
+  return card.usedAmount ?? card.currentBill?.totalAmount ?? 0;
+}
+
 function billUsage(card: BillEntry["card"]) {
-  const used = card.currentBill?.totalAmount ?? 0;
+  const used = invoiceAmount(card);
   const available = card.availableLimit;
   const total = available != null ? used + available : null;
   return { used, total };
@@ -386,6 +392,8 @@ export function HomeConnectedDashboard({
   onPressLastTransaction,
   onPressTransactions,
   onPressCategories,
+  onPressInflow,
+  onPressOutflow,
 }: HomeConnectedDashboardProps) {
   const styles = useStyles();
   const now = new Date();
@@ -417,11 +425,11 @@ export function HomeConnectedDashboard({
     })),
   );
   const billTotal = billCards.reduce(
-    (sum, item) => sum + (item.card.currentBill?.totalAmount ?? 0),
+    (sum, item) => sum + invoiceAmount(item.card),
     0,
   );
   const primaryBill = billCards[0] ?? null;
-  const billUsed = primaryBill?.card.currentBill?.totalAmount ?? billTotal;
+  const billUsed = primaryBill ? invoiceAmount(primaryBill.card) : billTotal;
   const billAvailable = primaryBill?.card.availableLimit ?? null;
   const billLimitTotal =
     billAvailable != null ? billUsed + billAvailable : null;
@@ -540,48 +548,70 @@ export function HomeConnectedDashboard({
       </GlassCard>
 
       <View style={styles.flowRow}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Entrada"
+          onPress={onPressInflow}
+          disabled={!onPressInflow}
+          style={({ pressed }) => [
+            styles.flexCard,
+            pressed && onPressInflow ? styles.flowPressed : null,
+          ]}
         >
-          <IconHold pad={3}>
-            <HomeDashInflowIcon size={18} />
-          </IconHold>
-          <View style={styles.flowCopy}>
-            <Text style={styles.label}>Entrada</Text>
-            <MoneyRow
-              amount={monthFlow.credit}
-              fill={false}
-              amountStyle={styles.flowAmount}
-            />
-          </View>
-          {creditTrend ? (
-            <View style={styles.trendRow}>
-              <Text style={styles.trend}>{creditTrend.label}</Text>
-              <Text style={styles.trend}>{creditTrend.value}</Text>
+          <GlassCard style={styles.flowCardFill} contentStyle={styles.flowInnerSingle}>
+            <IconHold pad={3}>
+              <HomeDashInflowIcon size={18} />
+            </IconHold>
+            <View style={styles.flowCopy}>
+              <Text style={styles.label}>Entrada</Text>
+              <MoneyRow
+                amount={monthFlow.credit}
+                fill={false}
+                amountStyle={styles.flowAmount}
+              />
             </View>
-          ) : null}
-        </GlassCard>
+            {creditTrend ? (
+              <View style={styles.trendRow}>
+                <Text style={styles.trend}>{creditTrend.label}</Text>
+                <Text style={styles.trend}>{creditTrend.value}</Text>
+              </View>
+            ) : null}
+          </GlassCard>
+        </Pressable>
 
-        <GlassCard
-          style={styles.flexCard}
-          contentStyle={styles.flowInnerSingle}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Saída"
+          onPress={onPressOutflow}
+          disabled={!onPressOutflow}
+          style={({ pressed }) => [
+            styles.flexCard,
+            pressed && onPressOutflow ? styles.flowPressed : null,
+          ]}
         >
-          <IconHold pad={3}>
-            <HomeDashOutflowIcon size={18} />
-          </IconHold>
-          <View style={styles.flowCopy}>
-            <Text style={styles.label}>Saída</Text>
-            <MoneyRow
-              amount={monthFlow.debit}
-              fill={false}
-              amountStyle={styles.flowAmount}
-            />
-          </View>
-          {debitTrend ? (
-            <View style={styles.trendRow}>
-              <Text style={styles.trend}>{debitTrend.label}</Text>
-              <Text style={styles.trend}>{debitTrend.value}</Text>
+          <GlassCard
+            style={styles.flowCardFill}
+            contentStyle={styles.flowInnerSingle}
+          >
+            <IconHold pad={3}>
+              <HomeDashOutflowIcon size={18} />
+            </IconHold>
+            <View style={styles.flowCopy}>
+              <Text style={styles.label}>Saída</Text>
+              <MoneyRow
+                amount={monthFlow.debit}
+                fill={false}
+                amountStyle={styles.flowAmount}
+              />
             </View>
-          ) : null}
-        </GlassCard>
+            {debitTrend ? (
+              <View style={styles.trendRow}>
+                <Text style={styles.trend}>{debitTrend.label}</Text>
+                <Text style={styles.trend}>{debitTrend.value}</Text>
+              </View>
+            ) : null}
+          </GlassCard>
+        </Pressable>
       </View>
 
       {billCards.length > 1 ? (
@@ -887,6 +917,12 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   flexCard: {
     flex: 1,
     minWidth: 0,
+  },
+  flowCardFill: {
+    flex: 1,
+  },
+  flowPressed: {
+    opacity: 0.92,
   },
   flowInnerSingle: {
     flex: 1,

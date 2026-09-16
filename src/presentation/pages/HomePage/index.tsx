@@ -2,6 +2,7 @@ import { Image as ExpoImage } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import {
   useCallback,
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -25,9 +26,14 @@ import {
 } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
-import { getErrorMessage } from "@/infra/http/get-error-message";
+import { getErrorMessage, isApiError } from "@/infra/http/get-error-message";
 import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
+import {
+  getOpenFinanceConnections,
+  setOpenFinanceConnections,
+  useOpenFinanceConnections,
+} from "@/infra/open-finance/connections-store";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { BankConnectionsChip } from "@/presentation/components/ui/bank-connections-chip";
 import { BankSelectSheet } from "@/presentation/components/ui/bank-select-sheet";
@@ -52,6 +58,7 @@ import {
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
+import { isAuthorisedConnection } from "@/presentation/open-finance/connect-bank";
 import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
 
 const AVATAR_SIZE = 56;
@@ -303,6 +310,8 @@ function HomeConnectedState({
   onPressLastTransaction,
   onPressTransactions,
   onPressCategories,
+  onPressInflow,
+  onPressOutflow,
   scrollRef,
 }: {
   firstName: string;
@@ -318,6 +327,8 @@ function HomeConnectedState({
   onPressLastTransaction: (id: string) => void;
   onPressTransactions: () => void;
   onPressCategories: () => void;
+  onPressInflow: () => void;
+  onPressOutflow: () => void;
   scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
   const styles = useStyles();
@@ -374,6 +385,8 @@ function HomeConnectedState({
             onPressLastTransaction={onPressLastTransaction}
             onPressTransactions={onPressTransactions}
             onPressCategories={onPressCategories}
+            onPressInflow={onPressInflow}
+            onPressOutflow={onPressOutflow}
           />
         </View>
       </HomeHeroPullScroll>
@@ -387,9 +400,7 @@ export function HomePage() {
   const api = useApiService();
   const { profile, user } = useAuthSession();
   const scrollRef = useRef<HomeHeroPullScrollHandle>(null);
-  const [connections, setConnections] = useState<
-    OpenFinanceConnection[] | null
-  >(null);
+  const connections = useOpenFinanceConnections();
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [bankSelectOpen, setBankSelectOpen] = useState(false);
   const [selectedBankIds, setSelectedBankIds] = useState<string[]>([]);
@@ -414,14 +425,16 @@ export function HomePage() {
       api.modules.openFinance.listConnections(),
       api.modules.transactions.list(),
     ]);
-    setConnections(connectionResponse.items);
+    setOpenFinanceConnections(connectionResponse.items);
     setTransactions(transactionResponse.items);
   }, [api.modules.openFinance, api.modules.transactions]);
 
   useFocusEffect(
     useCallback(() => {
       void loadHomeData().catch(() => {
-        setConnections((current) => current ?? []);
+        if (getOpenFinanceConnections() === null) {
+          setOpenFinanceConnections([]);
+        }
       });
     }, [loadHomeData]),
   );
@@ -429,16 +442,24 @@ export function HomePage() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const synced = await api.modules.openFinance.syncConnections();
-      const transactionResponse = await api.modules.transactions.list();
-      setConnections(synced.items);
-      setTransactions(transactionResponse.items);
-    } catch (error) {
+      await loadHomeData();
       try {
-        await loadHomeData();
-      } catch {
-        setConnections((current) => current ?? []);
+        const synced = await api.modules.openFinance.syncConnections();
+        const transactionResponse = await api.modules.transactions.list();
+        setOpenFinanceConnections(synced.items);
+        setTransactions(transactionResponse.items);
+      } catch (error) {
+        if (isApiError(error)) {
+          Alert.alert(
+            "Não foi possível atualizar",
+            getErrorMessage(
+              error,
+              "Não foi possível sincronizar seus bancos. Tente novamente.",
+            ),
+          );
+        }
       }
+    } catch (error) {
       Alert.alert(
         "Não foi possível atualizar",
         getErrorMessage(
@@ -458,13 +479,35 @@ export function HomePage() {
 
   useTabRepressHandler("home", handleTabRepress);
 
+  const authorisedIds = (connections ?? [])
+    .filter(isAuthorisedConnection)
+    .map((item) => item.id)
+    .sort()
+    .join(",");
+
+  useEffect(() => {
+    if (!authorisedIds) {
+      return;
+    }
+    let cancelled = false;
+    void api.modules.transactions
+      .list()
+      .then((response) => {
+        if (!cancelled) {
+          setTransactions(response.items);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [api.modules.transactions, authorisedIds]);
+
   if (connections === null) {
     return <HomeLoading />;
   }
 
-  const connected = connections.filter(
-    (item) => !item.revokedAt && item.status === "AUTHORISED",
-  );
+  const connected = connections.filter(isAuthorisedConnection);
   const selectedConnections = connected.filter((item) => {
     if (selectedBankIds.length === 0) {
       return true;
@@ -541,6 +584,8 @@ export function HomePage() {
         }
         onPressTransactions={() => router.navigate("/(tabs)/activities")}
         onPressCategories={() => router.push("/categories")}
+        onPressInflow={() => router.push("/cash-flow")}
+        onPressOutflow={() => router.push("/cash-flow")}
         scrollRef={scrollRef}
       />
       {bankSelectSheet}

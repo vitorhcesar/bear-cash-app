@@ -61,6 +61,7 @@ export type OpenFinanceConnection = OpenFinanceConsent & {
     network: string | null;
     last4: string | null;
     availableLimit: number | null;
+    usedAmount?: number | null;
     currentBill: OpenFinanceBill | null;
   }>;
 };

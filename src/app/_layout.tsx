@@ -114,6 +114,7 @@ function RootNavigator() {
           />
           <Stack.Screen name="categories" options={pushFromRight} />
           <Stack.Screen name="category/[id]" options={pushFromRight} />
+          <Stack.Screen name="cash-flow" options={pushFromRight} />
         </Stack.Protected>
 
         <Stack.Protected guard={!canUseApp}>

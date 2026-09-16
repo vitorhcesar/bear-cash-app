@@ -27,8 +27,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { getErrorMessage } from "@/infra/http/get-error-message";
+import { getErrorMessage, isApiError } from "@/infra/http/get-error-message";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
+import { setOpenFinanceConnections } from "@/infra/open-finance/connections-store";
 import {
   ActivitiesFilterSheet,
   DEFAULT_ACTIVITIES_FILTERS,
@@ -59,6 +60,7 @@ import {
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
+import { isAuthorisedConnection } from "@/presentation/open-finance/connect-bank";
 import {
   HARD_PULL_HOLD,
   HARD_PULL_THRESHOLD,
@@ -372,9 +374,10 @@ export function ActivitiesPage() {
   const loadBankOptions = useCallback(async () => {
     try {
       const response = await api.modules.openFinance.listConnections();
+      setOpenFinanceConnections(response.items);
       const unique = new Map<string, ActivitiesBankOption>();
       for (const connection of response.items) {
-        if (connection.revokedAt) {
+        if (!isAuthorisedConnection(connection)) {
           continue;
         }
         unique.set(connection.institutionName, {
@@ -402,16 +405,29 @@ export function ActivitiesPage() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await api.modules.openFinance.syncConnections();
       await Promise.all([
         loadTransactions(query, { silent: true }),
         loadBankOptions(),
       ]);
+      try {
+        const synced = await api.modules.openFinance.syncConnections();
+        setOpenFinanceConnections(synced.items);
+        await Promise.all([
+          loadTransactions(query, { silent: true }),
+          loadBankOptions(),
+        ]);
+      } catch (error) {
+        if (isApiError(error)) {
+          Alert.alert(
+            "Não foi possível atualizar",
+            getErrorMessage(
+              error,
+              "Não foi possível sincronizar seus bancos. Tente novamente.",
+            ),
+          );
+        }
+      }
     } catch (error) {
-      await Promise.all([
-        loadTransactions(query, { silent: true }),
-        loadBankOptions(),
-      ]);
       Alert.alert(
         "Não foi possível atualizar",
         getErrorMessage(

@@ -226,15 +226,13 @@ export function AvatarCropSheet({
   return (
     <Modal
       visible={visible}
-      transparent
       animationType="fade"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
+      presentationStyle="fullScreen"
       onShow={handleOpen}
       onRequestClose={onCancel}
     >
       <GestureHandlerRootView style={styles.flex}>
-        <View style={[styles.root, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+        <View style={[styles.root, { paddingTop: Math.max(insets.top, 16), paddingBottom: Math.max(insets.bottom, 24) }]}>
           <View style={styles.stage} onLayout={handleStageLayout}>
             {uri && hasSize ? (
               <GestureDetector gesture={composed}>
@@ -417,7 +415,6 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     flex: 1,
     backgroundColor: BearCashColors.background,
     paddingHorizontal: 16,
-    paddingTop: 16,
     gap: 16,
   },
   stage: {

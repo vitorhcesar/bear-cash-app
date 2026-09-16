@@ -70,7 +70,8 @@ function copyFor(consent: OpenFinanceConsent | null) {
   if (isAwaitingAuthorization(consent)) {
     return {
       title: 'Autorize no banco',
-      description: `Abra o app do ${consent.institutionName} e aprove o acesso Open Finance. Depois volte ao BearCash; o app fecha a tela do banco sozinho.`,
+        description:
+        'Abra o app do banco e aprove o acesso Open Finance. Depois você pode fechar a página de sucesso da Polp; o BearCash detecta a autorização sozinho.',
       confirmLabel: 'Fechar',
     };
   }

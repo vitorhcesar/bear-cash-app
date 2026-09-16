@@ -33,6 +33,7 @@ const ACCENT_INKS = [
   "CC9AFE",
   "0C84FC",
   "5B8DEF",
+  "C7C5C9",
   "2FB70D",
 ];
 

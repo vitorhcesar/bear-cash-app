@@ -19,6 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getErrorMessage } from "@/infra/http/get-error-message";
 import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
+import { setOpenFinanceConnections } from "@/infra/open-finance/connections-store";
 import {
   getLastSettingsRoute,
   setLastSettingsRoute,
@@ -60,6 +61,7 @@ import {
 } from "@/presentation/constants/theme";
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
+import { isAuthorisedConnection } from "@/presentation/open-finance/connect-bank";
 
 const MAX_BANK_STACK = 4;
 const BANK_MARK_SIZE = 32;
@@ -78,6 +80,9 @@ function uniqueInstitutions(connections: OpenFinanceConnection[]) {
   const result: OpenFinanceConnection[] = [];
 
   for (const connection of connections) {
+    if (!isAuthorisedConnection(connection)) {
+      continue;
+    }
     const key = connection.institutionId || connection.institutionName;
     if (seen.has(key)) {
       continue;
@@ -207,6 +212,7 @@ export function SettingsPage() {
   const loadConnections = useCallback(async () => {
     try {
       const response = await api.modules.openFinance.listConnections();
+      setOpenFinanceConnections(response.items);
       setConnections(response.items.filter((item) => !item.revokedAt));
     } catch {
       setConnections([]);

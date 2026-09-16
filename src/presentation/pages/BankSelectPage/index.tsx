@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getErrorMessage } from '@/infra/http/get-error-message';
 import type { OpenFinanceConsent, OpenFinanceConnection, OpenFinanceInstitution } from '@/infra/http/services/api/modules/open-finance.module';
+import { setOpenFinanceConnections } from '@/infra/open-finance/connections-store';
 import {
   isInstitutionsCacheFresh,
   peekInstitutionsCache,
@@ -236,8 +237,9 @@ export function BankSelectPage() {
     try {
       const response = await api.modules.openFinance.listConnections();
       setConnections(response.items);
+      setOpenFinanceConnections(response.items);
     } catch {
-      setConnections([]);
+      // Keep the last known list.
     }
   }, [api.modules.openFinance]);
 
@@ -458,6 +460,7 @@ export function BankSelectPage() {
         onClose={() => {
           setSyncConsent(null);
           setSelectedBank(null);
+          void refreshConnections();
         }}
         onRecreate={() => {
           if (!syncConsent) {

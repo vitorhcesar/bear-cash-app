@@ -12,6 +12,7 @@ import {
   BearCashTypography,
 } from "@/presentation/constants/theme";
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
+import { isAuthorisedConnection } from "@/presentation/open-finance/connect-bank";
 
 const MARK_SIZE = 28;
 const MARK_OVERLAP = 10;
@@ -28,7 +29,7 @@ function uniqueInstitutions(connections: OpenFinanceConnection[]) {
   const result: OpenFinanceConnection[] = [];
 
   for (const connection of connections) {
-    if (connection.revokedAt || connection.status !== "AUTHORISED") {
+    if (!isAuthorisedConnection(connection)) {
       continue;
     }
     const key = connection.institutionId || connection.institutionName;

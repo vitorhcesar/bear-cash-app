@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { useCallback, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { pickProfilePhoto, prepareProfilePhoto } from '@/application/avatar/prepare-profile-photo';
 import { CUSTOM_AVATAR_ID } from '@/domain/avatar/avatar.type';
@@ -16,6 +16,15 @@ import { createThemedStyles } from '@/presentation/constants/themed-styles';
 import { RefreshIcon } from './auth-icons';
 import { Button } from './button';
 import { Sheet } from './sheet';
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+/** iOS only presents one view controller at a time — wait for the previous modal to finish dismissing. */
+const IOS_VIEW_CONTROLLER_DISMISS_MS = 500;
 
 const PREVIEW_SIZE = 112;
 const GRID_ITEM_SIZE = 80;
@@ -48,6 +57,23 @@ export function AvatarPickerSheet({
   const [cropImageSize, setCropImageSize] = useState<{ width?: number; height?: number }>({});
   const [cropVisible, setCropVisible] = useState(false);
   const [cropConfirming, setCropConfirming] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const visibleRef = useRef(visible);
+  const sheetExitResolveRef = useRef<(() => void) | null>(null);
+  const keepDraftOnOpenRef = useRef(false);
+
+  const pickerVisible = visible && !libraryOpen && !cropVisible;
+
+  useEffect(() => {
+    visibleRef.current = visible;
+    if (visible) {
+      return;
+    }
+    setLibraryOpen(false);
+    setCropVisible(false);
+    setCropUri(null);
+    setCropImageSize({});
+  }, [visible]);
 
   const draft: IAvatarOption | undefined =
     draftId === CUSTOM_AVATAR_ID
@@ -55,6 +81,11 @@ export function AvatarPickerSheet({
       : (avatars.find((avatar) => avatar.id === draftId) ?? avatars[0]);
 
   const handleOpen = useCallback(() => {
+    if (keepDraftOnOpenRef.current) {
+      keepDraftOnOpenRef.current = false;
+      return;
+    }
+
     const nextId = selectedId && (selectedId === CUSTOM_AVATAR_ID || avatars.some((a) => a.id === selectedId))
       ? selectedId
       : avatars[0]?.id;
@@ -81,16 +112,67 @@ export function AvatarPickerSheet({
     onClose();
   }
 
+  function reopenPickerSheet() {
+    keepDraftOnOpenRef.current = true;
+    setLibraryOpen(false);
+  }
+
+  async function waitForSheetExit() {
+    if (!pickerVisible) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        sheetExitResolveRef.current = null;
+        resolve();
+      };
+      sheetExitResolveRef.current = finish;
+      setTimeout(finish, 800);
+    });
+
+    if (Platform.OS === 'ios') {
+      await wait(IOS_VIEW_CONTROLLER_DISMISS_MS);
+    }
+  }
+
   async function handlePickCustom() {
     try {
-      const picked = await pickProfilePhoto();
-      if (!picked) {
+      const sheetExit = waitForSheetExit();
+      setLibraryOpen(true);
+      await sheetExit;
+      if (!visibleRef.current) {
+        setLibraryOpen(false);
         return;
       }
+
+      const picked = await pickProfilePhoto();
+      if (Platform.OS === 'ios') {
+        await wait(IOS_VIEW_CONTROLLER_DISMISS_MS);
+      }
+      if (!visibleRef.current) {
+        setLibraryOpen(false);
+        return;
+      }
+      if (!picked) {
+        reopenPickerSheet();
+        return;
+      }
+
       setCropUri(picked.uri);
       setCropImageSize({ width: picked.width, height: picked.height });
       setCropVisible(true);
     } catch {
+      if (visibleRef.current) {
+        reopenPickerSheet();
+      } else {
+        setLibraryOpen(false);
+      }
       Alert.alert('Erro', 'Não foi possível abrir a galeria.');
     }
   }
@@ -109,6 +191,7 @@ export function AvatarPickerSheet({
       setCropVisible(false);
       setCropUri(null);
       setCropImageSize({});
+      setLibraryOpen(false);
       onConfirm(custom);
       onClose();
     } catch {
@@ -118,12 +201,33 @@ export function AvatarPickerSheet({
     }
   }
 
+  async function handleCropCancel() {
+    if (cropConfirming) {
+      return;
+    }
+
+    setCropVisible(false);
+    setCropUri(null);
+    setCropImageSize({});
+    if (Platform.OS === 'ios') {
+      await wait(IOS_VIEW_CONTROLLER_DISMISS_MS);
+    }
+    if (!visibleRef.current) {
+      setLibraryOpen(false);
+      return;
+    }
+    reopenPickerSheet();
+  }
+
   return (
     <>
       <Sheet
-        visible={visible}
+        visible={pickerVisible}
         onClose={onClose}
         onOpen={handleOpen}
+        onExited={() => {
+          sheetExitResolveRef.current?.();
+        }}
         title="Escolher Avatar"
         subtitle="Selecione um avatar para o seu perfil"
       >
@@ -205,12 +309,7 @@ export function AvatarPickerSheet({
         imageHeight={cropImageSize.height}
         confirming={cropConfirming}
         onCancel={() => {
-          if (cropConfirming) {
-            return;
-          }
-          setCropVisible(false);
-          setCropUri(null);
-          setCropImageSize({});
+          void handleCropCancel();
         }}
         onConfirm={(crop) => {
           void handleCropConfirm(crop);
