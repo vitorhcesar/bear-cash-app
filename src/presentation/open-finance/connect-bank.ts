@@ -11,6 +11,7 @@ import type {
 export const MAX_OPEN_FINANCE_CONNECTIONS = 5;
 
 const POLL_INTERVAL_MS = 2000;
+const BROWSER_GRACE_MS = 2500;
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -123,19 +124,16 @@ async function readConsent(client: IOpenFinanceModule, consentId: string) {
   }
 }
 
-async function openAuthorization(url: string, redirectUrl: string) {
+async function openAuthorization(url: string) {
   const options = {
     createTask: false,
     showInRecents: true,
     preferEphemeralSession: false,
   };
 
-  try {
-    return await WebBrowser.openAuthSessionAsync(url, redirectUrl, options);
-  } catch {
-    await WebBrowser.openBrowserAsync(url, options);
-    return { type: 'dismiss' as const };
-  }
+  // Polp/Celcoin never redirect back to the app. ASWebAuthenticationSession
+  // would show iOS "Sign In" and can freeze if dismissed during presentation.
+  return WebBrowser.openBrowserAsync(url, options);
 }
 
 async function watchAuthorization(
@@ -152,6 +150,7 @@ async function watchAuthorization(
     let settled = false;
     let timer: ReturnType<typeof setInterval> | undefined;
     let subscription: ReturnType<typeof AppState.addEventListener> | undefined;
+    const openedAt = Date.now();
 
     const finish = (next: OpenFinanceConsent) => {
       if (settled) {
@@ -205,8 +204,10 @@ async function watchAuthorization(
         return;
       }
       void tick();
-      if (previous === 'background' || previous === 'inactive') {
-        dismissAuthorizationBrowser();
+      if (Date.now() - openedAt < BROWSER_GRACE_MS) {
+        return;
+      }
+      if (previous === 'background') {
         finish(current);
       }
     });
@@ -243,13 +244,12 @@ export async function authorizeOpenFinanceConsent(
   const stopped = { current: false };
   const authUrl = consent.urlToAuthenticate;
   const shouldOpenBrowser = Boolean(authUrl) && !isUrlExpired(consent);
-  const redirectUrl = openFinanceCallbackUrl(consent.id);
 
   beginOpenFinanceBrowserSession();
   try {
     const browserTask =
       shouldOpenBrowser && authUrl
-        ? openAuthorization(authUrl, redirectUrl)
+        ? openAuthorization(authUrl)
         : Promise.resolve({ type: 'skip' as const });
     const watchTask = watchAuthorization(client, consent, emit, stopped);
 
@@ -277,7 +277,13 @@ export async function connectOpenFinanceInstitution(
   institutionId: string,
   options?: AuthorizeOpenFinanceOptions,
 ) {
-  const created = await client.createConsent({ institutionId });
+  let created = await client.createConsent({ institutionId });
+  if (
+    isAwaitingAuthorization(created) &&
+    (!created.urlToAuthenticate || isUrlExpired(created))
+  ) {
+    created = await client.recreateConsent(created.id);
+  }
   options?.onUpdate?.(created);
   return authorizeOpenFinanceConsent(client, created, options);
 }
@@ -295,13 +301,7 @@ export async function reconnectOpenFinanceConsent(
   }
   options?.onUpdate?.(current);
 
-  if (
-    isSyncSettled(current) ||
-    current.status === 'AUTHORISED' ||
-    (isAwaitingAuthorization(current) &&
-      Boolean(current.urlToAuthenticate) &&
-      !isUrlExpired(current))
-  ) {
+  if (isSyncSettled(current) || current.status === 'AUTHORISED') {
     return authorizeOpenFinanceConsent(client, current, options);
   }
 

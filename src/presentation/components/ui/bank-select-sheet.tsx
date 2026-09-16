@@ -36,7 +36,7 @@ function uniqueActiveConnections(connections: OpenFinanceConnection[]) {
   const byInstitution = new Map<string, OpenFinanceConnection>();
 
   for (const connection of connections) {
-    if (connection.revokedAt) {
+    if (connection.revokedAt || connection.status !== "AUTHORISED") {
       continue;
     }
 

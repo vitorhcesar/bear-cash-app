@@ -27,7 +27,7 @@ function uniqueInstitutions(connections: OpenFinanceConnection[]) {
   const result: OpenFinanceConnection[] = [];
 
   for (const connection of connections) {
-    if (connection.revokedAt) {
+    if (connection.revokedAt || connection.status !== "AUTHORISED") {
       continue;
     }
     const key = connection.institutionId || connection.institutionName;

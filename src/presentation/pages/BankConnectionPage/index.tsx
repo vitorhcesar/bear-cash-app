@@ -324,7 +324,8 @@ export function BankConnectionPage() {
                     </Text>
                   </View>
                 </View>
-                {connection.accounts.length > 0 || connection.creditCards.length > 0 ? (
+                {connection.status === 'AUTHORISED' &&
+                (connection.accounts.length > 0 || connection.creditCards.length > 0) ? (
                   <View style={styles.connectionMeta}>
                     {connection.accounts.map((account) => (
                       <Text key={account.id} style={styles.connectionMetaText}>
