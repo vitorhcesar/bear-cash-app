@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
@@ -143,29 +144,52 @@ function HeroScrim() {
   );
 }
 
-function HeroGreeting({ firstName }: { firstName: string }) {
+function HeroGreeting({
+  firstName,
+  filtered = false,
+}: {
+  firstName: string;
+  filtered?: boolean;
+}) {
   const styles = useStyles();
   return (
-    <View style={styles.heroGreeting}>
+    <View style={[styles.heroGreeting, filtered && styles.heroGreetingWide]}>
       <Text style={styles.heroHello}>
         Olá, <Text style={styles.heroName}>{firstName}</Text>!
       </Text>
-      <Text style={styles.heroWelcome}>Bem-vindo a suas finanças! 🖐️</Text>
+      <Text style={styles.heroWelcome}>
+        {filtered
+          ? "Visualize as finanças dos bancos selecionados!"
+          : "Bem-vindo a suas finanças! 🖐️"}
+      </Text>
     </View>
   );
 }
 
-function ProfileAvatar({ source }: { source: IAvatarOption["source"] }) {
+function ProfileAvatar({
+  source,
+  onPress,
+}: {
+  source: IAvatarOption["source"];
+  onPress: () => void;
+}) {
   const styles = useStyles();
   return (
-    <View style={styles.avatarFrame}>
-      <ExpoImage
-        source={source}
-        style={styles.avatarImage}
-        contentFit="cover"
-        accessibilityLabel="Foto de perfil"
-      />
-    </View>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Abrir configurações"
+      hitSlop={8}
+    >
+      <View style={styles.avatarFrame}>
+        <ExpoImage
+          source={source}
+          style={styles.avatarImage}
+          contentFit="cover"
+          accessibilityLabel="Foto de perfil"
+        />
+      </View>
+    </Pressable>
   );
 }
 
@@ -177,6 +201,7 @@ function HomeEmptyState({
   onRefresh,
   onConnect,
   onOpenBankSelect,
+  onOpenSettings,
   scrollRef,
 }: {
   firstName: string;
@@ -186,6 +211,7 @@ function HomeEmptyState({
   onRefresh: () => void;
   onConnect: () => void;
   onOpenBankSelect: () => void;
+  onOpenSettings: () => void;
   scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
   const styles = useStyles();
@@ -225,7 +251,7 @@ function HomeEmptyState({
             pointerEvents="box-none"
             style={[styles.heroHeader, { top: insets.top + 16 }]}
           >
-            <ProfileAvatar source={avatarSource} />
+            <ProfileAvatar source={avatarSource} onPress={onOpenSettings} />
             <BankConnectionsChip
               connections={connections}
               onPress={onOpenBankSelect}
@@ -269,9 +295,11 @@ function HomeConnectedState({
   chipConnections,
   connections,
   transactions,
+  filtered,
   refreshing,
   onRefresh,
   onOpenBankSelect,
+  onOpenSettings,
   onPressLastTransaction,
   onPressTransactions,
   onPressCategories,
@@ -282,9 +310,11 @@ function HomeConnectedState({
   chipConnections: OpenFinanceConnection[];
   connections: OpenFinanceConnection[];
   transactions: TransactionItem[];
+  filtered: boolean;
   refreshing: boolean;
   onRefresh: () => void;
   onOpenBankSelect: () => void;
+  onOpenSettings: () => void;
   onPressLastTransaction: (id: string) => void;
   onPressTransactions: () => void;
   onPressCategories: () => void;
@@ -324,9 +354,10 @@ function HomeConnectedState({
             pointerEvents="box-none"
             style={[styles.heroHeader, { top: insets.top + 16 }]}
           >
-            <ProfileAvatar source={avatarSource} />
+            <ProfileAvatar source={avatarSource} onPress={onOpenSettings} />
             <BankConnectionsChip
               connections={chipConnections}
+              filtered={filtered}
               onPress={onOpenBankSelect}
             />
           </View>
@@ -334,7 +365,7 @@ function HomeConnectedState({
       >
         <View style={[styles.heroSpacer, { height: heroHeight }]}>
           <HeroScrim />
-          <HeroGreeting firstName={firstName} />
+          <HeroGreeting firstName={firstName} filtered={filtered} />
         </View>
         <View style={styles.connectedDashboard}>
           <HomeConnectedDashboard
@@ -452,6 +483,9 @@ export function HomePage() {
     }
     return selectedNames.has(bankName);
   });
+  const isFiltered =
+    selectedBankIds.length > 0 &&
+    dashboardConnections.length < connected.length;
 
   const bankSelectSheet = (
     <BankSelectSheet
@@ -481,6 +515,7 @@ export function HomePage() {
           onRefresh={() => void onRefresh()}
           onConnect={() => router.push("/bank-connection")}
           onOpenBankSelect={() => setBankSelectOpen(true)}
+          onOpenSettings={() => router.push("/settings")}
           scrollRef={scrollRef}
         />
         {bankSelectSheet}
@@ -496,9 +531,11 @@ export function HomePage() {
         chipConnections={dashboardConnections}
         connections={dashboardConnections}
         transactions={dashboardTransactions}
+        filtered={isFiltered}
         refreshing={refreshing}
         onRefresh={() => void onRefresh()}
         onOpenBankSelect={() => setBankSelectOpen(true)}
+        onOpenSettings={() => router.push("/settings")}
         onPressLastTransaction={(id) =>
           router.push({ pathname: "/transaction/[id]", params: { id } })
         }
@@ -576,6 +613,9 @@ const useStyles = createThemedStyles(() =>
       gap: 3,
       maxWidth: 263,
       zIndex: 2,
+    },
+    heroGreetingWide: {
+      maxWidth: "100%",
     },
     heroHello: {
       fontFamily: BearCashFonts.semiBold,

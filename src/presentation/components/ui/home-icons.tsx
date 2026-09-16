@@ -82,7 +82,7 @@ export function HomeDashWalletIcon({ size = 12, color }: IconProps) {
 }
 
 export function HomeDashInflowIcon({ size = 12, color }: IconProps) {
-  if (size >= 24) {
+  if (size >= 16) {
     return (
       <FigmaSvgIcon xml={HOME_DASH_INFLOW_24_XML} size={size} color={color} />
     );

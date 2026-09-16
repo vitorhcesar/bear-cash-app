@@ -1,12 +1,19 @@
 import { Image } from "expo-image";
-import { useMemo, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from "react-native";
 
 import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
 import { CategoryChipIcon } from "@/presentation/components/ui/activities-category-icons";
 import { summarizeCategorySpend } from "@/presentation/components/ui/category-spend";
-import { ExpenseArrowIcon } from "@/presentation/components/ui/activities-icons";
 import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
 import { HighlightCardBorder } from "@/presentation/components/ui/highlight-card-border";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
@@ -29,8 +36,9 @@ import {
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const CATEGORIES_BEAR = require("@/assets/images/home/categories-bear.jpg");
-const OUTFLOW_AMOUNT = "#ffa9aa";
 const TREND_MUTED = "#59565d";
+const BILL_TILE_WIDTH = 260;
+const BILL_TILE_GAP = 10;
 
 type HomeConnectedDashboardProps = {
   connections: OpenFinanceConnection[];
@@ -138,15 +146,6 @@ function connectionBalance(connection: OpenFinanceConnection) {
   );
 }
 
-function formatTrend(current: number, previous: number) {
-  if (previous <= 0) {
-    return null;
-  }
-  const pct = Math.round(((current - previous) / previous) * 100);
-  const sign = pct > 0 ? "+" : "";
-  return `${sign}${pct}%`;
-}
-
 function formatTrendCaption(current: number, previous: number) {
   if (previous <= 0) {
     return null;
@@ -169,12 +168,25 @@ function cardCaption(
   institutionName: string,
   name: string | null,
   last4: string | null,
+  mask = "***",
 ) {
   const title = [institutionName, name].filter(Boolean).join(" ");
   if (last4) {
-    return `${title} ***${last4}`;
+    return `${title} ${mask}${last4}`;
   }
   return title;
+}
+
+type BillEntry = {
+  connection: OpenFinanceConnection;
+  card: OpenFinanceConnection["creditCards"][number];
+};
+
+function billUsage(card: BillEntry["card"]) {
+  const used = card.currentBill?.totalAmount ?? 0;
+  const available = card.availableLimit;
+  const total = available != null ? used + available : null;
+  return { used, total };
 }
 
 function inMonth(date: Date, year: number, month: number) {
@@ -248,6 +260,126 @@ function MoneyRow({
   );
 }
 
+function BillsCarousel({
+  items,
+  total,
+}: {
+  items: BillEntry[];
+  total: number;
+}) {
+  const styles = useStyles();
+  const [page, setPage] = useState(0);
+  const interval = BILL_TILE_WIDTH + BILL_TILE_GAP;
+
+  function onScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const next = Math.round(event.nativeEvent.contentOffset.x / interval);
+    const clamped = Math.max(0, Math.min(next, items.length - 1));
+    if (clamped !== page) {
+      setPage(clamped);
+    }
+  }
+
+  return (
+    <GlassCard contentStyle={styles.billManyInner}>
+      <View style={styles.billManyHeader}>
+        <View style={styles.billCopy}>
+          <Text style={styles.label}>Total fatura atual</Text>
+          <View style={styles.billValue}>
+            <IconHold pad={6} radius={8}>
+              <HomeDashCardIcon size={16} />
+            </IconHold>
+            <MoneyRow amount={total} />
+          </View>
+        </View>
+        {items.length > 1 ? (
+          <View style={styles.billDots}>
+            {items.map((item, index) => (
+              <View
+                key={item.card.id}
+                style={[
+                  styles.billDot,
+                  index === page && styles.billDotActive,
+                ]}
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
+      <ScrollView
+        horizontal
+        nestedScrollEnabled
+        directionalLockEnabled
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToOffsets={items.map((_, index) => index * interval)}
+        disableIntervalMomentum
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.billCarousel}
+      >
+        {items.map((item) => {
+          const usage = billUsage(item.card);
+          return (
+            <View key={item.card.id} style={styles.billTile}>
+              <View style={styles.billTileHeader}>
+                <InstitutionMark
+                  name={item.connection.institutionName}
+                  logoUrl={item.connection.institutionLogoUrl}
+                  size={24}
+                />
+                <Text style={styles.billTileTitle} numberOfLines={1}>
+                  {cardCaption(
+                    item.connection.institutionName,
+                    item.card.name,
+                    item.card.last4,
+                    "•••",
+                  )}
+                </Text>
+              </View>
+              <View style={styles.billTileBody}>
+                <View style={styles.billTileBar}>
+                  <View
+                    style={[
+                      styles.billTileUsed,
+                      { flex: Math.max(usage.used, 0) },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.billTileRest,
+                      {
+                        flex: Math.max(
+                          (usage.total ?? usage.used) - usage.used,
+                          0.01,
+                        ),
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.limitLegend}>
+                  <View style={styles.limitLegendItem}>
+                    <Text style={styles.limitLegendLabel}>Usado:</Text>
+                    <Text style={styles.limitLegendValue}>
+                      {getCurrencySymbol("BRL")} {formatAmount(usage.used)}
+                    </Text>
+                  </View>
+                  <View style={styles.limitLegendItem}>
+                    <Text style={styles.limitLegendLabel}>Total:</Text>
+                    <Text style={styles.limitLegendValue}>
+                      {getCurrencySymbol("BRL")}{" "}
+                      {formatAmount(usage.total ?? usage.used)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </GlassCard>
+  );
+}
+
 export function HomeConnectedDashboard({
   connections,
   transactions,
@@ -277,10 +409,6 @@ export function HomeConnectedDashboard({
   const shareTotal = shares.reduce((sum, item) => sum + item.amount, 0);
 
   const markBank = connections[0];
-  const billBanks = connections.filter(
-    (connection) => connection.creditCards.length > 0,
-  );
-  const billStack = billBanks.length > 0 ? billBanks : connections;
 
   const billCards = connections.flatMap((item) =>
     item.creditCards.map((card) => ({
@@ -365,7 +493,7 @@ export function HomeConnectedDashboard({
             <MoneyRow amount={balance} />
           </View>
           {isMany ? (
-            <BankMarkStack connections={connections} maxVisible={2} />
+            <BankMarkStack connections={connections} maxVisible={3} />
           ) : markBank ? (
             <InstitutionMark
               name={markBank.institutionName}
@@ -411,107 +539,53 @@ export function HomeConnectedDashboard({
         ) : null}
       </GlassCard>
 
-      <View style={styles.row}>
-        {isMany ? (
-          <>
-            <GlassCard style={styles.flexCard} contentStyle={styles.flowInner}>
-              <View style={styles.flowHeader}>
-                <Text style={styles.label}>Entrada</Text>
-                {formatTrend(monthFlow.credit, monthFlow.prevCredit) ? (
-                  <Text style={styles.trend}>
-                    {formatTrend(monthFlow.credit, monthFlow.prevCredit)}
-                  </Text>
-                ) : null}
-              </View>
-              <View style={styles.flowValue}>
-                <IconHold>
-                  <HomeDashInflowIcon size={12} />
-                </IconHold>
-                <MoneyRow amount={monthFlow.credit} />
-              </View>
-            </GlassCard>
+      <View style={styles.flowRow}>
+        >
+          <IconHold pad={3}>
+            <HomeDashInflowIcon size={18} />
+          </IconHold>
+          <View style={styles.flowCopy}>
+            <Text style={styles.label}>Entrada</Text>
+            <MoneyRow
+              amount={monthFlow.credit}
+              fill={false}
+              amountStyle={styles.flowAmount}
+            />
+          </View>
+          {creditTrend ? (
+            <View style={styles.trendRow}>
+              <Text style={styles.trend}>{creditTrend.label}</Text>
+              <Text style={styles.trend}>{creditTrend.value}</Text>
+            </View>
+          ) : null}
+        </GlassCard>
 
-            <GlassCard style={styles.flexCard} contentStyle={styles.flowInner}>
-              <View style={styles.flowHeader}>
-                <Text style={styles.label}>Saída</Text>
-                {formatTrend(monthFlow.debit, monthFlow.prevDebit) ? (
-                  <Text style={styles.trend}>
-                    {formatTrend(monthFlow.debit, monthFlow.prevDebit)}
-                  </Text>
-                ) : null}
-              </View>
-              <View style={styles.flowValue}>
-                <IconHold>
-                  <ExpenseArrowIcon size={12} />
-                </IconHold>
-                <MoneyRow amount={monthFlow.debit} color={OUTFLOW_AMOUNT} />
-              </View>
-            </GlassCard>
-          </>
-        ) : (
-          <>
-            <GlassCard
-              style={styles.flexCard}
-              contentStyle={styles.flowInnerSingle}
-            >
-              <IconHold>
-                <HomeDashInflowIcon size={24} />
-              </IconHold>
-              <View style={styles.flowCopy}>
-                <Text style={styles.label}>Entrada</Text>
-                <MoneyRow
-                  amount={monthFlow.credit}
-                  fill={false}
-                  amountStyle={styles.flowAmount}
-                />
-              </View>
-              {creditTrend ? (
-                <View style={styles.trendRow}>
-                  <Text style={styles.trend}>{creditTrend.label}</Text>
-                  <Text style={styles.trend}>{creditTrend.value}</Text>
-                </View>
-              ) : null}
-            </GlassCard>
-
-            <GlassCard
-              style={styles.flexCard}
-              contentStyle={styles.flowInnerSingle}
-            >
-              <IconHold>
-                <HomeDashOutflowIcon size={24} />
-              </IconHold>
-              <View style={styles.flowCopy}>
-                <Text style={styles.label}>Saída</Text>
-                <MoneyRow
-                  amount={monthFlow.debit}
-                  fill={false}
-                  amountStyle={styles.flowAmount}
-                />
-              </View>
-              {debitTrend ? (
-                <View style={styles.trendRow}>
-                  <Text style={styles.trend}>{debitTrend.label}</Text>
-                  <Text style={styles.trend}>{debitTrend.value}</Text>
-                </View>
-              ) : null}
-            </GlassCard>
-          </>
-        )}
+        <GlassCard
+          style={styles.flexCard}
+          contentStyle={styles.flowInnerSingle}
+        >
+          <IconHold pad={3}>
+            <HomeDashOutflowIcon size={18} />
+          </IconHold>
+          <View style={styles.flowCopy}>
+            <Text style={styles.label}>Saída</Text>
+            <MoneyRow
+              amount={monthFlow.debit}
+              fill={false}
+              amountStyle={styles.flowAmount}
+            />
+          </View>
+          {debitTrend ? (
+            <View style={styles.trendRow}>
+              <Text style={styles.trend}>{debitTrend.label}</Text>
+              <Text style={styles.trend}>{debitTrend.value}</Text>
+            </View>
+          ) : null}
+        </GlassCard>
       </View>
 
-      {isMany ? (
-        <GlassCard contentStyle={styles.billInner}>
-          <View style={styles.billCopy}>
-            <Text style={styles.label}>Total fatura atual</Text>
-            <View style={styles.billValue}>
-              <IconHold>
-                <HomeDashCardIcon size={12} />
-              </IconHold>
-              <MoneyRow amount={billTotal} />
-            </View>
-          </View>
-          <BankMarkStack connections={billStack} maxVisible={3} />
-        </GlassCard>
+      {billCards.length > 1 ? (
+        <BillsCarousel items={billCards} total={billTotal} />
       ) : (
         <GlassCard contentStyle={styles.billSingleInner}>
           {primaryBill ? (
@@ -520,7 +594,7 @@ export function HomeConnectedDashboard({
                 <InstitutionMark
                   name={primaryBill.connection.institutionName}
                   logoUrl={primaryBill.connection.institutionLogoUrl}
-                  size={20}
+                  size={24}
                 />
                 <Text style={styles.billHeaderTitle} numberOfLines={1}>
                   {cardCaption(
@@ -531,7 +605,7 @@ export function HomeConnectedDashboard({
                 </Text>
               </View>
               {isMastercard(primaryBill.card.network) ? (
-                <MastercardBrandMark />
+                <MastercardBrandMark width={28} height={19} />
               ) : null}
             </View>
           ) : null}
@@ -540,7 +614,7 @@ export function HomeConnectedDashboard({
               <Text style={styles.label}>Total fatura atual</Text>
               <View style={styles.billValue}>
                 <IconHold pad={6} radius={8}>
-                  <HomeDashCardIcon size={12} />
+                  <HomeDashCardIcon size={16} />
                 </IconHold>
                 <MoneyRow amount={billTotal} />
               </View>
@@ -637,7 +711,7 @@ export function HomeConnectedDashboard({
           <Text style={styles.label}>Parcelamentos</Text>
           <View style={styles.metricValue}>
             <IconHold>
-              <HomeDashInstallmentsIcon size={isMany ? 12 : 16} />
+              <HomeDashInstallmentsIcon size={16} />
             </IconHold>
             <Text style={styles.metricNumber} numberOfLines={1}>
               {installments}
@@ -650,10 +724,7 @@ export function HomeConnectedDashboard({
           <Text style={styles.label}>Assinaturas</Text>
           <View style={styles.metricValue}>
             <IconHold>
-              <HomeDashSubscriptionsIcon
-                size={isMany ? 12 : 16}
-                color={isMany ? undefined : "#995CD6"}
-              />
+              <HomeDashSubscriptionsIcon size={16} color="#995CD6" />
             </IconHold>
             <MoneyRow amount={recurringTotal} />
           </View>
@@ -808,28 +879,23 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "stretch",
     gap: 16,
   },
+  flowRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: 12,
+  },
   flexCard: {
     flex: 1,
     minWidth: 0,
   },
-  flowInner: {
-    gap: 8,
-    padding: 16,
-  },
   flowInnerSingle: {
     flex: 1,
-    gap: 16,
-    padding: 16,
-    justifyContent: "space-between",
-  },
-  flowHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     gap: 8,
+    padding: 12,
+    justifyContent: "space-between",
   },
   flowCopy: {
-    gap: 8,
+    gap: 4,
   },
   flowAmount: {
     fontSize: 24,
@@ -845,15 +911,79 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "flex-start",
     gap: 2,
   },
-  flowValue: {
+  billManyInner: {
+    padding: 0,
+    gap: 0,
+  },
+  billManyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    padding: 16,
+  },
+  billDots: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  billInner: {
+  billDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: BearCashColors.borderStrong,
+  },
+  billDotActive: {
+    backgroundColor: BearCashColors.text,
+  },
+  billCarousel: {
+    gap: BILL_TILE_GAP,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  billTile: {
+    width: BILL_TILE_WIDTH,
+    borderWidth: 1,
+    borderColor: BearCashColors.borderStrong,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: BearCashColors.surface,
+  },
+  billTileHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 6,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: BearCashColors.borderStrong,
+  },
+  billTileTitle: {
+    flex: 1,
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
+  },
+  billTileBody: {
+    padding: 12,
+    gap: 12,
+  },
+  billTileBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    height: 6,
+    alignSelf: "stretch",
+  },
+  billTileUsed: {
+    height: 6,
+    borderRadius: 40,
+    minWidth: 4,
+    backgroundColor: BearCashColors.text,
+  },
+  billTileRest: {
+    height: 6,
+    borderRadius: 40,
+    minWidth: 4,
+    backgroundColor: BearCashColors.borderSoft,
   },
   billSingleInner: {
     padding: 0,

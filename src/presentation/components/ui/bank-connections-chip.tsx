@@ -20,6 +20,7 @@ const MAX_VISIBLE = 3;
 type BankConnectionsChipProps = {
   connections: OpenFinanceConnection[];
   onPress?: () => void;
+  filtered?: boolean;
 };
 
 function uniqueInstitutions(connections: OpenFinanceConnection[]) {
@@ -64,15 +65,17 @@ function DashedAddMark() {
 export function BankConnectionsChip({
   connections,
   onPress,
+  filtered = false,
 }: BankConnectionsChipProps) {
   const styles = useStyles();
   const institutions = uniqueInstitutions(connections);
-  const visible = institutions.slice(0, MAX_VISIBLE);
-  const remaining = institutions.length - visible.length;
-  const isEmpty = institutions.length === 0;
-  const compact = institutions.length === 1;
+  const compact = institutions.length > 0;
   const markSize = compact ? 20 : MARK_SIZE;
-  const overlap = compact ? 8 : MARK_OVERLAP;
+  const overlap = compact ? 5 : MARK_OVERLAP;
+  const maxVisible = compact ? 2 : MAX_VISIBLE;
+  const visible = institutions.slice(0, maxVisible);
+  const remaining = compact ? 0 : institutions.length - visible.length;
+  const isEmpty = institutions.length === 0;
 
   return (
     <Pressable
@@ -92,45 +95,50 @@ export function BankConnectionsChip({
       {isEmpty ? (
         <DashedAddMark />
       ) : (
-        <View style={[styles.stack, { height: markSize }]}>
-          {visible.map((connection, index) => (
-            <View
-              key={connection.institutionId || connection.id}
-              style={[
-                styles.stackItem,
-                {
-                  width: markSize,
-                  height: markSize,
-                  borderRadius: markSize / 2,
-                  marginLeft: index === 0 ? 0 : -overlap,
-                  zIndex: visible.length - index,
-                },
-              ]}
-            >
-              <InstitutionMark
-                name={connection.institutionName}
-                logoUrl={connection.institutionLogoUrl}
-                size={markSize}
-              />
-            </View>
-          ))}
-          {remaining > 0 ? (
-            <View
-              style={[
-                styles.stackItem,
-                styles.more,
-                {
-                  width: markSize,
-                  height: markSize,
-                  borderRadius: markSize / 2,
-                  marginLeft: -overlap,
-                  zIndex: 0,
-                },
-              ]}
-            >
-              <Text style={styles.moreText}>+{remaining}</Text>
-            </View>
-          ) : null}
+        <View style={styles.stackWrap}>
+          <View style={[styles.stack, { height: markSize }]}>
+            {visible.map((connection, index) => (
+              <View
+                key={connection.institutionId || connection.id}
+                style={[
+                  styles.stackItem,
+                  {
+                    width: markSize,
+                    height: markSize,
+                    borderRadius: markSize / 2,
+                    marginLeft: index === 0 ? 0 : -overlap,
+                    zIndex: visible.length - index,
+                    borderWidth: index === 0 ? 0 : 1,
+                    borderColor: BearCashColors.background,
+                  },
+                ]}
+              >
+                <InstitutionMark
+                  name={connection.institutionName}
+                  logoUrl={connection.institutionLogoUrl}
+                  size={markSize}
+                />
+              </View>
+            ))}
+            {remaining > 0 ? (
+              <View
+                style={[
+                  styles.stackItem,
+                  styles.more,
+                  {
+                    width: markSize,
+                    height: markSize,
+                    borderRadius: markSize / 2,
+                    marginLeft: -overlap,
+                    zIndex: 0,
+                  },
+                ]}
+              >
+                <Text style={styles.moreText}>+{remaining}</Text>
+              </View>
+            ) : null}
+          </View>
+          {filtered ? <View style={styles.notificationDot} /> : null}
         </View>
       )}
       <HomeChevronDownIcon
@@ -169,6 +177,9 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  stackWrap: {
+    position: "relative",
+  },
   stack: {
     flexDirection: "row",
     alignItems: "center",
@@ -190,5 +201,15 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     color: BearCashColors.onText,
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: BearCashColors.warning,
+    zIndex: 4,
   },
 }));

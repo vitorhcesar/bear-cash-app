@@ -285,7 +285,6 @@ export function TransactionDetailsPage() {
     );
   }
 
-  const isCredit = item.type === 'CREDIT';
   const symbol = getCurrencySymbol(item.currencyCode);
   const accountLabel = item.bankName?.trim() || 'BearCash';
   const installmentLabel = getInstallmentLabel(item);
@@ -331,10 +330,7 @@ export function TransactionDetailsPage() {
               <View style={styles.summaryCopy}>
                 <Text style={styles.name}>{item.description}</Text>
                 <View style={styles.amountRow}>
-                  <Text style={styles.amountSymbol}>
-                    {isCredit ? '+' : '-'}
-                    {symbol}
-                  </Text>
+                  <Text style={styles.amountSymbol}>{symbol}</Text>
                   <SpinningAmount
                     value={item.amount}
                     style={styles.amountValue}

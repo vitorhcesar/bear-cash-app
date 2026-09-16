@@ -30,11 +30,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { getErrorMessage } from "@/infra/http/get-error-message";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
 import {
-  DEFAULT_PREFERENCES,
-  getPreferences,
-  updatePreferences,
-} from "@/infra/preferences/preferences-store";
-import {
   ActivitiesFilterSheet,
   DEFAULT_ACTIVITIES_FILTERS,
   type ActivitiesBankOption,
@@ -54,8 +49,6 @@ import {
   formatActivitySection,
 } from "@/presentation/components/ui/calendar";
 import { ActivitiesStickyHeaderBackdrop } from "@/presentation/components/ui/activities-sticky-header-backdrop";
-import { CashFlowPair } from "@/presentation/components/ui/cash-flow-card";
-import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
   APP_BOTTOM_CHROME_HEIGHT,
@@ -76,16 +69,6 @@ import {
 const FILTERS = ["Entradas", "Saídas", "Pagamentos", "Cartão"] as const;
 
 type FilterId = (typeof FILTERS)[number];
-
-function splitCurrencyAmount(amount: number, currencyCode = "BRL") {
-  return {
-    symbol: getCurrencySymbol(currencyCode),
-    value: Math.abs(amount).toLocaleString("pt-BR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }),
-  };
-}
 
 function activeFilterCount(filters: ActivitiesFilters) {
   let count = 0;
@@ -245,7 +228,7 @@ function matchesFilter(item: TransactionItem, filter: FilterId | null) {
   return Boolean(item.creditCardMetadata);
 }
 
-const STICKY_HEADER_FALLBACK_HEIGHT = 360;
+const STICKY_HEADER_FALLBACK_HEIGHT = 220;
 const FILTERS_EXPANDED_FALLBACK = 38;
 const COLLAPSE_AFTER_SCROLL = 132;
 const EXPAND_BELOW_SCROLL = 20;
@@ -262,7 +245,7 @@ export function ActivitiesPage() {
   const pullTriggered = useSharedValue(false);
   const filtersExpandedH = useSharedValue(FILTERS_EXPANDED_FALLBACK);
   const headerExpandedH = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT);
-  const headerCollapsedH = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT - 120);
+  const headerCollapsedH = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT - 54);
   const headerHeightSv = useSharedValue(STICKY_HEADER_FALLBACK_HEIGHT);
   const headerPhaseRef = useRef<"expanded" | "animating" | "collapsed">(
     "expanded",
@@ -332,12 +315,6 @@ export function ActivitiesPage() {
   const [items, setItems] = useState<TransactionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterId | null>(null);
-  const [incomeVisible, setIncomeVisible] = useState(
-    DEFAULT_PREFERENCES.activitiesIncomeVisible,
-  );
-  const [expenseVisible, setExpenseVisible] = useState(
-    DEFAULT_PREFERENCES.activitiesExpenseVisible,
-  );
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<ActivitiesFilters>(
     DEFAULT_ACTIVITIES_FILTERS,
@@ -411,22 +388,6 @@ export function ActivitiesPage() {
       setBankOptions([]);
     }
   }, [api.modules.openFinance]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      const stored = await getPreferences();
-      if (!cancelled) {
-        setIncomeVisible(stored.activitiesIncomeVisible);
-        setExpenseVisible(stored.activitiesExpenseVisible);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -568,18 +529,6 @@ export function ActivitiesPage() {
 
   useTabRepressHandler("activities", handleTabRepress);
 
-  const toggleIncomeVisibility = useCallback(() => {
-    const next = !incomeVisible;
-    setIncomeVisible(next);
-    void updatePreferences({ activitiesIncomeVisible: next });
-  }, [incomeVisible]);
-
-  const toggleExpenseVisibility = useCallback(() => {
-    const next = !expenseVisible;
-    setExpenseVisible(next);
-    void updatePreferences({ activitiesExpenseVisible: next });
-  }, [expenseVisible]);
-
   const scopedItems = useMemo(() => {
     return items.filter((item) => {
       if (!filters.showHidden && item.hiddenFromTotals) {
@@ -620,23 +569,6 @@ export function ActivitiesPage() {
     return filtered;
   }, [scopedItems, activeFilter, filters.sort]);
 
-  const totals = useMemo(() => {
-    let credit = 0;
-    let debit = 0;
-    for (const item of scopedItems) {
-      if (item.hiddenFromTotals) {
-        continue;
-      }
-      const value = Math.abs(item.amount);
-      if (item.type === "CREDIT") {
-        credit += value;
-      } else {
-        debit += value;
-      }
-    }
-    return { credit, debit };
-  }, [scopedItems]);
-
   const grouped = useMemo(() => {
     const sections = new Map<
       string,
@@ -672,8 +604,6 @@ export function ActivitiesPage() {
   const hasQuery = query.trim().length > 0;
   const filterCount = activeFilterCount(filters);
   const filterActive = filterCount > 0;
-  const incomeAmount = splitCurrencyAmount(totals.credit);
-  const expenseAmount = splitCurrencyAmount(totals.debit);
   const resultsPeriodLabel = periodResultsLabel(filters.period);
 
   return (
@@ -934,22 +864,6 @@ export function ActivitiesPage() {
                 ) : null}
               </View>
             </View>
-
-            <CashFlowPair
-              compact={compact}
-              income={{
-                symbol: incomeAmount.symbol,
-                amount: incomeAmount.value,
-                hidden: !incomeVisible,
-                onToggleVisibility: toggleIncomeVisibility,
-              }}
-              expense={{
-                symbol: expenseAmount.symbol,
-                amount: expenseAmount.value,
-                hidden: !expenseVisible,
-                onToggleVisibility: toggleExpenseVisibility,
-              }}
-            />
             </View>
           </View>
         </View>
@@ -1183,9 +1097,6 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
     flexShrink: 1,
-  },
-  summaryColumn: {
-    gap: 12,
   },
   emptyState: {
     flex: 1,
