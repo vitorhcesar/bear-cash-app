@@ -1,5 +1,4 @@
 import { AppState, Platform } from 'react-native';
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 
 import { API_BASE_URL } from '@/infra/http/services/api/api-env';
@@ -94,14 +93,16 @@ export function openFinanceHttpsCallbackUrl(consentId?: string) {
   return url.toString();
 }
 
+export function openFinanceIosAuthRedirectUrl() {
+  // Polp never sees this URL. Their redirectUrl is HTTPS only.
+  // ASWebAuthenticationSession cannot use `https` as callbackURLScheme,
+  // so the HTTPS callback page hops here to close the iOS sheet.
+  return 'bear-cash://open-finance/callback';
+}
+
 export function openFinanceCallbackUrl(consentId?: string) {
-  // iOS ASWebAuthenticationSession intercepts the custom scheme after the
-  // HTTPS callback 302. Android Custom Tabs can close on the HTTPS URL itself.
-  if (Platform.OS !== 'android') {
-    return Linking.createURL(
-      'open-finance/callback',
-      consentId ? { queryParams: { consentId } } : undefined,
-    );
+  if (Platform.OS === 'ios') {
+    return openFinanceIosAuthRedirectUrl();
   }
 
   return openFinanceHttpsCallbackUrl(consentId);
@@ -125,15 +126,20 @@ async function readConsent(client: IOpenFinanceModule, consentId: string) {
 }
 
 async function openAuthorization(url: string) {
-  const options = {
-    createTask: false,
-    showInRecents: true,
-    preferEphemeralSession: false,
-  };
+  if (Platform.OS === 'ios') {
+    // iPhone: in-app Safari stays in-process; AppState background→active is
+    // not a dismiss. Auth Session ends on Cancel or `bear-cash://` after the
+    // Polp HTTPS redirectUrl has loaded.
+    return WebBrowser.openAuthSessionAsync(url, openFinanceIosAuthRedirectUrl(), {
+      preferEphemeralSession: false,
+      showInRecents: true,
+    });
+  }
 
-  // Polp/Celcoin never redirect back to the app. ASWebAuthenticationSession
-  // would show iOS "Sign In" and can freeze if dismissed during presentation.
-  return WebBrowser.openBrowserAsync(url, options);
+  return WebBrowser.openBrowserAsync(url, {
+    createTask: true,
+    showInRecents: true,
+  });
 }
 
 async function watchAuthorization(
@@ -141,6 +147,7 @@ async function watchAuthorization(
   consent: OpenFinanceConsent,
   emit: (consent: OpenFinanceConsent) => OpenFinanceConsent,
   stopped: { current: boolean },
+  browserResult?: Promise<WebBrowser.WebBrowserResult | WebBrowser.WebBrowserAuthSessionResult | null>,
 ) {
   let current = consent;
   let ticking = false;
@@ -204,6 +211,11 @@ async function watchAuthorization(
         return;
       }
       void tick();
+      // iPhone: ASWebAuthenticationSession / Safari stay in the same app.
+      // background → active is the bank screen being presented, not a dismiss.
+      if (Platform.OS === 'ios') {
+        return;
+      }
       if (Date.now() - openedAt < BROWSER_GRACE_MS) {
         return;
       }
@@ -214,6 +226,20 @@ async function watchAuthorization(
     timer = setInterval(() => {
       void tick();
     }, POLL_INTERVAL_MS);
+
+    void browserResult?.then((result) => {
+      if (settled || !result) {
+        return;
+      }
+      if (result.type === 'opened') {
+        return;
+      }
+      if (result.type === 'cancel' || result.type === 'dismiss') {
+        finish(current);
+        return;
+      }
+      void tick();
+    });
 
     void tick();
   });
@@ -247,15 +273,11 @@ export async function authorizeOpenFinanceConsent(
 
   beginOpenFinanceBrowserSession();
   try {
-    const browserTask =
+    const browserResult =
       shouldOpenBrowser && authUrl
-        ? openAuthorization(authUrl)
-        : Promise.resolve({ type: 'skip' as const });
-    const watchTask = watchAuthorization(client, consent, emit, stopped);
-
-    await Promise.race([browserTask, watchTask]);
-    stopped.current = true;
-    dismissAuthorizationBrowser();
+        ? openAuthorization(authUrl).catch(() => null)
+        : Promise.resolve(null);
+    await watchAuthorization(client, consent, emit, stopped, browserResult);
   } finally {
     stopped.current = true;
     dismissAuthorizationBrowser();

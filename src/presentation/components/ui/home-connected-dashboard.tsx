@@ -11,14 +11,16 @@ import { getCurrencySymbol } from "@/presentation/components/ui/currencies";
 import { HighlightCardBorder } from "@/presentation/components/ui/highlight-card-border";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
 import {
+  HomeDashCardIcon,
   HomeDashInflowIcon,
   HomeDashInstallmentsIcon,
+  HomeDashOutflowIcon,
   HomeDashSubscriptionsIcon,
   HomeDashWalletIcon,
+  MastercardBrandMark,
 } from "@/presentation/components/ui/home-icons";
 import { InstitutionMark } from "@/presentation/components/ui/institution-mark";
 import { BankMarkStack } from "@/presentation/components/ui/bank-mark-stack";
-import { TransactionCardIcon } from "@/presentation/components/ui/new-transaction-icons";
 import {
   BearCashColors,
   BearCashFonts,
@@ -145,6 +147,36 @@ function formatTrend(current: number, previous: number) {
   return `${sign}${pct}%`;
 }
 
+function formatTrendCaption(current: number, previous: number) {
+  if (previous <= 0) {
+    return null;
+  }
+  const pct = Math.round(((current - previous) / previous) * 100);
+  if (pct === 0) {
+    return null;
+  }
+  if (pct > 0) {
+    return { label: "Crescimento", value: `+${pct}%` };
+  }
+  return { label: "Queda", value: `${pct}%` };
+}
+
+function isMastercard(network: string | null) {
+  return Boolean(network && /mastercard/i.test(network));
+}
+
+function cardCaption(
+  institutionName: string,
+  name: string | null,
+  last4: string | null,
+) {
+  const title = [institutionName, name].filter(Boolean).join(" ");
+  if (last4) {
+    return `${title} ***${last4}`;
+  }
+  return title;
+}
+
 function inMonth(date: Date, year: number, month: number) {
   return date.getFullYear() === year && date.getMonth() === month;
 }
@@ -167,27 +199,49 @@ function GlassCard({
   );
 }
 
-function IconHold({ children }: { children: ReactNode }) {
+function IconHold({
+  children,
+  pad = 4,
+  radius = 4,
+}: {
+  children: ReactNode;
+  pad?: number;
+  radius?: number;
+}) {
   const styles = useStyles();
-  return <View style={styles.iconHold}>{children}</View>;
+  return (
+    <View style={[styles.iconHold, { padding: pad, borderRadius: radius }]}>
+      {children}
+    </View>
+  );
 }
 
 function MoneyRow({
   amount,
   color = BearCashColors.text,
   amountStyle,
+  fill = true,
 }: {
   amount: number;
   color?: string;
   amountStyle?: object;
+  fill?: boolean;
 }) {
   const styles = useStyles();
   return (
-    <View style={styles.moneyRow}>
+    <View style={[styles.moneyRow, fill ? styles.moneyRowFill : null]}>
       <Text style={[styles.coin, { color }]}>
         {getCurrencySymbol("BRL")}
       </Text>
-      <Text style={[styles.amount, amountStyle, { color }]} numberOfLines={1}>
+      <Text
+        style={[
+          styles.amount,
+          fill ? styles.amountFill : null,
+          amountStyle,
+          { color },
+        ]}
+        numberOfLines={1}
+      >
         {formatAmount(amount)}
       </Text>
     </View>
@@ -228,12 +282,21 @@ export function HomeConnectedDashboard({
   );
   const billStack = billBanks.length > 0 ? billBanks : connections;
 
-  const billCards = connections.flatMap((item) => item.creditCards);
+  const billCards = connections.flatMap((item) =>
+    item.creditCards.map((card) => ({
+      connection: item,
+      card,
+    })),
+  );
   const billTotal = billCards.reduce(
-    (sum, card) => sum + (card.currentBill?.totalAmount ?? 0),
+    (sum, item) => sum + (item.card.currentBill?.totalAmount ?? 0),
     0,
   );
-  const billLast4 = billCards.find((card) => card.last4)?.last4 ?? null;
+  const primaryBill = billCards[0] ?? null;
+  const billUsed = primaryBill?.card.currentBill?.totalAmount ?? billTotal;
+  const billAvailable = primaryBill?.card.availableLimit ?? null;
+  const billLimitTotal =
+    billAvailable != null ? billUsed + billAvailable : null;
 
   const monthFlow = useMemo(() => {
     let credit = 0;
@@ -259,6 +322,8 @@ export function HomeConnectedDashboard({
     }
     return { credit, debit, prevCredit, prevDebit };
   }, [now, prev, visible]);
+  const creditTrend = formatTrendCaption(monthFlow.credit, monthFlow.prevCredit);
+  const debitTrend = formatTrendCaption(monthFlow.debit, monthFlow.prevDebit);
 
   const categories = useMemo(() => {
     const spend = summarizeCategorySpend(
@@ -347,68 +412,179 @@ export function HomeConnectedDashboard({
       </GlassCard>
 
       <View style={styles.row}>
-        <GlassCard style={styles.flexCard} contentStyle={styles.flowInner}>
-          <View style={styles.flowHeader}>
-            <Text style={styles.label}>Entrada</Text>
-            {formatTrend(monthFlow.credit, monthFlow.prevCredit) ? (
-              <Text style={styles.trend}>
-                {formatTrend(monthFlow.credit, monthFlow.prevCredit)}
-              </Text>
-            ) : null}
-          </View>
-          <View style={styles.flowValue}>
-            <IconHold>
-              <HomeDashInflowIcon size={12} />
-            </IconHold>
-            <MoneyRow amount={monthFlow.credit} />
-          </View>
-        </GlassCard>
+        {isMany ? (
+          <>
+            <GlassCard style={styles.flexCard} contentStyle={styles.flowInner}>
+              <View style={styles.flowHeader}>
+                <Text style={styles.label}>Entrada</Text>
+                {formatTrend(monthFlow.credit, monthFlow.prevCredit) ? (
+                  <Text style={styles.trend}>
+                    {formatTrend(monthFlow.credit, monthFlow.prevCredit)}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={styles.flowValue}>
+                <IconHold>
+                  <HomeDashInflowIcon size={12} />
+                </IconHold>
+                <MoneyRow amount={monthFlow.credit} />
+              </View>
+            </GlassCard>
 
-        <GlassCard style={styles.flexCard} contentStyle={styles.flowInner}>
-          <View style={styles.flowHeader}>
-            <Text style={styles.label}>Saída</Text>
-            {formatTrend(monthFlow.debit, monthFlow.prevDebit) ? (
-              <Text style={styles.trend}>
-                {formatTrend(monthFlow.debit, monthFlow.prevDebit)}
-              </Text>
-            ) : null}
-          </View>
-          <View style={styles.flowValue}>
-            <IconHold>
-              <ExpenseArrowIcon size={12} />
-            </IconHold>
-            <MoneyRow amount={monthFlow.debit} color={OUTFLOW_AMOUNT} />
-          </View>
-        </GlassCard>
+            <GlassCard style={styles.flexCard} contentStyle={styles.flowInner}>
+              <View style={styles.flowHeader}>
+                <Text style={styles.label}>Saída</Text>
+                {formatTrend(monthFlow.debit, monthFlow.prevDebit) ? (
+                  <Text style={styles.trend}>
+                    {formatTrend(monthFlow.debit, monthFlow.prevDebit)}
+                  </Text>
+                ) : null}
+              </View>
+              <View style={styles.flowValue}>
+                <IconHold>
+                  <ExpenseArrowIcon size={12} />
+                </IconHold>
+                <MoneyRow amount={monthFlow.debit} color={OUTFLOW_AMOUNT} />
+              </View>
+            </GlassCard>
+          </>
+        ) : (
+          <>
+            <GlassCard
+              style={styles.flexCard}
+              contentStyle={styles.flowInnerSingle}
+            >
+              <IconHold>
+                <HomeDashInflowIcon size={24} />
+              </IconHold>
+              <View style={styles.flowCopy}>
+                <Text style={styles.label}>Entrada</Text>
+                <MoneyRow
+                  amount={monthFlow.credit}
+                  fill={false}
+                  amountStyle={styles.flowAmount}
+                />
+              </View>
+              {creditTrend ? (
+                <View style={styles.trendRow}>
+                  <Text style={styles.trend}>{creditTrend.label}</Text>
+                  <Text style={styles.trend}>{creditTrend.value}</Text>
+                </View>
+              ) : null}
+            </GlassCard>
+
+            <GlassCard
+              style={styles.flexCard}
+              contentStyle={styles.flowInnerSingle}
+            >
+              <IconHold>
+                <HomeDashOutflowIcon size={24} />
+              </IconHold>
+              <View style={styles.flowCopy}>
+                <Text style={styles.label}>Saída</Text>
+                <MoneyRow
+                  amount={monthFlow.debit}
+                  fill={false}
+                  amountStyle={styles.flowAmount}
+                />
+              </View>
+              {debitTrend ? (
+                <View style={styles.trendRow}>
+                  <Text style={styles.trend}>{debitTrend.label}</Text>
+                  <Text style={styles.trend}>{debitTrend.value}</Text>
+                </View>
+              ) : null}
+            </GlassCard>
+          </>
+        )}
       </View>
 
-      <GlassCard contentStyle={styles.billInner}>
-        <View style={styles.billCopy}>
-          <Text style={styles.label}>Total fatura atual</Text>
-          <View style={styles.billValue}>
-            <IconHold>
-              <TransactionCardIcon size={12} color="#B385E0" />
-            </IconHold>
-            <MoneyRow amount={billTotal} />
+      {isMany ? (
+        <GlassCard contentStyle={styles.billInner}>
+          <View style={styles.billCopy}>
+            <Text style={styles.label}>Total fatura atual</Text>
+            <View style={styles.billValue}>
+              <IconHold>
+                <HomeDashCardIcon size={12} />
+              </IconHold>
+              <MoneyRow amount={billTotal} />
+            </View>
           </View>
-        </View>
-        {isMany ? (
           <BankMarkStack connections={billStack} maxVisible={3} />
-        ) : billLast4 || markBank ? (
-          <View style={styles.billCardMeta}>
-            {markBank ? (
-              <InstitutionMark
-                name={markBank.institutionName}
-                logoUrl={markBank.institutionLogoUrl}
-                size={20}
-              />
-            ) : null}
-            {billLast4 ? (
-              <Text style={styles.billLast4}>**{billLast4}</Text>
+        </GlassCard>
+      ) : (
+        <GlassCard contentStyle={styles.billSingleInner}>
+          {primaryBill ? (
+            <View style={styles.billHeader}>
+              <View style={styles.billHeaderMain}>
+                <InstitutionMark
+                  name={primaryBill.connection.institutionName}
+                  logoUrl={primaryBill.connection.institutionLogoUrl}
+                  size={20}
+                />
+                <Text style={styles.billHeaderTitle} numberOfLines={1}>
+                  {cardCaption(
+                    primaryBill.connection.institutionName,
+                    primaryBill.card.name,
+                    primaryBill.card.last4,
+                  )}
+                </Text>
+              </View>
+              {isMastercard(primaryBill.card.network) ? (
+                <MastercardBrandMark />
+              ) : null}
+            </View>
+          ) : null}
+          <View style={styles.billBody}>
+            <View style={styles.billCopy}>
+              <Text style={styles.label}>Total fatura atual</Text>
+              <View style={styles.billValue}>
+                <IconHold pad={6} radius={8}>
+                  <HomeDashCardIcon size={12} />
+                </IconHold>
+                <MoneyRow amount={billTotal} />
+              </View>
+            </View>
+            {billLimitTotal != null && billLimitTotal > 0 ? (
+              <View style={styles.limitBlock}>
+                <Text style={styles.label}>Limite total:</Text>
+                <View style={styles.limitBar}>
+                  <View
+                    style={[
+                      styles.limitUsed,
+                      {
+                        flex: Math.max(billUsed, 0),
+                      },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.limitRest,
+                      {
+                        flex: Math.max(billLimitTotal - billUsed, 0.01),
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.limitLegend}>
+                  <View style={styles.limitLegendItem}>
+                    <Text style={styles.limitLegendLabel}>Usado:</Text>
+                    <Text style={styles.limitLegendValue}>
+                      {getCurrencySymbol("BRL")} {formatAmount(billUsed)}
+                    </Text>
+                  </View>
+                  <View style={styles.limitLegendItem}>
+                    <Text style={styles.limitLegendLabel}>Total:</Text>
+                    <Text style={styles.limitLegendValue}>
+                      {getCurrencySymbol("BRL")} {formatAmount(billLimitTotal)}
+                    </Text>
+                  </View>
+                </View>
+              </View>
             ) : null}
           </View>
-        ) : null}
-      </GlassCard>
+        </GlassCard>
+      )}
 
       <Pressable
         accessibilityRole="button"
@@ -461,7 +637,7 @@ export function HomeConnectedDashboard({
           <Text style={styles.label}>Parcelamentos</Text>
           <View style={styles.metricValue}>
             <IconHold>
-              <HomeDashInstallmentsIcon size={12} />
+              <HomeDashInstallmentsIcon size={isMany ? 12 : 16} />
             </IconHold>
             <Text style={styles.metricNumber} numberOfLines={1}>
               {installments}
@@ -474,7 +650,10 @@ export function HomeConnectedDashboard({
           <Text style={styles.label}>Assinaturas</Text>
           <View style={styles.metricValue}>
             <IconHold>
-              <HomeDashSubscriptionsIcon size={12} />
+              <HomeDashSubscriptionsIcon
+                size={isMany ? 12 : 16}
+                color={isMany ? undefined : "#995CD6"}
+              />
             </IconHold>
             <MoneyRow amount={recurringTotal} />
           </View>
@@ -600,11 +779,13 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     padding: 4,
   },
   moneyRow: {
-    flex: 1,
-    minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
     gap: 2,
+  },
+  moneyRowFill: {
+    flex: 1,
+    minWidth: 0,
   },
   coin: {
     fontFamily: BearCashFonts.semiBold,
@@ -613,11 +794,14 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     color: BearCashColors.text,
   },
   amount: {
-    flex: 1,
     fontFamily: BearCashFonts.semiBold,
     fontSize: 18,
     lineHeight: 22,
     color: BearCashColors.text,
+  },
+  amountFill: {
+    flex: 1,
+    minWidth: 0,
   },
   row: {
     flexDirection: "row",
@@ -632,15 +816,34 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     gap: 8,
     padding: 16,
   },
+  flowInnerSingle: {
+    flex: 1,
+    gap: 16,
+    padding: 16,
+    justifyContent: "space-between",
+  },
   flowHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 8,
   },
+  flowCopy: {
+    gap: 8,
+  },
+  flowAmount: {
+    fontSize: 24,
+    lineHeight: 29,
+    flex: 0,
+  },
   trend: {
     ...BearCashTypography.captionSmall,
     color: TREND_MUTED,
+  },
+  trendRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 2,
   },
   flowValue: {
     flexDirection: "row",
@@ -652,26 +855,88 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  billSingleInner: {
+    padding: 0,
+    gap: 0,
+  },
+  billHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: BearCashColors.borderStrong,
+  },
+  billHeaderMain: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  billHeaderTitle: {
+    flex: 1,
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textMid,
+  },
+  billBody: {
+    padding: 16,
+    gap: 10,
+  },
   billCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 6,
+    gap: 8,
   },
   billValue: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
   },
-  billCardMeta: {
+  limitBlock: {
+    gap: 8,
+    alignSelf: "stretch",
+  },
+  limitBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 2,
+    height: 12,
+    alignSelf: "stretch",
   },
-  billLast4: {
+  limitUsed: {
+    height: 12,
+    borderRadius: 40,
+    minWidth: 4,
+    backgroundColor: BearCashColors.text,
+  },
+  limitRest: {
+    height: 12,
+    borderRadius: 40,
+    minWidth: 4,
+    backgroundColor: BearCashColors.borderSoft,
+  },
+  limitLegend: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    alignSelf: "stretch",
+  },
+  limitLegendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  limitLegendLabel: {
+    ...BearCashTypography.captionSmall,
+    color: BearCashColors.textSoft,
+  },
+  limitLegendValue: {
     fontFamily: BearCashFonts.semiBold,
-    fontSize: 14,
-    lineHeight: 22,
-    color: BearCashColors.text,
+    fontSize: 12,
+    lineHeight: 19,
+    color: BearCashColors.textMid,
   },
   categoriesCard: {
     borderRadius: 12,

@@ -19,13 +19,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getErrorMessage } from "@/infra/http/get-error-message";
 import type { OpenFinanceConnection } from "@/infra/http/services/api/modules/open-finance.module";
+import {
+  getLastSettingsRoute,
+  setLastSettingsRoute,
+  type SettingsNavId,
+} from "@/infra/preferences/settings-last-route";
 import { useAuthDraft } from "@/presentation/auth/auth-draft-context";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
 import { BackButton } from "@/presentation/components/ui/back-button";
 import { EmailIcon } from "@/presentation/components/ui/brand-icons";
+import { HighlightCardBorder } from "@/presentation/components/ui/highlight-card-border";
 import { InstitutionMark } from "@/presentation/components/ui/institution-mark";
 import { ProfileAvatarControl } from "@/presentation/components/ui/profile-avatar-control";
 import { ReportProblemSheet } from "@/presentation/components/ui/report-problem-sheet";
+import { SettingsPremiumBanner } from "@/presentation/components/ui/settings-premium-banner";
 import {
   SettingsBankIcon,
   SettingsBiometricsIcon,
@@ -36,7 +43,6 @@ import {
   SettingsProfileIcon,
   SettingsReportIcon,
   SettingsSlidersIcon,
-  SettingsSparkleIcon,
   SettingsStarIcon,
   SettingsSupportIcon,
 } from "@/presentation/components/ui/settings-icons";
@@ -64,6 +70,7 @@ type NavRowProps = {
   icon: ReactNode;
   onPress?: () => void;
   badge?: number;
+  highlighted?: boolean;
 };
 
 function uniqueInstitutions(connections: OpenFinanceConnection[]) {
@@ -82,16 +89,12 @@ function uniqueInstitutions(connections: OpenFinanceConnection[]) {
   return result;
 }
 
-function NavRow({ label, icon, onPress, badge }: NavRowProps) {
+function NavRow({ label, icon, onPress, badge, highlighted }: NavRowProps) {
   const styles = useStyles();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.navRow, pressed && styles.pressed]}
-    >
+  const content = (
+    <>
       <View style={styles.navRowLeft}>
-        <View style={styles.iconSlot}>{icon}</View>
+        {highlighted ? icon : <View style={styles.iconSlot}>{icon}</View>}
         <Text style={styles.navLabel}>{label}</Text>
         {badge != null && badge > 0 ? (
           <View style={styles.badge}>
@@ -100,6 +103,24 @@ function NavRow({ label, icon, onPress, badge }: NavRowProps) {
         ) : null}
       </View>
       <SettingsChevronIcon size={16} color={BearCashColors.textMid} />
+    </>
+  );
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        highlighted ? styles.navRowHighlightOuter : styles.navRow,
+        pressed && styles.pressed,
+      ]}
+    >
+      {highlighted ? <HighlightCardBorder /> : null}
+      {highlighted ? (
+        <View style={styles.navRowHighlightInner}>{content}</View>
+      ) : (
+        content
+      )}
     </Pressable>
   );
 }
@@ -110,42 +131,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
       <View style={styles.sectionList}>{children}</View>
-    </View>
-  );
-}
-
-function SettingsPlanBanner({
-  hasPlan,
-  onPress,
-}: {
-  hasPlan: boolean;
-  onPress: () => void;
-}) {
-  const styles = useStyles();
-  return (
-    <View style={styles.planBanner}>
-      <View style={styles.planBannerCopy}>
-        <View style={styles.planBannerTitleRow}>
-          <SettingsSparkleIcon size={16} />
-          <Text style={styles.planBannerTitle}>
-            {hasPlan ? "Sua conta é Pro!" : "Faça upgrade!"}
-          </Text>
-        </View>
-        <Text style={styles.planBannerSubtitle}>
-          {hasPlan
-            ? "Conheça todos os benefícios para controlar e organizar seus gastos"
-            : "Desbloqueie mais benefícios e aproveite a experiência completa."}
-        </Text>
-      </View>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onPress}
-        style={({ pressed }) => [styles.planCta, pressed && styles.pressed]}
-      >
-        <Text style={styles.planCtaLabel}>
-          {hasPlan ? "Ver plano" : "Assinar"}
-        </Text>
-      </Pressable>
     </View>
   );
 }
@@ -209,6 +194,7 @@ export function SettingsPage() {
   const { resetDraft } = useAuthDraft();
   const [loggingOut, setLoggingOut] = useState(false);
   const [reportSheetOpen, setReportSheetOpen] = useState(false);
+  const [lastRoute, setLastRoute] = useState<string | null>(null);
   const [connections, setConnections] = useState<OpenFinanceConnection[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<IAvatarOption>(() =>
     resolveAvatarSource(profile?.avatarKey, profile?.avatarUrl, DEFAULT_AVATARS[0]),
@@ -230,6 +216,7 @@ export function SettingsPage() {
   useFocusEffect(
     useCallback(() => {
       void loadConnections();
+      void getLastSettingsRoute().then(setLastRoute);
     }, [loadConnections]),
   );
 
@@ -288,6 +275,12 @@ export function SettingsPage() {
     Alert.alert(feature, "Em breve.");
   }
 
+  function openSettingsRoute(id: SettingsNavId, action: () => void) {
+    setLastRoute(id);
+    void setLastSettingsRoute(id);
+    action();
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView
@@ -341,8 +334,7 @@ export function SettingsPage() {
             )}
           </View>
 
-          <SettingsPlanBanner
-            hasPlan={hasPlan}
+          <SettingsPremiumBanner
             onPress={() =>
               router.push(hasPlan ? "/subscription" : "/subscription-premium")
             }
@@ -383,7 +375,10 @@ export function SettingsPage() {
               label="Bancos"
               icon={<SettingsBankIcon size={16} color={BearCashColors.iconAccent} />}
               badge={connections.length}
-              onPress={() => router.push("/bank-connection")}
+              highlighted={lastRoute === "banks"}
+              onPress={() =>
+                openSettingsRoute("banks", () => router.push("/bank-connection"))
+              }
             />
           </Section>
 
@@ -391,17 +386,30 @@ export function SettingsPage() {
             <NavRow
               label="Perfil"
               icon={<SettingsProfileIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => router.push("/profile")}
+              highlighted={lastRoute === "profile"}
+              onPress={() =>
+                openSettingsRoute("profile", () => router.push("/profile"))
+              }
             />
             <NavRow
               label="Assinatura"
               icon={<SettingsCardIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => router.push("/subscription")}
+              highlighted={lastRoute === "subscription"}
+              onPress={() =>
+                openSettingsRoute("subscription", () =>
+                  router.push("/subscription"),
+                )
+              }
             />
             <NavRow
               label="Preferências"
               icon={<SettingsSlidersIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => router.push("/preferences")}
+              highlighted={lastRoute === "preferences"}
+              onPress={() =>
+                openSettingsRoute("preferences", () =>
+                  router.push("/preferences"),
+                )
+              }
             />
             {/* Não deve aparecer no app por enquanto */}
             {/* <NavRow
@@ -412,7 +420,10 @@ export function SettingsPage() {
             <NavRow
               label="Avalie o BearCash"
               icon={<SettingsStarIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => comingSoon("Avalie o BearCash")}
+              highlighted={lastRoute === "rate"}
+              onPress={() =>
+                openSettingsRoute("rate", () => comingSoon("Avalie o BearCash"))
+              }
             />
           </Section>
 
@@ -420,22 +431,36 @@ export function SettingsPage() {
             <NavRow
               label="Alterar senha"
               icon={<SettingsPasswordIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => router.push("/change-password-code")}
+              highlighted={lastRoute === "password"}
+              onPress={() =>
+                openSettingsRoute("password", () =>
+                  router.push("/change-password-code"),
+                )
+              }
             />
             <NavRow
               label="Biometria"
               icon={<SettingsBiometricsIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => router.push("/biometrics")}
+              highlighted={lastRoute === "biometrics"}
+              onPress={() =>
+                openSettingsRoute("biometrics", () => router.push("/biometrics"))
+              }
             />
             <NavRow
               label="Reportar um problema"
               icon={<SettingsReportIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => setReportSheetOpen(true)}
+              highlighted={lastRoute === "report"}
+              onPress={() =>
+                openSettingsRoute("report", () => setReportSheetOpen(true))
+              }
             />
             <NavRow
               label="Suporte"
               icon={<SettingsSupportIcon size={16} color={BearCashColors.iconAccent} />}
-              onPress={() => comingSoon("Suporte")}
+              highlighted={lastRoute === "support"}
+              onPress={() =>
+                openSettingsRoute("support", () => comingSoon("Suporte"))
+              }
             />
           </Section>
 
@@ -521,50 +546,6 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     color: BearCashColors.textSoft,
     textAlign: "center",
   },
-  planBanner: {
-    alignSelf: "stretch",
-    backgroundColor: BearCashColors.neutralLight,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: 10,
-    overflow: "hidden",
-  },
-  planBannerCopy: {
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 150,
-    gap: 4,
-  },
-  planBannerTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  planBannerTitle: {
-    ...BearCashTypography.subheading,
-    color: BearCashColors.buttonFilledText,
-  },
-  planBannerSubtitle: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.bannerMuted,
-  },
-  planCta: {
-    height: 34,
-    borderRadius: 24,
-    backgroundColor: BearCashColors.buttonFilled,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  planCtaLabel: {
-    ...BearCashTypography.bodySmall,
-    color: BearCashColors.buttonFilledText,
-  },
   bankStack: {
     flexDirection: "row",
     alignItems: "center",
@@ -592,6 +573,20 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignSelf: "stretch",
     padding: 12,
     borderRadius: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  navRowHighlightOuter: {
+    alignSelf: "stretch",
+    borderRadius: 12,
+    padding: 1,
+    overflow: "hidden",
+  },
+  navRowHighlightInner: {
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 12,
+    padding: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

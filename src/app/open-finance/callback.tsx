@@ -15,6 +15,13 @@ export default function OpenFinanceCallbackRoute() {
     }
     void WebBrowser.dismissBrowser().catch(() => undefined);
 
+    // Deep link after bank auth should not yank the in-flight connect flow
+    // off BankSelectPage / BankConnectionPage.
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
     router.replace(
       consentId
         ? { pathname: '/bank-connection', params: { consentId } }

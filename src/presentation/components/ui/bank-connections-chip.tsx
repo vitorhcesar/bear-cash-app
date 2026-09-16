@@ -70,6 +70,9 @@ export function BankConnectionsChip({
   const visible = institutions.slice(0, MAX_VISIBLE);
   const remaining = institutions.length - visible.length;
   const isEmpty = institutions.length === 0;
+  const compact = institutions.length === 1;
+  const markSize = compact ? 20 : MARK_SIZE;
+  const overlap = compact ? 8 : MARK_OVERLAP;
 
   return (
     <Pressable
@@ -80,19 +83,26 @@ export function BankConnectionsChip({
           : "Conexões bancárias"
       }
       onPress={onPress}
-      style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.chip,
+        compact && styles.chipCompact,
+        pressed && styles.pressed,
+      ]}
     >
       {isEmpty ? (
         <DashedAddMark />
       ) : (
-        <View style={styles.stack}>
+        <View style={[styles.stack, { height: markSize }]}>
           {visible.map((connection, index) => (
             <View
               key={connection.institutionId || connection.id}
               style={[
                 styles.stackItem,
                 {
-                  marginLeft: index === 0 ? 0 : -MARK_OVERLAP,
+                  width: markSize,
+                  height: markSize,
+                  borderRadius: markSize / 2,
+                  marginLeft: index === 0 ? 0 : -overlap,
                   zIndex: visible.length - index,
                 },
               ]}
@@ -100,7 +110,7 @@ export function BankConnectionsChip({
               <InstitutionMark
                 name={connection.institutionName}
                 logoUrl={connection.institutionLogoUrl}
-                size={MARK_SIZE}
+                size={markSize}
               />
             </View>
           ))}
@@ -109,7 +119,13 @@ export function BankConnectionsChip({
               style={[
                 styles.stackItem,
                 styles.more,
-                { marginLeft: -MARK_OVERLAP, zIndex: 0 },
+                {
+                  width: markSize,
+                  height: markSize,
+                  borderRadius: markSize / 2,
+                  marginLeft: -overlap,
+                  zIndex: 0,
+                },
               ]}
             >
               <Text style={styles.moreText}>+{remaining}</Text>
@@ -117,7 +133,10 @@ export function BankConnectionsChip({
           ) : null}
         </View>
       )}
-      <HomeChevronDownIcon size={16} color={BearCashColors.text} />
+      <HomeChevronDownIcon
+        size={compact ? 12 : 16}
+        color={BearCashColors.text}
+      />
     </Pressable>
   );
 }
@@ -133,6 +152,13 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 6,
     overflow: "hidden",
+  },
+  chipCompact: {
+    gap: 4,
+    borderRadius: 24,
+    paddingLeft: 6,
+    paddingRight: 4,
+    paddingVertical: 4,
   },
   pressed: {
     opacity: 0.85,
