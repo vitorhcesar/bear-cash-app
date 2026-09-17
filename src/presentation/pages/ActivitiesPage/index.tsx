@@ -1,9 +1,10 @@
 import { BlurTargetView } from "expo-blur";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +12,7 @@ import {
   Text,
   TextInput,
   View,
+  type ListRenderItem,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
@@ -31,26 +33,36 @@ import { getErrorMessage, isApiError } from "@/infra/http/get-error-message";
 import type { TransactionItem } from "@/infra/http/services/api/modules/transactions.module";
 import { setOpenFinanceConnections } from "@/infra/open-finance/connections-store";
 import {
+  getCategoryGroup,
+  resolveCategoryId,
+} from "@/presentation/components/ui/activities-category-catalog";
+import { FilterChipCloseIcon } from "@/presentation/components/ui/activities-filter-icons";
+import {
   ActivitiesFilterSheet,
   DEFAULT_ACTIVITIES_FILTERS,
   type ActivitiesBankOption,
   type ActivitiesFilters,
   type PeriodId,
 } from "@/presentation/components/ui/activities-filter-sheet";
-import { getCategoryGroup, resolveCategoryId } from "@/presentation/components/ui/activities-category-catalog";
-import { FilterChipCloseIcon } from "@/presentation/components/ui/activities-filter-icons";
 import {
   EmptyActivityIcon,
   FilterSlidersIcon,
   PlusIcon,
   SearchIcon,
 } from "@/presentation/components/ui/activities-icons";
+import { ActivitiesStickyHeaderBackdrop } from "@/presentation/components/ui/activities-sticky-header-backdrop";
 import {
   MONTHS_LONG,
   formatActivitySection,
 } from "@/presentation/components/ui/calendar";
-import { ActivitiesStickyHeaderBackdrop } from "@/presentation/components/ui/activities-sticky-header-backdrop";
+import { GlassPanel } from "@/presentation/components/ui/glass-panel";
 import { TransactionListItem } from "@/presentation/components/ui/transaction-list-item";
+import {
+  HARD_PULL_HOLD,
+  HARD_PULL_THRESHOLD,
+  pullSpinnerOpacity,
+  rubberbandPull,
+} from "@/presentation/constants/pull-refresh";
 import {
   APP_BOTTOM_CHROME_HEIGHT,
   BearCashColors,
@@ -61,12 +73,6 @@ import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 import { useTabRepressHandler } from "@/presentation/navigation/tab-repress-context";
 import { isAuthorisedConnection } from "@/presentation/open-finance/connect-bank";
-import {
-  HARD_PULL_HOLD,
-  HARD_PULL_THRESHOLD,
-  pullSpinnerOpacity,
-  rubberbandPull,
-} from "@/presentation/constants/pull-refresh";
 
 const FILTERS = ["Entradas", "Saídas", "Pagamentos", "Cartão"] as const;
 
@@ -114,13 +120,24 @@ function periodResultsLabel(period: PeriodId, now = new Date()) {
     return `${padDay(now.getDate())} de ${monthName}`;
   }
   if (period === "yesterday") {
-    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const yesterday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - 1,
+    );
     return `${padDay(yesterday.getDate())} de ${MONTHS_LONG[yesterday.getMonth()]}`;
   }
   if (period === "7d" || period === "15d") {
     const span = period === "7d" ? 6 : 14;
-    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - span);
-    if (from.getMonth() === now.getMonth() && from.getFullYear() === now.getFullYear()) {
+    const from = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - span,
+    );
+    if (
+      from.getMonth() === now.getMonth() &&
+      from.getFullYear() === now.getFullYear()
+    ) {
       return `${padDay(from.getDate())} — ${padDay(now.getDate())} de ${monthName}`;
     }
     return `${padDay(from.getDate())} de ${MONTHS_LONG[from.getMonth()]} — ${padDay(now.getDate())} de ${monthName}`;
@@ -163,11 +180,17 @@ function matchesPeriod(date: Date, period: PeriodId) {
     return day >= today - 14 * 86_400_000;
   }
   if (period === "current-month") {
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    return (
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth()
+    );
   }
   if (period === "last-month") {
     const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    return date.getFullYear() === last.getFullYear() && date.getMonth() === last.getMonth();
+    return (
+      date.getFullYear() === last.getFullYear() &&
+      date.getMonth() === last.getMonth()
+    );
   }
   if (period === "6m") {
     const from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
@@ -209,8 +232,8 @@ function matchesCategory(item: TransactionItem, categories: string[]) {
     }
     return Boolean(
       group &&
-        (label.includes(group.label.toLowerCase()) ||
-          label.includes(group.chipLabel.toLowerCase())),
+      (label.includes(group.label.toLowerCase()) ||
+        label.includes(group.chipLabel.toLowerCase())),
     );
   });
 }
@@ -235,9 +258,46 @@ const FILTERS_EXPANDED_FALLBACK = 38;
 const COLLAPSE_AFTER_SCROLL = 132;
 const EXPAND_BELOW_SCROLL = 20;
 
+type ActivityRow =
+  | { type: "section"; key: string; title: string; first: boolean }
+  | { type: "transaction"; key: string; item: TransactionItem };
+
+const ActivityListRow = memo(function ActivityListRow({
+  row,
+  onOpenTransaction,
+}: {
+  row: ActivityRow;
+  onOpenTransaction: (id: string) => void;
+}) {
+  const styles = useStyles();
+
+  if (row.type === "section") {
+    return (
+      <Text
+        style={[
+          styles.sectionTitle,
+          row.first ? null : styles.sectionTitleSpaced,
+        ]}
+      >
+        {row.title}
+      </Text>
+    );
+  }
+
+  return (
+    <View style={styles.transactionRow}>
+      <TransactionListItem
+        item={row.item}
+        leading="mark"
+        onPress={() => onOpenTransaction(row.item.id)}
+      />
+    </View>
+  );
+});
+
 export function ActivitiesPage() {
   const styles = useStyles();
-  const scrollRef = useRef<Animated.ScrollView>(null);
+  const scrollRef = useRef<FlatList<ActivityRow>>(null);
   const listBlurRef = useRef<View | null>(null);
   const scrollY = useSharedValue(0);
   const compact = useSharedValue(0);
@@ -262,33 +322,44 @@ export function ActivitiesPage() {
     onScroll: (event) => {
       const y = event.contentOffset.y;
       scrollY.value = y;
+      if (!refreshingSv.value && y > 2 && androidPull.value > 0) {
+        androidPull.value = 0;
+      }
       if (refreshingSv.value || y < 0) {
         return;
       }
       if (y >= COLLAPSE_AFTER_SCROLL && collapsed.value === 0) {
         collapsed.value = 1;
         runOnJS(setHeaderPhase)("animating");
-        compact.value = withTiming(1, {
-          duration: 340,
-          easing: Easing.out(Easing.cubic),
-        }, (finished) => {
-          if (finished) {
-            runOnJS(setHeaderPhase)("collapsed");
-          }
-        });
+        compact.value = withTiming(
+          1,
+          {
+            duration: 340,
+            easing: Easing.out(Easing.cubic),
+          },
+          (finished) => {
+            if (finished) {
+              runOnJS(setHeaderPhase)("collapsed");
+            }
+          },
+        );
         return;
       }
       if (y <= EXPAND_BELOW_SCROLL && collapsed.value === 1) {
         collapsed.value = 0;
         runOnJS(setHeaderPhase)("animating");
-        compact.value = withTiming(0, {
-          duration: 320,
-          easing: Easing.out(Easing.cubic),
-        }, (finished) => {
-          if (finished) {
-            runOnJS(setHeaderPhase)("expanded");
-          }
-        });
+        compact.value = withTiming(
+          0,
+          {
+            duration: 320,
+            easing: Easing.out(Easing.cubic),
+          },
+          (finished) => {
+            if (finished) {
+              runOnJS(setHeaderPhase)("expanded");
+            }
+          },
+        );
       }
     },
   });
@@ -308,9 +379,6 @@ export function ActivitiesPage() {
       [headerExpandedH.value, headerCollapsedH.value],
     ),
   }));
-  const [stickyHeaderHeight, setStickyHeaderHeight] = useState(
-    STICKY_HEADER_FALLBACK_HEIGHT,
-  );
   const router = useRouter();
   const api = useApiService();
   const [query, setQuery] = useState("");
@@ -394,9 +462,12 @@ export function ActivitiesPage() {
 
   useFocusEffect(
     useCallback(() => {
-      const handle = setTimeout(() => {
-        void loadTransactions(query);
-      }, query ? 250 : 0);
+      const handle = setTimeout(
+        () => {
+          void loadTransactions(query);
+        },
+        query ? 250 : 0,
+      );
       void loadBankOptions();
       return () => clearTimeout(handle);
     }, [query, loadTransactions, loadBankOptions]),
@@ -447,7 +518,10 @@ export function ActivitiesPage() {
         androidPull.value = withTiming(HARD_PULL_HOLD, { duration: 180 });
       } else {
         requestAnimationFrame(() => {
-          scrollRef.current?.scrollTo({ y: -HARD_PULL_HOLD, animated: true });
+          scrollRef.current?.scrollToOffset({
+            offset: -HARD_PULL_HOLD,
+            animated: true,
+          });
         });
       }
       return;
@@ -490,6 +564,11 @@ export function ActivitiesPage() {
     .activeOffsetY(16)
     .failOffsetX([-18, 18])
     .simultaneousWithExternalGesture(nativeScroll)
+    .onTouchesDown((_event, state) => {
+      if (scrollY.value > 2) {
+        state.fail();
+      }
+    })
     .onTouchesMove((_event, state) => {
       if (scrollY.value > 2) {
         state.fail();
@@ -539,7 +618,7 @@ export function ActivitiesPage() {
   });
 
   const handleTabRepress = useCallback(() => {
-    scrollRef.current?.scrollTo({ y: 0, animated: true });
+    scrollRef.current?.scrollToOffset({ offset: 0, animated: true });
     void onRefresh();
   }, [onRefresh]);
 
@@ -609,6 +688,50 @@ export function ActivitiesPage() {
     return [...sections.values()];
   }, [filteredItems]);
 
+  const rows = useMemo<ActivityRow[]>(() => {
+    const next: ActivityRow[] = [];
+    grouped.forEach((section, index) => {
+      next.push({
+        type: "section",
+        key: `section-${section.key}`,
+        title: section.title,
+        first: index === 0,
+      });
+      for (const item of section.data) {
+        next.push({
+          type: "transaction",
+          key: item.id,
+          item,
+        });
+      }
+    });
+    return next;
+  }, [grouped]);
+
+  const onOpenTransaction = useCallback(
+    (id: string) => {
+      router.push({
+        pathname: "/transaction/[id]",
+        params: { id },
+      });
+    },
+    [router],
+  );
+
+  const renderActivityRow = useCallback<ListRenderItem<ActivityRow>>(
+    ({ item }) => (
+      <ActivityListRow row={item} onOpenTransaction={onOpenTransaction} />
+    ),
+    [onOpenTransaction],
+  );
+
+  const keyExtractor = useCallback((row: ActivityRow) => row.key, []);
+
+  const listHeader = useMemo(
+    () => <Animated.View pointerEvents="none" style={headerSpacerStyle} />,
+    [headerSpacerStyle],
+  );
+
   const clearSheetFilters = useCallback(() => {
     setFilters(DEFAULT_ACTIVITIES_FILTERS);
     if (categoryParam) {
@@ -626,74 +749,60 @@ export function ActivitiesPage() {
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.screen}>
         <BlurTargetView ref={listBlurRef} style={styles.listTarget}>
-        <GestureDetector gesture={Gesture.Simultaneous(pullPan, nativeScroll)}>
-        <Animated.ScrollView
-          ref={scrollRef}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          alwaysBounceVertical
-          bounces
-          overScrollMode={Platform.OS === "android" ? "never" : "always"}
-          scrollEventThrottle={16}
-          onScroll={onScroll}
-          onScrollEndDrag={handlePullEndDrag}
-          onMomentumScrollEnd={handlePullMomentumEnd}
-          contentInset={
-            Platform.OS === "ios" && refreshing
-              ? { top: HARD_PULL_HOLD }
-              : undefined
-          }
-        >
-          <Animated.View style={androidPullStyle}>
-          <Animated.View
-            pointerEvents="none"
-            style={headerSpacerStyle}
-          />
-          {loading && items.length === 0 ? (
-            <View style={styles.loading}>
-              <ActivityIndicator
-                color={BearCashColors.primary}
-                accessibilityLabel="Carregando atividades"
-              />
-            </View>
-          ) : empty ? (
-            <View style={styles.emptyState}>
-              <EmptyActivityIcon size={24} />
-              <View style={styles.emptyCopy}>
-                <Text style={styles.emptyTitle}>
-                  Nenhuma atividade encontrada
-                </Text>
-                <Text style={styles.emptySubtitle}>
-                  Você não possui nenhuma atividade financeira registrada
-                </Text>
-              </View>
-            </View>
-          ) : (
-            grouped.map((section) => (
-              <View key={section.key} style={styles.section}>
-                <Text style={styles.sectionTitle}>{section.title}</Text>
-                <View style={styles.sectionList}>
-                  {section.data.map((item) => (
-                    <TransactionListItem
-                      key={item.id}
-                      item={item}
-                      leading="mark"
-                      onPress={() =>
-                        router.push({
-                          pathname: "/transaction/[id]",
-                          params: { id: item.id },
-                        })
-                      }
+          <GestureDetector
+            gesture={Gesture.Simultaneous(pullPan, nativeScroll)}
+          >
+            <Animated.FlatList
+              ref={scrollRef}
+              style={[styles.flexList, androidPullStyle]}
+              data={rows}
+              keyExtractor={keyExtractor}
+              renderItem={renderActivityRow}
+              ListHeaderComponent={listHeader}
+              ListEmptyComponent={
+                loading && items.length === 0 ? (
+                  <View style={styles.loading}>
+                    <ActivityIndicator
+                      color={BearCashColors.primary}
+                      accessibilityLabel="Carregando atividades"
                     />
-                  ))}
-                </View>
-              </View>
-            ))
-          )}
-          </Animated.View>
-        </Animated.ScrollView>
-        </GestureDetector>
+                  </View>
+                ) : empty ? (
+                  <View style={styles.emptyState}>
+                    <EmptyActivityIcon size={24} />
+                    <View style={styles.emptyCopy}>
+                      <Text style={styles.emptyTitle}>
+                        Nenhuma atividade encontrada
+                      </Text>
+                      <Text style={styles.emptySubtitle}>
+                        Você não possui nenhuma atividade financeira registrada
+                      </Text>
+                    </View>
+                  </View>
+                ) : null
+              }
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              alwaysBounceVertical
+              bounces
+              overScrollMode={Platform.OS === "android" ? "never" : "always"}
+              scrollEventThrottle={16}
+              onScroll={onScroll}
+              onScrollEndDrag={handlePullEndDrag}
+              onMomentumScrollEnd={handlePullMomentumEnd}
+              contentInset={
+                Platform.OS === "ios" && refreshing
+                  ? { top: HARD_PULL_HOLD }
+                  : undefined
+              }
+              initialNumToRender={12}
+              maxToRenderPerBatch={8}
+              updateCellsBatchingPeriod={50}
+              windowSize={7}
+              removeClippedSubviews={false}
+            />
+          </GestureDetector>
         </BlurTargetView>
 
         <Animated.View
@@ -701,7 +810,10 @@ export function ActivitiesPage() {
           style={[styles.pullSpinner, pullSpinnerStyle]}
         >
           <View style={styles.pullSpinnerBadge}>
-            <ActivityIndicator size="large" color={BearCashColors.buttonFilled} />
+            <ActivityIndicator
+              size="large"
+              color={BearCashColors.buttonFilled}
+            />
           </View>
         </Animated.View>
 
@@ -713,9 +825,6 @@ export function ActivitiesPage() {
             const phase = headerPhaseRef.current;
             if (phase === "expanded") {
               headerExpandedH.value = nextHeight;
-              if (Math.abs(nextHeight - stickyHeaderHeight) > 0.5) {
-                setStickyHeaderHeight(nextHeight);
-              }
               return;
             }
             if (phase === "collapsed") {
@@ -727,159 +836,173 @@ export function ActivitiesPage() {
           <View style={styles.stickyHeaderShell}>
             <ActivitiesStickyHeaderBackdrop blurTarget={listBlurRef} />
             <View style={styles.stickyHeaderContent}>
-            <View style={styles.topBlock}>
-              <View style={styles.header}>
-                <Text style={styles.title}>Atividades</Text>
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.addButton,
-                    pressed && styles.pressed,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Nova transação"
-                  onPress={() => router.push("/new-transaction")}
-                >
-                  <PlusIcon size={24} />
-                </Pressable>
-              </View>
-
-              <View style={styles.toolbar}>
-                <View style={styles.searchRow}>
-                  <View style={styles.searchField}>
-                    {hasQuery ? (
-                      <View style={styles.floatingLabelRow} pointerEvents="none">
-                        <View style={styles.floatingLabelBackground}>
-                          <Text style={styles.floatingLabel}>
-                            Buscar atividades
-                          </Text>
-                        </View>
-                      </View>
-                    ) : null}
-                    <SearchIcon size={16} />
-                    <TextInput
-                      style={styles.searchInput}
-                      placeholder="Buscar atividades"
-                      placeholderTextColor={BearCashColors.textSoft}
-                      value={query}
-                      onChangeText={setQuery}
-                      autoCorrect={false}
-                      returnKeyType="search"
-                      accessibilityLabel="Buscar atividades"
-                    />
-                    {hasQuery ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Limpar busca"
-                        hitSlop={8}
-                        onPress={() => setQuery("")}
-                      >
-                        <FilterChipCloseIcon size={16} />
-                      </Pressable>
-                    ) : null}
-                  </View>
+              <View style={styles.topBlock}>
+                <View style={styles.header}>
+                  <Text style={styles.title}>Atividades</Text>
                   <Pressable
+                    style={({ pressed }) => [
+                      styles.addButton,
+                      pressed && styles.pressed,
+                    ]}
                     accessibilityRole="button"
-                    accessibilityLabel="Filtros"
-                    hitSlop={8}
-                    onPress={() => setFiltersOpen(true)}
+                    accessibilityLabel="Nova transação"
+                    onPress={() => router.push("/new-transaction")}
                   >
-                    <View style={styles.filterButton}>
-                      <FilterSlidersIcon size={28} />
-                      {filterActive ? <View style={styles.filterDot} /> : null}
-                    </View>
+                    <PlusIcon size={24} />
                   </Pressable>
                 </View>
 
-                <Animated.View
-                  style={[styles.filtersSlot, filtersSlotStyle]}
-                  pointerEvents="box-none"
-                >
-                  <View
-                    style={styles.filtersWrap}
-                    onLayout={(event) => {
-                      if (headerPhaseRef.current !== "expanded") {
-                        return;
-                      }
-                      const next = event.nativeEvent.layout.height;
-                      if (next > 8) {
-                        filtersExpandedH.value = next;
-                      }
-                    }}
-                  >
-                  <ScrollView
-                    horizontal
-                    nestedScrollEnabled
-                    style={styles.filtersScroll}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.filters}
-                  >
-                    {filterActive ? (
-                      <Pressable
-                        onPress={() => setFiltersOpen(true)}
-                        style={styles.chipFilters}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Filtros, ${filterCount} ativos`}
-                      >
-                        <FilterSlidersIcon
-                          size={16}
-                          color={BearCashColors.background}
-                        />
-                        <Text style={styles.chipFiltersText}>
-                          Filtros ({filterCount})
-                        </Text>
-                      </Pressable>
-                    ) : null}
-                    {FILTERS.map((filter) => {
-                      const selected = filter === activeFilter;
-                      return (
-                        <Pressable
-                          key={filter}
-                          onPress={() =>
-                            setActiveFilter((current) =>
-                              current === filter ? null : filter,
-                            )
-                          }
-                          style={[styles.chip, selected && styles.chipSelected]}
-                          accessibilityRole="button"
-                          accessibilityState={{ selected }}
+                <View style={styles.toolbar}>
+                  <View style={styles.searchRow}>
+                    <View style={styles.searchFieldWrap}>
+                      {hasQuery ? (
+                        <View
+                          style={styles.floatingLabelRow}
+                          pointerEvents="none"
                         >
-                          <Text
-                            style={[
-                              styles.chipText,
-                              selected && styles.chipTextSelected,
-                            ]}
+                          <View style={styles.floatingLabelBackground}>
+                            <Text style={styles.floatingLabel}>
+                              Buscar atividades
+                            </Text>
+                          </View>
+                        </View>
+                      ) : null}
+                      <GlassPanel
+                        radius={8}
+                        style={styles.searchField}
+                        contentStyle={styles.searchFieldContent}
+                      >
+                        <SearchIcon size={16} />
+                        <TextInput
+                          style={styles.searchInput}
+                          placeholder="Buscar atividades"
+                          placeholderTextColor={BearCashColors.textSoft}
+                          value={query}
+                          onChangeText={setQuery}
+                          autoCorrect={false}
+                          returnKeyType="search"
+                          accessibilityLabel="Buscar atividades"
+                        />
+                        {hasQuery ? (
+                          <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Limpar busca"
+                            hitSlop={8}
+                            onPress={() => setQuery("")}
                           >
-                            {filter}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
-                  </View>
-                </Animated.View>
-
-                {filterActive ? (
-                  <View style={styles.resultsBar}>
-                    <View style={styles.resultsCopy}>
-                      <Text style={styles.resultsCount}>
-                        “{filteredItems.length}” Resultados para:
-                      </Text>
-                      <Text style={styles.resultsPeriod} numberOfLines={1}>
-                        {resultsPeriodLabel}
-                      </Text>
+                            <FilterChipCloseIcon size={16} />
+                          </Pressable>
+                        ) : null}
+                      </GlassPanel>
                     </View>
                     <Pressable
                       accessibilityRole="button"
-                      accessibilityLabel="Limpar filtros"
+                      accessibilityLabel="Filtros"
                       hitSlop={8}
-                      onPress={clearSheetFilters}
+                      onPress={() => setFiltersOpen(true)}
                     >
-                      <FilterChipCloseIcon size={20} />
+                      <View style={styles.filterButton}>
+                        <FilterSlidersIcon size={28} />
+                        {filterActive ? (
+                          <View style={styles.filterDot} />
+                        ) : null}
+                      </View>
                     </Pressable>
                   </View>
-                ) : null}
+
+                  <Animated.View
+                    style={[styles.filtersSlot, filtersSlotStyle]}
+                    pointerEvents="box-none"
+                  >
+                    <View
+                      style={styles.filtersWrap}
+                      onLayout={(event) => {
+                        if (headerPhaseRef.current !== "expanded") {
+                          return;
+                        }
+                        const next = event.nativeEvent.layout.height;
+                        if (next > 8) {
+                          filtersExpandedH.value = next;
+                        }
+                      }}
+                    >
+                      <ScrollView
+                        horizontal
+                        nestedScrollEnabled
+                        style={styles.filtersScroll}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.filters}
+                      >
+                        {filterActive ? (
+                          <Pressable
+                            onPress={() => setFiltersOpen(true)}
+                            style={styles.chipFilters}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Filtros, ${filterCount} ativos`}
+                          >
+                            <FilterSlidersIcon
+                              size={16}
+                              color={BearCashColors.background}
+                            />
+                            <Text style={styles.chipFiltersText}>
+                              Filtros ({filterCount})
+                            </Text>
+                          </Pressable>
+                        ) : null}
+                        {FILTERS.map((filter) => {
+                          const selected = filter === activeFilter;
+                          return (
+                            <Pressable
+                              key={filter}
+                              onPress={() =>
+                                setActiveFilter((current) =>
+                                  current === filter ? null : filter,
+                                )
+                              }
+                              style={[
+                                styles.chip,
+                                selected && styles.chipSelected,
+                              ]}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected }}
+                            >
+                              <Text
+                                style={[
+                                  styles.chipText,
+                                  selected && styles.chipTextSelected,
+                                ]}
+                              >
+                                {filter}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    </View>
+                  </Animated.View>
+
+                  {filterActive ? (
+                    <View style={styles.resultsBar}>
+                      <View style={styles.resultsCopy}>
+                        <Text style={styles.resultsCount}>
+                          “{filteredItems.length}” Resultados para:
+                        </Text>
+                        <Text style={styles.resultsPeriod} numberOfLines={1}>
+                          {resultsPeriodLabel}
+                        </Text>
+                      </View>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Limpar filtros"
+                        hitSlop={8}
+                        onPress={clearSheetFilters}
+                      >
+                        <FilterChipCloseIcon size={20} />
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </View>
               </View>
-            </View>
             </View>
           </View>
         </View>
@@ -896,268 +1019,275 @@ export function ActivitiesPage() {
   );
 }
 
-const useStyles = createThemedStyles(() => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: BearCashColors.background,
-  },
-  screen: {
-    flex: 1,
-  },
-  listTarget: {
-    flex: 1,
-  },
-  pullSpinner: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    zIndex: 5,
-    alignItems: "center",
-  },
-  pullSpinnerBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(10, 10, 11, 0.9)",
-    borderWidth: 1,
-    borderColor: BearCashColors.borderStrong,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-    paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
-    gap: 20,
-  },
-  stickyHeader: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 2,
-  },
-  stickyHeaderShell: {
-    position: "relative",
-    width: "100%",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "rgba(255, 255, 255, 0.08)",
-  },
-  stickyHeaderContent: {
-    position: "relative",
-    zIndex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 16,
-    gap: 20,
-  },
-  topBlock: {
-    gap: 16,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: 40,
-  },
-  toolbar: {
-    gap: 0,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 24,
-    backgroundColor: BearCashColors.buttonFilled,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  title: {
-    ...BearCashTypography.h1,
-    flex: 1,
-    paddingRight: 12,
-    color: BearCashColors.text,
-  },
-  searchRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  searchField: {
-    flex: 1,
-    minWidth: 0,
-    position: "relative",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    borderWidth: 1,
-    borderColor: BearCashColors.borderSoft,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  floatingLabelRow: {
-    position: "absolute",
-    top: -8,
-    left: 13,
-    zIndex: 2,
-  },
-  floatingLabelBackground: {
-    backgroundColor: "rgba(10, 10, 11, 0.88)",
-    paddingHorizontal: 4,
-  },
-  floatingLabel: {
-    ...BearCashTypography.captionSmall,
-    color: BearCashColors.text,
-  },
-  searchInput: {
-    flex: 1,
-    ...BearCashTypography.body,
-    color: BearCashColors.text,
-    padding: 0,
-  },
-  filterButton: {
-    width: 28,
-    height: 28,
-  },
-  filterDot: {
-    position: "absolute",
-    top: 3,
-    left: 13,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: BearCashColors.primarySoft,
-  },
-  filtersSlot: {
-    overflow: "hidden",
-  },
-  filtersWrap: {
-    flexGrow: 0,
-    flexShrink: 0,
-  },
-  filtersScroll: {
-    flexGrow: 0,
-  },
-  filters: {
-    gap: 10,
-    paddingRight: 8,
-    alignItems: "center",
-  },
-  chip: {
-    borderRadius: 40,
-    backgroundColor: BearCashColors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    alignSelf: "center",
-    justifyContent: "center",
-  },
-  chipSelected: {
-    backgroundColor: BearCashColors.text,
-  },
-  chipText: {
-    ...BearCashTypography.bodySmall,
-    color: BearCashColors.textMid,
-    lineHeight: 22,
-  },
-  chipTextSelected: {
-    color: BearCashColors.onText,
-  },
-  chipFilters: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    borderRadius: 40,
-    backgroundColor: BearCashColors.text,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    alignSelf: "center",
-    justifyContent: "center",
-  },
-  chipFiltersText: {
-    ...BearCashTypography.bodySmall,
-    color: BearCashColors.background,
-    lineHeight: 22,
-  },
-  resultsBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    marginTop: 16,
-    backgroundColor: BearCashColors.surface,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 8,
-  },
-  resultsCopy: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 4,
-  },
-  resultsCount: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 12,
-    lineHeight: 19,
-    color: BearCashColors.text,
-  },
-  resultsPeriod: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-    flexShrink: 1,
-  },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    maxWidth: 250,
-    alignSelf: "center",
-  },
-  emptyCopy: {
-    gap: 6,
-    alignItems: "center",
-  },
-  emptyTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 20,
-    lineHeight: 24,
-    color: BearCashColors.textMid,
-    textAlign: "center",
-  },
-  emptySubtitle: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textSoft,
-    textAlign: "center",
-  },
-  loading: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 180,
-  },
-  section: {
-    gap: 12,
-    width: "100%",
-  },
-  sectionTitle: {
-    fontFamily: BearCashFonts.semiBold,
-    fontSize: 16,
-    lineHeight: 26,
-    color: BearCashColors.text,
-  },
-  sectionList: {
-    gap: 16,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-}));
+const useStyles = createThemedStyles(() =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: BearCashColors.background,
+    },
+    screen: {
+      flex: 1,
+    },
+    listTarget: {
+      flex: 1,
+    },
+    flexList: {
+      flex: 1,
+    },
+    pullSpinner: {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      zIndex: 5,
+      alignItems: "center",
+    },
+    pullSpinnerBadge: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(10, 10, 11, 0.9)",
+      borderWidth: 1,
+      borderColor: BearCashColors.borderStrong,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.45,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 16,
+      paddingBottom: APP_BOTTOM_CHROME_HEIGHT,
+    },
+    stickyHeader: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 2,
+    },
+    stickyHeaderShell: {
+      position: "relative",
+      width: "100%",
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: "rgba(255, 255, 255, 0.08)",
+    },
+    stickyHeaderContent: {
+      position: "relative",
+      zIndex: 1,
+      paddingHorizontal: 16,
+      paddingTop: 16,
+      paddingBottom: 16,
+      gap: 20,
+    },
+    topBlock: {
+      gap: 16,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      minHeight: 40,
+    },
+    toolbar: {
+      gap: 0,
+    },
+    addButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 24,
+      backgroundColor: BearCashColors.buttonFilled,
+      alignItems: "center",
+      justifyContent: "center",
+      overflow: "hidden",
+    },
+    title: {
+      ...BearCashTypography.h1,
+      flex: 1,
+      paddingRight: 12,
+      color: BearCashColors.text,
+    },
+    searchRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    searchFieldWrap: {
+      flex: 1,
+      minWidth: 0,
+      position: "relative",
+    },
+    searchField: {
+      minWidth: 0,
+    },
+    searchFieldContent: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+    },
+    floatingLabelRow: {
+      position: "absolute",
+      top: -8,
+      left: 13,
+      zIndex: 2,
+    },
+    floatingLabelBackground: {
+      backgroundColor: "rgba(10, 10, 11, 0.88)",
+      paddingHorizontal: 4,
+    },
+    floatingLabel: {
+      ...BearCashTypography.captionSmall,
+      color: BearCashColors.text,
+    },
+    searchInput: {
+      flex: 1,
+      ...BearCashTypography.body,
+      color: BearCashColors.text,
+      padding: 0,
+    },
+    filterButton: {
+      width: 28,
+      height: 28,
+    },
+    filterDot: {
+      position: "absolute",
+      top: 3,
+      left: 13,
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: BearCashColors.primarySoft,
+    },
+    filtersSlot: {
+      overflow: "hidden",
+    },
+    filtersWrap: {
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+    filtersScroll: {
+      flexGrow: 0,
+    },
+    filters: {
+      gap: 10,
+      paddingRight: 8,
+      alignItems: "center",
+    },
+    chip: {
+      borderRadius: 40,
+      backgroundColor: BearCashColors.surface,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      alignSelf: "center",
+      justifyContent: "center",
+    },
+    chipSelected: {
+      backgroundColor: BearCashColors.text,
+    },
+    chipText: {
+      ...BearCashTypography.bodySmall,
+      color: BearCashColors.textMid,
+      lineHeight: 22,
+    },
+    chipTextSelected: {
+      color: BearCashColors.onText,
+    },
+    chipFilters: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      borderRadius: 40,
+      backgroundColor: BearCashColors.text,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      alignSelf: "center",
+      justifyContent: "center",
+    },
+    chipFiltersText: {
+      ...BearCashTypography.bodySmall,
+      color: BearCashColors.background,
+      lineHeight: 22,
+    },
+    resultsBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 8,
+      marginTop: 16,
+      backgroundColor: BearCashColors.surface,
+      borderRadius: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 8,
+    },
+    resultsCopy: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 4,
+    },
+    resultsCount: {
+      fontFamily: BearCashFonts.semiBold,
+      fontSize: 12,
+      lineHeight: 19,
+      color: BearCashColors.text,
+    },
+    resultsPeriod: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textSoft,
+      flexShrink: 1,
+    },
+    emptyState: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12,
+      maxWidth: 250,
+      alignSelf: "center",
+    },
+    emptyCopy: {
+      gap: 6,
+      alignItems: "center",
+    },
+    emptyTitle: {
+      fontFamily: BearCashFonts.semiBold,
+      fontSize: 20,
+      lineHeight: 24,
+      color: BearCashColors.textMid,
+      textAlign: "center",
+    },
+    emptySubtitle: {
+      ...BearCashTypography.caption,
+      color: BearCashColors.textSoft,
+      textAlign: "center",
+    },
+    loading: {
+      flex: 1,
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: 180,
+    },
+    sectionTitle: {
+      fontFamily: BearCashFonts.semiBold,
+      fontSize: 16,
+      lineHeight: 26,
+      color: BearCashColors.text,
+      paddingBottom: 12,
+      includeFontPadding: false,
+    },
+    sectionTitleSpaced: {
+      paddingTop: 4,
+    },
+    transactionRow: {
+      paddingBottom: 20,
+    },
+    pressed: {
+      opacity: 0.85,
+    },
+  }),
+);

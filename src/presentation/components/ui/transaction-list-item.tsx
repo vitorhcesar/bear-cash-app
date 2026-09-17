@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { TransactionItem } from '@/infra/http/services/api/modules/transactions.module';
@@ -24,7 +25,7 @@ function formatAbsoluteAmount(amount: number) {
   });
 }
 
-export function TransactionListItem({
+export const TransactionListItem = memo(function TransactionListItem({
   item,
   onPress,
   leading = 'inline',
@@ -52,7 +53,6 @@ export function TransactionListItem({
     'Sem categoria';
   const isCredit = item.type === 'CREDIT';
   const symbol = getCurrencySymbol(item.currencyCode);
-  const accountLabel = item.bankName?.trim() || 'BearCash';
   const mark = leading === 'mark';
   const resolvedIconKey = iconKey ?? category?.iconKey;
   const resolvedIconColor = iconColor ?? category?.color ?? BearCashColors.textMid;
@@ -99,10 +99,10 @@ export function TransactionListItem({
               <CategoryChipIcon
                 iconKey={resolvedIconKey}
                 color={resolvedIconColor}
-                size={16}
+                size={18}
               />
             ) : (
-              <TransactionPencilIcon size={16} />
+              <TransactionPencilIcon size={18} />
             )}
           </View>
           <View style={styles.markBadge}>
@@ -123,10 +123,10 @@ export function TransactionListItem({
               <CategoryChipIcon
                 iconKey={category.iconKey}
                 color={category.color}
-                size={12}
+                size={14}
               />
             ) : (
-              <TransactionPencilIcon size={12} />
+              <TransactionPencilIcon size={14} />
             )}
             <Text
               style={styles.title}
@@ -138,33 +138,24 @@ export function TransactionListItem({
           </View>
           {mark ? null : amount}
         </View>
-        <View>
-          <View style={styles.metaRow}>
-            <Text style={styles.meta}>
-              {formatActivityDay(new Date(item.date))}
-            </Text>
-            <View style={styles.dot} />
-            <Text
-              style={styles.metaFlexible}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {groupLabel}
-            </Text>
-          </View>
+        <View style={styles.metaRow}>
+          <Text style={styles.meta}>
+            {formatActivityDay(new Date(item.date))}
+          </Text>
+          <View style={styles.dot} />
           <Text
             style={styles.metaFlexible}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {accountLabel}
+            {groupLabel}
           </Text>
         </View>
       </View>
       {mark ? amount : null}
     </Pressable>
   );
-}
+});
 
 const useStyles = createThemedStyles(() => StyleSheet.create({
   row: {
@@ -175,7 +166,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   rowMark: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   mark: {
     flexDirection: 'row',
@@ -197,7 +188,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   },
   copy: {
     minWidth: 0,
-    gap: 2,
+    gap: 6,
     overflow: 'hidden',
   },
   copyMark: {
@@ -213,7 +204,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     minWidth: 0,
   },
   title: {
@@ -221,32 +212,35 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     flexShrink: 1,
     minWidth: 0,
     fontFamily: BearCashFonts.semiBold,
-    fontSize: 12,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 20,
     color: BearCashColors.text,
+    includeFontPadding: false,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
     minWidth: 0,
   },
   meta: {
-    ...BearCashTypography.captionSmall,
+    ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
     flexShrink: 0,
+    includeFontPadding: false,
   },
   metaFlexible: {
-    ...BearCashTypography.captionSmall,
+    ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
     flex: 1,
     flexShrink: 1,
     minWidth: 0,
+    includeFontPadding: false,
   },
   dot: {
-    width: 2,
-    height: 2,
-    borderRadius: 1,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
     backgroundColor: BearCashColors.textSoft,
   },
   amount: {
@@ -256,10 +250,13 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     flexShrink: 0,
   },
   amountSymbol: {
-    ...BearCashTypography.captionSmall,
+    ...BearCashTypography.caption,
   },
   amountValue: {
-    ...BearCashTypography.caption,
+    fontFamily: BearCashFonts.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    includeFontPadding: false,
   },
   income: {
     color: BearCashColors.income,

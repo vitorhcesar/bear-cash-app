@@ -28,6 +28,9 @@ import { useBearCashTheme } from "@/presentation/theme/bear-cash-theme-context";
  * Fill: 17.857% rgba(18,17,19,0.15) → 154.46% rgba(59,22,122,0.15)
  * Glass: frost 35. Sem Stroke — o filete é a refração do Glass
  * (topo ~rgba(255,255,255,0.28), base ~rgba(214,196,232,0.40)).
+ *
+ * Use only in the bottom chrome (outside the tab BlurTargetView).
+ * In-content inputs and cards use `GlassPanel`.
  */
 const FigmaNavGlass = {
   radius: 40,
