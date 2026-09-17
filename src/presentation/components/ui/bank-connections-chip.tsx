@@ -14,8 +14,8 @@ import {
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { isAuthorisedConnection } from "@/presentation/open-finance/connect-bank";
 
-const MARK_SIZE = 28;
-const MARK_OVERLAP = 10;
+const MARK_SIZE = 32;
+const MARK_OVERLAP = 11;
 const MAX_VISIBLE = 3;
 
 type BankConnectionsChipProps = {
@@ -58,7 +58,7 @@ function DashedAddMark() {
           strokeDasharray="2.4 1.8"
         />
       </Svg>
-      <HomePlusIcon size={14} color={BearCashColors.text} />
+      <HomePlusIcon size={16} color={BearCashColors.text} />
     </View>
   );
 }
@@ -71,8 +71,8 @@ export function BankConnectionsChip({
   const styles = useStyles();
   const institutions = uniqueInstitutions(connections);
   const compact = institutions.length > 0;
-  const markSize = compact ? 20 : MARK_SIZE;
-  const overlap = compact ? 5 : MARK_OVERLAP;
+  const markSize = compact ? 26 : MARK_SIZE;
+  const overlap = compact ? 6 : MARK_OVERLAP;
   const maxVisible = compact ? 2 : MAX_VISIBLE;
   const visible = institutions.slice(0, maxVisible);
   const remaining = compact ? 0 : institutions.length - visible.length;
@@ -143,7 +143,7 @@ export function BankConnectionsChip({
         </View>
       )}
       <HomeChevronDownIcon
-        size={compact ? 12 : 16}
+        size={compact ? 14 : 16}
         color={BearCashColors.text}
       />
     </Pressable>
@@ -156,18 +156,18 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "center",
     gap: 6,
     backgroundColor: BearCashColors.surface,
-    borderRadius: 32,
+    borderRadius: 36,
     paddingLeft: 8,
     paddingRight: 6,
     paddingVertical: 6,
     overflow: "hidden",
   },
   chipCompact: {
-    gap: 4,
-    borderRadius: 24,
+    gap: 5,
+    borderRadius: 28,
     paddingLeft: 6,
-    paddingRight: 4,
-    paddingVertical: 4,
+    paddingRight: 5,
+    paddingVertical: 6,
   },
   pressed: {
     opacity: 0.85,
@@ -199,17 +199,17 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   },
   moreText: {
     ...BearCashTypography.captionSmall,
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 15,
     color: BearCashColors.onText,
   },
   notificationDot: {
     position: "absolute",
     top: 0,
     right: 0,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
     backgroundColor: BearCashColors.warning,
     zIndex: 4,
   },
