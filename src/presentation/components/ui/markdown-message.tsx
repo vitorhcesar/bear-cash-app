@@ -7,6 +7,8 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
+  type TextStyle,
 } from "react-native";
 
 import {
@@ -40,6 +42,112 @@ export function MarkdownMessage({ content }: MarkdownMessageProps) {
       ))}
     </View>
   );
+}
+
+type MarkdownPreviewProps = {
+  content: string;
+  numberOfLines?: number;
+  style?: StyleProp<TextStyle>;
+};
+
+/** Inline markdown in a single Text — safe for list previews with numberOfLines. */
+export function MarkdownPreview({
+  content,
+  numberOfLines = 2,
+  style,
+}: MarkdownPreviewProps) {
+  const tokens = useMemo(
+    () => flattenPreviewTokens(Lexer.lex(content, MARKED_OPTIONS)),
+    [content],
+  );
+
+  if (!tokens.length) {
+    return null;
+  }
+
+  return (
+    <Text numberOfLines={numberOfLines} style={style}>
+      <InlineTokens tokens={tokens} disableLinks />
+    </Text>
+  );
+}
+
+function pushPlain(target: Token[], text: string) {
+  const value = text.replace(/\s+/g, " ");
+  if (!value) {
+    return;
+  }
+  target.push({ type: "text", raw: value, text: value } as Tokens.Text);
+}
+
+function addPreviewSpace(target: Token[]) {
+  if (target.length === 0) {
+    return;
+  }
+  const last = target[target.length - 1];
+  if (last.type === "text" && "text" in last && String(last.text).endsWith(" ")) {
+    return;
+  }
+  pushPlain(target, " ");
+}
+
+function flattenPreviewTokens(tokens: Token[]): Token[] {
+  const inline: Token[] = [];
+
+  function walk(items?: Token[]) {
+    if (!items?.length) {
+      return;
+    }
+
+    for (const token of items) {
+      switch (token.type) {
+        case "space":
+        case "hr":
+        case "html":
+          break;
+        case "paragraph":
+        case "heading":
+          addPreviewSpace(inline);
+          if (token.tokens?.length) {
+            inline.push(...token.tokens);
+          } else if ("text" in token && typeof token.text === "string") {
+            pushPlain(inline, token.text);
+          }
+          break;
+        case "list":
+          for (const item of (token as Tokens.List).items) {
+            addPreviewSpace(inline);
+            walk(item.tokens);
+          }
+          break;
+        case "blockquote":
+          walk(token.tokens);
+          break;
+        case "code":
+          addPreviewSpace(inline);
+          pushPlain(inline, token.text);
+          break;
+        case "text":
+          addPreviewSpace(inline);
+          if (token.tokens?.length) {
+            inline.push(...token.tokens);
+          } else {
+            pushPlain(inline, token.text);
+          }
+          break;
+        default:
+          if ("tokens" in token && token.tokens?.length) {
+            walk(token.tokens);
+          } else if ("text" in token && typeof token.text === "string") {
+            addPreviewSpace(inline);
+            pushPlain(inline, token.text);
+          }
+      }
+    }
+  }
+
+  walk(tokens);
+  return inline;
 }
 
 function BlockToken({ token }: { token: Token }) {
@@ -205,41 +313,57 @@ function MarkdownTable({ token }: { token: Tokens.Table }) {
   );
 }
 
-function InlineTokens({ tokens }: { tokens?: Token[] }) {
+function InlineTokens({
+  tokens,
+  disableLinks = false,
+}: {
+  tokens?: Token[];
+  disableLinks?: boolean;
+}) {
   if (!tokens?.length) {
     return null;
   }
 
   return tokens.map((token, index) => (
-    <InlineToken key={`${token.type}-${index}`} token={token} />
+    <InlineToken
+      key={`${token.type}-${index}`}
+      token={token}
+      disableLinks={disableLinks}
+    />
   ));
 }
 
-function InlineToken({ token }: { token: Token }) {
+function InlineToken({
+  token,
+  disableLinks = false,
+}: {
+  token: Token;
+  disableLinks?: boolean;
+}) {
   const styles = useStyles();
   switch (token.type) {
     case "text":
       return token.tokens ? (
-        <InlineTokens tokens={token.tokens} />
+        <InlineTokens tokens={token.tokens} disableLinks={disableLinks} />
       ) : (
         <Text>{token.text}</Text>
       );
     case "strong":
       return (
         <Text style={styles.strong}>
-          <InlineTokens tokens={token.tokens} />
+          <InlineTokens tokens={token.tokens} disableLinks={disableLinks} />
         </Text>
       );
     case "em":
       return (
         <Text style={styles.em}>
-          <InlineTokens tokens={token.tokens} />
+          <InlineTokens tokens={token.tokens} disableLinks={disableLinks} />
         </Text>
       );
     case "del":
       return (
         <Text style={styles.del}>
-          <InlineTokens tokens={token.tokens} />
+          <InlineTokens tokens={token.tokens} disableLinks={disableLinks} />
         </Text>
       );
     case "codespan":
@@ -247,13 +371,17 @@ function InlineToken({ token }: { token: Token }) {
     case "link":
       return (
         <Text
-          accessibilityRole="link"
+          accessibilityRole={disableLinks ? undefined : "link"}
           style={styles.link}
-          onPress={() => {
-            void openMarkdownUrl(token.href);
-          }}
+          onPress={
+            disableLinks
+              ? undefined
+              : () => {
+                  void openMarkdownUrl(token.href);
+                }
+          }
         >
-          <InlineTokens tokens={token.tokens} />
+          <InlineTokens tokens={token.tokens} disableLinks={disableLinks} />
         </Text>
       );
     case "image":
@@ -268,7 +396,7 @@ function InlineToken({ token }: { token: Token }) {
       return null;
     default:
       if ("tokens" in token && token.tokens?.length) {
-        return <InlineTokens tokens={token.tokens} />;
+        return <InlineTokens tokens={token.tokens} disableLinks={disableLinks} />;
       }
       if ("text" in token && typeof token.text === "string") {
         return <Text>{token.text}</Text>;
@@ -323,7 +451,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     gap: 8,
   },
   body: {
-    ...BearCashTypography.bodySmall,
+    ...BearCashTypography.body,
     color: BearCashColors.text,
   },
   h1: {
@@ -389,7 +517,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     gap: 8,
   },
   listMarker: {
-    ...BearCashTypography.bodySmall,
+    ...BearCashTypography.body,
     color: BearCashColors.primarySoft,
     minWidth: 18,
   },

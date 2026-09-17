@@ -1,9 +1,9 @@
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -20,21 +20,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getErrorMessage } from "@/infra/http/get-error-message";
 import type { AiMessage } from "@/infra/http/services/api/modules/ai.module";
 import { useAuthSession } from "@/presentation/auth/auth-session-context";
-import { HomeSparkleIcon } from "@/presentation/components/ui/home-icons";
-import { MarkdownMessage } from "@/presentation/components/ui/markdown-message";
+import { BearCashMascotIcon } from "@/presentation/components/ui/bank-connection-icons";
+import { BearCashIaHistorySheet } from "@/presentation/components/ui/bear-cash-ia-history-sheet";
+import { BearCashIaScreenTransition } from "@/presentation/components/ui/bear-cash-ia-screen-transition";
 import {
-  BearCashIaChatIcon,
+  BearCashIaClockIcon,
   BearCashIaCloseIcon,
+  BearCashIaPlusIcon,
   BearCashIaSendIcon,
 } from "@/presentation/components/ui/bear-cash-ia-icons";
+import { MarkdownMessage } from "@/presentation/components/ui/markdown-message";
+import { SettingsRocketIcon } from "@/presentation/components/ui/settings-icons";
 import { BearCashColors, BearCashFonts, BearCashTypography } from "@/presentation/constants/theme";
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
-const BEAR_CASH_AVATAR = require("@/assets/images/bear-cash-ia/avatar.png");
-const INPUT_BG = "#212220";
-const SEND_SIZE = 40;
-const COMPOSER_GAP = 12;
+const SEND_SIZE = 36;
+const CIRCLE_BUTTON = 44;
+const COMPOSER_GAP = 10;
 
 const SUGGESTIONS = [
   "Quanto gastei este mês?",
@@ -122,25 +125,20 @@ export function BearCashIaChatPage() {
     [profile?.displayName, profile?.fullName, user?.name],
   );
 
-  const welcomeText = firstName
-    ? `Olá, ${firstName}! Sou o BearCash, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?`
-    : "Olá! Sou o BearCash, seu assistente pessoal. Analisei suas contas conectadas hoje. Como posso guiar suas economias agora?";
-
-  const welcomeMessage = useMemo<ChatMessage>(
-    () => ({ id: "welcome", role: "bear-cash", kind: "text", text: welcomeText }),
-    [welcomeText],
-  );
+  const greeting = firstName ? `Olá, ${firstName}` : "Olá";
 
   const [draft, setDraft] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>(
     paramConversationId,
   );
-  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loadingConversation, setLoadingConversation] = useState(
     Boolean(paramConversationId),
   );
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const nextId = useCallback(() => {
     idRef.current += 1;
@@ -175,7 +173,7 @@ export function BearCashIaChatPage() {
 
     if (!paramConversationId) {
       setConversationId(undefined);
-      setMessages([welcomeMessage]);
+      setMessages([]);
       setLoadingConversation(false);
       setError(null);
       return;
@@ -201,7 +199,7 @@ export function BearCashIaChatPage() {
           return;
         }
         setConversationId(undefined);
-        setMessages([welcomeMessage]);
+        setMessages([]);
         setError(
           getErrorMessage(
             loadError,
@@ -218,7 +216,7 @@ export function BearCashIaChatPage() {
     return () => {
       cancelled = true;
     };
-  }, [api.modules.ai, paramConversationId, welcomeMessage]);
+  }, [api.modules.ai, paramConversationId]);
 
   useEffect(() => {
     if (loadingConversation) {
@@ -229,11 +227,54 @@ export function BearCashIaChatPage() {
   }, [loadingConversation, conversationId, messages.length, scrollToEnd]);
 
   function closeBearCashIa() {
+    if (closing) {
+      return;
+    }
+    setClosing(true);
+  }
+
+  const finishClose = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
     if (router.canDismiss()) {
       router.dismissTo("/(tabs)");
       return;
     }
     router.replace("/(tabs)");
+  }, [router]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        if (historyOpen) {
+          setHistoryOpen(false);
+          return true;
+        }
+        closeBearCashIa();
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [historyOpen, closing]);
+
+  function startNewChat() {
+    if (!conversationId && messages.length === 0 && !sending) {
+      return;
+    }
+
+    setDraft("");
+    setError(null);
+    setConversationId(undefined);
+    setMessages([]);
+    pinToBottom.current = true;
+
+    if (paramConversationId) {
+      skipNextLoad.current = true;
+      router.setParams({ conversationId: undefined });
+    }
   }
 
   async function sendText(raw: string) {
@@ -292,75 +333,66 @@ export function BearCashIaChatPage() {
 
   const monthLabel = useMemo(() => currentMonthLabel(), []);
   const canSend = draft.trim().length > 0 && !sending && !loadingConversation;
-  const showSuggestions =
-    !conversationId && messages.length === 1 && !sending && !loadingConversation;
+  const showEmptyState =
+    !loadingConversation && messages.length === 0 && !sending;
+  const showSuggestions = showEmptyState && !conversationId;
 
   return (
-    <View style={styles.root}>
+    <BearCashIaScreenTransition closing={closing} onClosed={finishClose}>
+      <View style={styles.root}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <View style={styles.userInfo}>
-            <View style={styles.headerAvatar}>
-              <Image
-                source={BEAR_CASH_AVATAR}
-                style={styles.headerAvatarImage}
-                contentFit="cover"
-                accessibilityLabel="BearCash IA"
-              />
-            </View>
-            <View style={styles.textStack}>
-              <View style={styles.nameRow}>
-                <Text style={styles.name}>BearCash IA</Text>
-                <View style={styles.onlineDot} />
-              </View>
-              <Text style={styles.role}>Assistente de Finanças</Text>
-            </View>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Conversas anteriores"
-              onPress={() => router.push("/bear-cash-ia-history")}
-              style={({ pressed }) => [
-                styles.closeButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <BearCashIaChatIcon size={24} />
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Fechar"
-              onPress={closeBearCashIa}
-              style={({ pressed }) => [
-                styles.closeButton,
-                pressed && styles.pressed,
-              ]}
-            >
-              <BearCashIaCloseIcon size={24} />
-            </Pressable>
-          </View>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Fechar"
+            onPress={closeBearCashIa}
+            style={({ pressed }) => [
+              styles.circleButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <BearCashIaCloseIcon size={20} color={BearCashColors.text} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Conversas anteriores"
+            onPress={() => setHistoryOpen(true)}
+            style={({ pressed }) => [
+              styles.circleButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <BearCashIaClockIcon size={20} color={BearCashColors.text} />
+          </Pressable>
         </View>
 
-        <ScrollView
-          ref={scrollRef}
-          style={styles.flex}
-          contentContainerStyle={styles.chatContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          onContentSizeChange={handleContentSizeChange}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        >
-          {loadingConversation ? (
-            <View style={styles.loadingWrap}>
-              <ActivityIndicator color={BearCashColors.primarySoft} />
+        {loadingConversation ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator color={BearCashColors.primarySoft} />
+          </View>
+        ) : showEmptyState ? (
+          <View style={styles.hero}>
+            <BearCashMascotIcon size={52} color={BearCashColors.text} />
+            <View style={styles.heroCopy}>
+              <Text style={styles.heroTitle}>{greeting}</Text>
+              <Text style={styles.heroSubtitle}>Como posso te ajudar?</Text>
             </View>
-          ) : (
-            messages.map((message) => {
+          </View>
+        ) : (
+          <ScrollView
+            ref={scrollRef}
+            style={styles.flex}
+            contentContainerStyle={styles.chatContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={handleContentSizeChange}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
+            {messages.map((message) => {
               if (message.kind === "insight") {
                 return (
                   <InsightBlock key={message.id} monthLabel={monthLabel} />
@@ -376,68 +408,65 @@ export function BearCashIaChatPage() {
                 );
               }
               return (
-                <View key={message.id} style={styles.bearCashBlock}>
-                  <View style={styles.bubbleAvatar}>
-                    <Image
-                      source={BEAR_CASH_AVATAR}
-                      style={styles.bubbleAvatarImage}
-                      contentFit="cover"
-                    />
-                  </View>
-                  <View style={styles.bearCashBubble}>
-                    <MarkdownMessage content={message.text ?? ""} />
-                  </View>
+                <View key={message.id} style={styles.assistantBlock}>
+                  <MarkdownMessage content={message.text ?? ""} />
                 </View>
               );
-            })
-          )}
+            })}
 
-          {sending ? (
-            <View style={styles.bearCashBlock}>
-              <View style={styles.bubbleAvatar}>
-                <Image
-                  source={BEAR_CASH_AVATAR}
-                  style={styles.bubbleAvatarImage}
-                  contentFit="cover"
-                />
-              </View>
+            {sending ? (
               <View
-                style={styles.bearCashTypingBubble}
+                style={styles.assistantBlock}
                 accessibilityLabel="BearCash está digitando"
               >
                 <TypingDots />
               </View>
-            </View>
-          ) : null}
+            ) : null}
+          </ScrollView>
+        )}
 
-          {showSuggestions ? (
-            <View style={styles.suggestions}>
-              <Text style={styles.suggestionsLabel}>Perguntas Sugeridas</Text>
-              <View style={styles.suggestionsGrid}>
-                {SUGGESTIONS.map((label) => (
-                  <Pressable
-                    key={label}
-                    accessibilityRole="button"
-                    onPress={() => {
-                      void sendText(label);
-                    }}
-                    style={({ pressed }) => [
-                      styles.suggestionPill,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <Text style={styles.suggestionText}>{label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          ) : null}
-        </ScrollView>
+        {showSuggestions ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.suggestionsContent}
+            style={styles.suggestions}
+          >
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Seja Premium"
+              onPress={() => router.push("/subscription-premium")}
+              style={({ pressed }) => [
+                styles.suggestionPill,
+                pressed && styles.pressed,
+              ]}
+            >
+              <SettingsRocketIcon size={14} color={BearCashColors.text} />
+              <Text style={styles.suggestionText}>Seja Premium</Text>
+            </Pressable>
+            {SUGGESTIONS.map((label) => (
+              <Pressable
+                key={label}
+                accessibilityRole="button"
+                onPress={() => {
+                  void sendText(label);
+                }}
+                style={({ pressed }) => [
+                  styles.suggestionPill,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Text style={styles.suggestionText}>{label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        ) : null}
 
         <View
           style={[
             styles.footer,
-            { paddingBottom: Math.max(insets.bottom, 16) },
+            { paddingBottom: Math.max(insets.bottom, 12) },
           ]}
         >
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -447,12 +476,31 @@ export function BearCashIaChatPage() {
             onSend={() => {
               void sendText(draft);
             }}
+            onNewChat={startNewChat}
             canSend={canSend}
             sending={sending}
           />
         </View>
       </KeyboardAvoidingView>
-    </View>
+
+      <BearCashIaHistorySheet
+        visible={historyOpen}
+        activeConversationId={conversationId}
+        onClose={() => setHistoryOpen(false)}
+        onSelect={(id) => {
+          setHistoryOpen(false);
+          if (id === conversationId) {
+            return;
+          }
+          router.setParams({ conversationId: id });
+        }}
+        onNewChat={() => {
+          setHistoryOpen(false);
+          startNewChat();
+        }}
+      />
+      </View>
+    </BearCashIaScreenTransition>
   );
 }
 
@@ -506,51 +554,61 @@ function Composer({
   value,
   onChangeText,
   onSend,
+  onNewChat,
   canSend,
   sending,
 }: {
   value: string;
   onChangeText: (text: string) => void;
   onSend: () => void;
+  onNewChat: () => void;
   canSend: boolean;
   sending: boolean;
 }) {
   const styles = useStyles();
   return (
     <View style={styles.composerRow}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Nova conversa"
+        onPress={onNewChat}
+        style={({ pressed }) => [
+          styles.plusButton,
+          pressed && styles.pressed,
+        ]}
+      >
+        <BearCashIaPlusIcon size={16} color={BearCashColors.text} />
+      </Pressable>
       <View style={styles.inputPill}>
         <TextInput
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
-          placeholder="Digite sua mensagem..."
+          placeholder="Envie uma mensagem"
           placeholderTextColor={BearCashColors.textSoft}
           onSubmitEditing={onSend}
           returnKeyType="send"
           editable={!sending}
           accessibilityLabel="Mensagem para o BearCash IA"
         />
-        <View style={styles.sparkleSlot}>
-          <HomeSparkleIcon size={16} color={BearCashColors.buttonFilled} />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Enviar"
+          disabled={!canSend}
+          onPress={onSend}
+          style={({ pressed }) => [
+            styles.sendButton,
+            !canSend && styles.sendDisabled,
+            pressed && canSend && styles.pressed,
+          ]}
+        >
+          {sending ? (
+            <ActivityIndicator color={BearCashColors.onText} size="small" />
+          ) : (
+            <BearCashIaSendIcon size={14} color={BearCashColors.onText} />
+          )}
+        </Pressable>
       </View>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Enviar"
-        disabled={!canSend}
-        onPress={onSend}
-        style={({ pressed }) => [
-          styles.sendButton,
-          !canSend && styles.sendDisabled,
-          pressed && canSend && styles.pressed,
-        ]}
-      >
-        {sending ? (
-          <ActivityIndicator color={BearCashColors.buttonFilledText} size="small" />
-        ) : (
-          <BearCashIaSendIcon size={16} />
-        )}
-      </Pressable>
     </View>
   );
 }
@@ -558,51 +616,42 @@ function Composer({
 function InsightBlock({ monthLabel }: { monthLabel: string }) {
   const styles = useStyles();
   return (
-    <View style={styles.bearCashBlock}>
-      <View style={styles.bubbleAvatar}>
-        <Image
-          source={BEAR_CASH_AVATAR}
-          style={styles.bubbleAvatarImage}
-          contentFit="cover"
-        />
-      </View>
-      <View style={styles.insightBubble}>
-        <View style={styles.insightHero}>
-          <Text style={styles.insightKicker}>Alimentação • {monthLabel}</Text>
-          <Text style={styles.insightAmount}>{formatBrl(FOOD_TOTAL)}</Text>
-          <View style={styles.insightDeltaRow}>
-            <Text style={styles.insightDelta}>−12% menor</Text>
-            <Text style={styles.insightDeltaRest}>que o mês passado</Text>
-          </View>
+    <View style={styles.insightBubble}>
+      <View style={styles.insightHero}>
+        <Text style={styles.insightKicker}>Alimentação • {monthLabel}</Text>
+        <Text style={styles.insightAmount}>{formatBrl(FOOD_TOTAL)}</Text>
+        <View style={styles.insightDeltaRow}>
+          <Text style={styles.insightDelta}>−12% menor</Text>
+          <Text style={styles.insightDeltaRest}>que o mês passado</Text>
         </View>
-        <View style={styles.insightDivider} />
-        <View style={styles.breakdownList}>
-          <Text style={styles.insightSectionTitle}>Principais Subcategorias:</Text>
-          {FOOD_BREAKDOWN.map((item) => (
-            <View key={item.label} style={styles.categoryBar}>
-              <View style={styles.categoryMeta}>
-                <Text style={styles.categoryLabel}>{item.label}</Text>
-                <Text style={styles.categoryValue}>{formatBrl(item.amount)}</Text>
-              </View>
-              <View style={styles.track}>
-                <View
-                  style={[
-                    styles.trackFill,
-                    {
-                      width: `${(item.amount / FOOD_TOTAL) * 100}%`,
-                      backgroundColor: item.color,
-                    },
-                  ]}
-                />
-              </View>
+      </View>
+      <View style={styles.insightDivider} />
+      <View style={styles.breakdownList}>
+        <Text style={styles.insightSectionTitle}>Principais Subcategorias:</Text>
+        {FOOD_BREAKDOWN.map((item) => (
+          <View key={item.label} style={styles.categoryBar}>
+            <View style={styles.categoryMeta}>
+              <Text style={styles.categoryLabel}>{item.label}</Text>
+              <Text style={styles.categoryValue}>{formatBrl(item.amount)}</Text>
             </View>
-          ))}
-        </View>
-        <Text style={styles.insightTip}>
-          Dica do BearCash: Você economizou bastante evitando deliveries à noite.
-          Continue assim para atingir sua meta!
-        </Text>
+            <View style={styles.track}>
+              <View
+                style={[
+                  styles.trackFill,
+                  {
+                    width: `${(item.amount / FOOD_TOTAL) * 100}%`,
+                    backgroundColor: item.color,
+                  },
+                ]}
+              />
+            </View>
+          </View>
+        ))}
       </View>
+      <Text style={styles.insightTip}>
+        Dica do BearCash: Você economizou bastante evitando deliveries à noite.
+        Continue assim para atingir sua meta!
+      </Text>
     </View>
   );
 }
@@ -620,186 +669,112 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: BearCashColors.borderSoft,
+    paddingBottom: 8,
   },
-  userInfo: {
-    flex: 1,
-    minWidth: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingRight: 12,
-  },
-  headerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    overflow: "hidden",
+  circleButton: {
+    width: CIRCLE_BUTTON,
+    height: CIRCLE_BUTTON,
+    borderRadius: CIRCLE_BUTTON / 2,
+    borderWidth: 1,
+    borderColor: BearCashColors.highlightStroke,
     backgroundColor: BearCashColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  headerAvatarImage: {
-    width: 44,
-    height: 44,
+  pressed: {
+    opacity: 0.82,
   },
-  textStack: {
+  hero: {
     flex: 1,
-    minWidth: 0,
-    gap: 2,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 22,
+    paddingHorizontal: 32,
+    paddingBottom: 24,
   },
-  nameRow: {
-    flexDirection: "row",
+  heroCopy: {
     alignItems: "center",
     gap: 6,
   },
-  name: {
-    ...BearCashTypography.h3,
+  heroTitle: {
+    fontSize: 28,
+    lineHeight: 34,
+    fontFamily: BearCashFonts.semiBold,
     color: BearCashColors.text,
+    textAlign: "center",
   },
-  onlineDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: BearCashColors.primary,
-  },
-  role: {
-    ...BearCashTypography.captionSmall,
+  heroSubtitle: {
+    fontSize: 20,
+    lineHeight: 28,
+    fontFamily: BearCashFonts.regular,
     color: BearCashColors.textSoft,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 24,
-    backgroundColor: BearCashColors.buttonFilled,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-  },
-  pressed: {
-    opacity: 0.85,
+    textAlign: "center",
   },
   chatContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 20,
-    gap: 20,
+    gap: 18,
   },
   loadingWrap: {
-    paddingVertical: 48,
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
   },
   errorText: {
     ...BearCashTypography.captionSmall,
     color: BearCashColors.error,
     marginBottom: 8,
+    paddingHorizontal: 4,
   },
-  bearCashBlock: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  bubbleAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: BearCashColors.surface,
-  },
-  bubbleAvatarImage: {
-    width: 32,
-    height: 32,
-  },
-  bearCashBubble: {
-    flex: 1,
-    minWidth: 0,
-    backgroundColor: BearCashColors.surface,
-    borderWidth: 1,
-    borderColor: BearCashColors.borderSoft,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    padding: 16,
-  },
-  bearCashTypingBubble: {
-    alignSelf: "flex-start",
-    backgroundColor: BearCashColors.surface,
-    borderWidth: 1,
-    borderColor: BearCashColors.borderSoft,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  typingDots: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: BearCashColors.textMid,
+  assistantBlock: {
+    alignSelf: "stretch",
+    paddingRight: 28,
   },
   bubbleText: {
-    ...BearCashTypography.bodySmall,
+    ...BearCashTypography.body,
     color: BearCashColors.text,
   },
   suggestions: {
-    gap: 8,
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: 10,
   },
-  suggestionsLabel: {
-    ...BearCashTypography.captionSmall,
-    color: BearCashColors.textSoft,
-  },
-  suggestionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  suggestionsContent: {
+    paddingHorizontal: 16,
     gap: 8,
+    alignItems: "center",
   },
   suggestionPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: BearCashColors.borderStrong,
-    borderRadius: 24,
+    borderColor: BearCashColors.highlightStroke,
+    borderRadius: 999,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   suggestionText: {
-    ...BearCashTypography.caption,
-    color: BearCashColors.textMid,
+    ...BearCashTypography.subheading,
+    color: BearCashColors.text,
   },
   userBlock: {
     alignItems: "flex-end",
   },
   userBubble: {
-    maxWidth: 260,
-    backgroundColor: BearCashColors.borderStrong,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 4,
-    padding: 16,
+    maxWidth: "82%",
+    backgroundColor: BearCashColors.neutralBase,
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   insightBubble: {
-    flex: 1,
-    minWidth: 0,
     backgroundColor: BearCashColors.surface,
     borderWidth: 1,
-    borderColor: BearCashColors.borderSoft,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 16,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    borderColor: BearCashColors.highlightStroke,
+    borderRadius: 20,
     padding: 16,
     gap: 16,
   },
@@ -869,11 +844,21 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     ...BearCashTypography.caption,
     color: BearCashColors.textSoft,
   },
+  typingDots: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 8,
+  },
+  typingDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: BearCashColors.textMid,
+  },
   footer: {
     backgroundColor: BearCashColors.background,
-    borderTopWidth: 1,
-    borderTopColor: BearCashColors.borderSoft,
-    paddingTop: 12,
+    paddingTop: 4,
     paddingHorizontal: 16,
   },
   composerRow: {
@@ -881,42 +866,45 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     alignItems: "center",
     gap: COMPOSER_GAP,
   },
+  plusButton: {
+    width: CIRCLE_BUTTON,
+    height: CIRCLE_BUTTON,
+    borderRadius: CIRCLE_BUTTON / 2,
+    borderWidth: 1,
+    borderColor: BearCashColors.highlightStroke,
+    backgroundColor: BearCashColors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   inputPill: {
     flex: 1,
     minWidth: 0,
+    minHeight: CIRCLE_BUTTON,
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    backgroundColor: INPUT_BG,
-    borderWidth: 1,
-    borderColor: BearCashColors.borderStrong,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    gap: 8,
+    backgroundColor: BearCashColors.neutralBase,
+    borderRadius: 999,
+    paddingLeft: 16,
+    paddingRight: 6,
+    paddingVertical: 4,
   },
   input: {
     flex: 1,
     minWidth: 0,
     padding: 0,
-    ...BearCashTypography.bodySmall,
+    ...BearCashTypography.body,
     color: BearCashColors.text,
-  },
-  sparkleSlot: {
-    width: 16,
-    height: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
   },
   sendButton: {
     width: SEND_SIZE,
     height: SEND_SIZE,
     borderRadius: 999,
-    backgroundColor: BearCashColors.primarySoft,
+    backgroundColor: BearCashColors.text,
     alignItems: "center",
     justifyContent: "center",
   },
   sendDisabled: {
-    opacity: 0.45,
+    opacity: 0.28,
   },
 }));

@@ -75,6 +75,7 @@ function RootNavigator() {
   return (
     <BiometricLockGate>
       <Stack
+        detachInactiveScreens={false}
         screenOptions={() => ({
           headerShown: false,
           animation: "none",
@@ -99,10 +100,14 @@ function RootNavigator() {
           <Stack.Screen name="bank-connection" options={pushFromRight} />
           <Stack.Screen
             name="bear-cash-ia"
-            options={{ animation: "fade" }}
+            options={{
+              animation: "none",
+              presentation: "containedTransparentModal",
+              contentStyle: { backgroundColor: "transparent" },
+              gestureEnabled: false,
+            }}
             dangerouslySingular
           />
-          <Stack.Screen name="bear-cash-ia-history" options={pushFromRight} />
           <Stack.Screen name="bank-select" options={pushFromRight} />
           <Stack.Screen name="open-finance/callback" options={noAnimation} />
           <Stack.Screen name="new-transaction" options={pushFromRight} />

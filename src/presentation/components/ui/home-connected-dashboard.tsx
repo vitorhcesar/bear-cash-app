@@ -36,7 +36,6 @@ import {
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 
 const CATEGORIES_BEAR = require("@/assets/images/home/categories-bear.jpg");
-const TREND_MUTED = "#59565d";
 const BILL_TILE_WIDTH = 260;
 const BILL_TILE_GAP = 10;
 
@@ -146,20 +145,6 @@ function connectionBalance(connection: OpenFinanceConnection) {
     (sum, account) => sum + (account.availableAmount ?? 0),
     0,
   );
-}
-
-function formatTrendCaption(current: number, previous: number) {
-  if (previous <= 0) {
-    return null;
-  }
-  const pct = Math.round(((current - previous) / previous) * 100);
-  if (pct === 0) {
-    return null;
-  }
-  if (pct > 0) {
-    return { label: "Crescimento", value: `+${pct}%` };
-  }
-  return { label: "Queda", value: `${pct}%` };
 }
 
 function isMastercard(network: string | null) {
@@ -397,7 +382,6 @@ export function HomeConnectedDashboard({
 }: HomeConnectedDashboardProps) {
   const styles = useStyles();
   const now = new Date();
-  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
   const visible = useMemo(
     () => transactions.filter((item) => !item.hiddenFromTotals),
@@ -437,29 +421,20 @@ export function HomeConnectedDashboard({
   const monthFlow = useMemo(() => {
     let credit = 0;
     let debit = 0;
-    let prevCredit = 0;
-    let prevDebit = 0;
     for (const item of visible) {
       const date = new Date(item.date);
       const value = Math.abs(item.amount);
-      if (inMonth(date, now.getFullYear(), now.getMonth())) {
-        if (item.type === "CREDIT") {
-          credit += value;
-        } else {
-          debit += value;
-        }
-      } else if (inMonth(date, prev.getFullYear(), prev.getMonth())) {
-        if (item.type === "CREDIT") {
-          prevCredit += value;
-        } else {
-          prevDebit += value;
-        }
+      if (!inMonth(date, now.getFullYear(), now.getMonth())) {
+        continue;
+      }
+      if (item.type === "CREDIT") {
+        credit += value;
+      } else {
+        debit += value;
       }
     }
-    return { credit, debit, prevCredit, prevDebit };
-  }, [now, prev, visible]);
-  const creditTrend = formatTrendCaption(monthFlow.credit, monthFlow.prevCredit);
-  const debitTrend = formatTrendCaption(monthFlow.debit, monthFlow.prevDebit);
+    return { credit, debit };
+  }, [now, visible]);
 
   const categories = useMemo(() => {
     const spend = summarizeCategorySpend(
@@ -570,12 +545,6 @@ export function HomeConnectedDashboard({
                 amountStyle={styles.flowAmount}
               />
             </View>
-            {creditTrend ? (
-              <View style={styles.trendRow}>
-                <Text style={styles.trend}>{creditTrend.label}</Text>
-                <Text style={styles.trend}>{creditTrend.value}</Text>
-              </View>
-            ) : null}
           </GlassCard>
         </Pressable>
 
@@ -604,12 +573,6 @@ export function HomeConnectedDashboard({
                 amountStyle={styles.flowAmount}
               />
             </View>
-            {debitTrend ? (
-              <View style={styles.trendRow}>
-                <Text style={styles.trend}>{debitTrend.label}</Text>
-                <Text style={styles.trend}>{debitTrend.value}</Text>
-              </View>
-            ) : null}
           </GlassCard>
         </Pressable>
       </View>
@@ -928,7 +891,6 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     flex: 1,
     gap: 8,
     padding: 12,
-    justifyContent: "space-between",
   },
   flowCopy: {
     gap: 4,
@@ -937,15 +899,6 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     fontSize: 24,
     lineHeight: 29,
     flex: 0,
-  },
-  trend: {
-    ...BearCashTypography.captionSmall,
-    color: TREND_MUTED,
-  },
-  trendRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 2,
   },
   billManyInner: {
     padding: 0,

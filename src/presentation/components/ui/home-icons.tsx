@@ -125,16 +125,8 @@ export function HomeDashInstallmentsIcon({ size = 12, color }: IconProps) {
 }
 
 export function HomeDashSubscriptionsIcon({ size = 12, color }: IconProps) {
-  const box = size >= 16 ? 16 : 12;
   return (
-    <FigmaSvgIcon
-      xml={HOME_DASH_SUBSCRIPTIONS_XML}
-      size={size}
-      color={color}
-      box={box}
-      glyphWidth={14.3333}
-      glyphHeight={11.6667}
-    />
+    <FigmaSvgIcon xml={HOME_DASH_SUBSCRIPTIONS_XML} size={size} color={color} />
   );
 }
 
