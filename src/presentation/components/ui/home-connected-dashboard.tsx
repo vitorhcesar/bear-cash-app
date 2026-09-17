@@ -223,17 +223,19 @@ function MoneyRow({
   amount,
   color = BearCashColors.text,
   amountStyle,
+  coinStyle,
   fill = true,
 }: {
   amount: number;
   color?: string;
   amountStyle?: object;
+  coinStyle?: object;
   fill?: boolean;
 }) {
   const styles = useStyles();
   return (
     <View style={[styles.moneyRow, fill ? styles.moneyRowFill : null]}>
-      <Text style={[styles.coin, { color }]}>
+      <Text style={[styles.coin, coinStyle, { color }]}>
         {getCurrencySymbol("BRL")}
       </Text>
       <Text
@@ -467,21 +469,30 @@ export function HomeConnectedDashboard({
       <GlassCard
         contentStyle={[styles.balanceInner, isMany && styles.balanceInnerMany]}
       >
-        <Text style={styles.label}>Saldo em suas contas</Text>
+        <Text style={styles.balanceLabel}>Saldo em suas contas</Text>
         <View style={styles.balanceRow}>
           <View style={styles.balanceValue}>
-            <IconHold>
-              <HomeDashWalletIcon size={12} />
+            <IconHold pad={5} radius={5}>
+              <HomeDashWalletIcon size={16} />
             </IconHold>
-            <MoneyRow amount={balance} />
+            <MoneyRow
+              amount={balance}
+              amountStyle={styles.balanceAmount}
+              coinStyle={styles.balanceCoin}
+            />
           </View>
           {isMany ? (
-            <BankMarkStack connections={connections} maxVisible={3} />
+            <BankMarkStack
+              connections={connections}
+              maxVisible={3}
+              size={28}
+              overlap={7}
+            />
           ) : markBank ? (
             <InstitutionMark
               name={markBank.institutionName}
               logoUrl={markBank.institutionLogoUrl}
-              size={20}
+              size={28}
             />
           ) : null}
         </View>
@@ -775,6 +786,10 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     ...BearCashTypography.captionSmall,
     color: BearCashColors.textMid,
   },
+  balanceLabel: {
+    ...BearCashTypography.caption,
+    color: BearCashColors.textMid,
+  },
   balanceInner: {
     gap: 10,
   },
@@ -866,6 +881,14 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   amountFill: {
     flex: 1,
     minWidth: 0,
+  },
+  balanceAmount: {
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  balanceCoin: {
+    fontSize: 14,
+    lineHeight: 22,
   },
   row: {
     flexDirection: "row",

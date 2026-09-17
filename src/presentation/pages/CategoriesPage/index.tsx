@@ -44,12 +44,12 @@ import {
 import { createThemedStyles } from "@/presentation/constants/themed-styles";
 import { useApiService } from "@/presentation/hooks/use-api-service";
 
-const CHART_HEIGHT = 168;
-const LARGE_BUBBLE = 83;
-const MEDIUM_BUBBLE = 46;
-const SMALL_BUBBLE = 37;
-const LARGE_ICON = 44;
-const SMALL_ICON = 22;
+const CHART_HEIGHT = 188;
+const LARGE_BUBBLE = 96;
+const MEDIUM_BUBBLE = 56;
+const SMALL_BUBBLE = 46;
+const LARGE_ICON = 52;
+const SMALL_ICON = 28;
 
 function monthLabel(date: Date) {
   return date.toLocaleDateString("pt-BR", { month: "long" }).toLowerCase();
@@ -95,7 +95,7 @@ function CategoryRow({
       >
         <View style={styles.rowMain}>
           <View style={styles.rowIcon}>
-            <CategoryChipIcon iconKey={item.iconKey} color={color} size={16} />
+            <CategoryChipIcon iconKey={item.iconKey} color={color} size={24} />
           </View>
           <View style={styles.rowCopy}>
             <Text style={styles.rowName}>{categoryListLabel(item)}</Text>
@@ -105,7 +105,7 @@ function CategoryRow({
             </View>
           </View>
         </View>
-        <CategoriesChevronIcon size={28} color={BearCashColors.textMid} />
+        <CategoriesChevronIcon size={32} color={BearCashColors.textMid} />
       </Pressable>
     </View>
   );
@@ -205,7 +205,7 @@ export function CategoriesPage() {
                 onPress={() => setPickerOpen(true)}
                 style={({ pressed }) => pressed && styles.pressed}
               >
-                <CategoriesCalendarIcon size={28} />
+                <CategoriesCalendarIcon size={32} />
               </Pressable>
             </View>
           </View>
@@ -228,7 +228,7 @@ export function CategoriesPage() {
             </Text>
             <View style={styles.totalRow}>
               <View style={styles.walletHold}>
-                <HomeDashWalletIcon size={12} />
+                <HomeDashWalletIcon size={16} />
               </View>
               <View style={styles.totalAmount}>
                 <Text style={styles.totalCoin}>
@@ -347,7 +347,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     gap: 8,
   },
   caption: {
-    ...BearCashTypography.captionSmall,
+    ...BearCashTypography.caption,
     color: BearCashColors.textMid,
   },
   totalRow: {
@@ -357,8 +357,8 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   },
   walletHold: {
     backgroundColor: BearCashColors.neutralBase,
-    borderRadius: 4,
-    padding: 4,
+    borderRadius: 6,
+    padding: 6,
   },
   totalAmount: {
     flex: 1,
@@ -369,15 +369,15 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   },
   totalCoin: {
     fontFamily: BearCashFonts.semiBold,
-    fontSize: 12,
-    lineHeight: 19,
+    fontSize: 14,
+    lineHeight: 22,
     color: BearCashColors.text,
   },
   totalValue: {
     flex: 1,
     fontFamily: BearCashFonts.semiBold,
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 22,
+    lineHeight: 26,
     color: BearCashColors.text,
   },
   chart: {
@@ -390,8 +390,8 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: BearCashFonts.semiBold,
-    fontSize: 16,
-    lineHeight: 26,
+    fontSize: 18,
+    lineHeight: 28,
     color: BearCashColors.text,
   },
   list: {
@@ -407,8 +407,8 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    padding: 12,
+    gap: 10,
+    padding: 14,
     borderRadius: 10,
     backgroundColor: BearCashColors.surface,
     overflow: "hidden",
@@ -418,12 +418,12 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     minWidth: 0,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   rowIcon: {
     backgroundColor: BearCashColors.neutralBase,
-    borderRadius: 4,
-    padding: 6,
+    borderRadius: 6,
+    padding: 8,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -433,7 +433,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     gap: 2,
   },
   rowName: {
-    ...BearCashTypography.caption,
+    ...BearCashTypography.bodySmall,
     color: BearCashColors.textMid,
   },
   rowAmount: {
@@ -443,16 +443,18 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   },
   rowCoin: {
     fontFamily: BearCashFonts.semiBold,
-    fontSize: 10,
-    lineHeight: 16,
+    fontSize: 12,
+    lineHeight: 19,
     color: BearCashColors.textMid,
   },
   rowValue: {
-    ...BearCashTypography.subheading,
+    fontFamily: BearCashFonts.semiBold,
+    fontSize: 16,
+    lineHeight: 24,
     color: BearCashColors.textMid,
   },
   empty: {
-    ...BearCashTypography.caption,
+    ...BearCashTypography.bodySmall,
     color: BearCashColors.textSoft,
   },
 }));

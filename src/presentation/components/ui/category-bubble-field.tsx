@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
+  interpolateColor,
   runOnJS,
   useAnimatedStyle,
   useFrameCallback,
@@ -30,6 +31,10 @@ type SimBody = {
   vx: number;
   vy: number;
   r: number;
+  baseR: number;
+  selectedR: number;
+  select: number;
+  selectTarget: number;
   mass: number;
 };
 
@@ -46,6 +51,7 @@ const TAP_MOVE = 8;
 const MAX_THROW = 2800;
 const SELECT_SCALE = 95.756 / 82.866;
 const SELECT_MIN = 84;
+const SELECT_SMOOTH = 9;
 
 function withAlpha(hex: string, alpha: number) {
   const clean = hex.replace("#", "");
@@ -71,6 +77,10 @@ function emptyBody(): SimBody {
     vx: 0,
     vy: 0,
     r: 0,
+    baseR: 0,
+    selectedR: 0,
+    select: 0,
+    selectTarget: 0,
     mass: 1,
   };
 }
@@ -101,6 +111,10 @@ function seedBodies(specs: CategoryBubbleSpec[], width: number): SimBody[] {
       vx: (Math.random() - 0.5) * 140,
       vy: 20 + Math.random() * 50,
       r,
+      baseR: r,
+      selectedR: selectedSize(spec.size) / 2,
+      select: 0,
+      selectTarget: 0,
       mass: Math.max(r * r, 1),
     });
   }
@@ -191,10 +205,21 @@ function clampThrow(value: number) {
   return Math.max(-MAX_THROW, Math.min(MAX_THROW, value));
 }
 
+function easeSelect(body: SimBody, dt: number) {
+  "worklet";
+  const delta = body.selectTarget - body.select;
+  if (Math.abs(delta) < 0.002) {
+    body.select = body.selectTarget;
+  } else {
+    body.select += delta * (1 - Math.exp(-SELECT_SMOOTH * dt));
+  }
+  body.r = body.baseR + (body.selectedR - body.baseR) * body.select;
+  body.mass = Math.max(body.r * body.r, 1);
+}
+
 function PhysicsBubble({
   index,
   spec,
-  selected,
   bodies,
   tick,
   onSelect,
@@ -202,16 +227,19 @@ function PhysicsBubble({
 }: {
   index: number;
   spec: CategoryBubbleSpec;
-  selected: boolean;
   bodies: SharedValue<SimBody[]>;
   tick: SharedValue<number>;
   onSelect: (id: string) => void;
   onDragActive: (active: boolean) => void;
 }) {
   const styles = useStyles();
-  const size = selected ? selectedSize(spec.size) : spec.size;
-  const iconSize = selected ? Math.round(size * 0.308) : spec.icon;
-  const percentSize = Math.max(12, Math.round(size * 0.192));
+  const layoutSize = spec.size;
+  const selectedIcon = Math.round(layoutSize * 0.34);
+  const percentSize = Math.max(10, Math.round(layoutSize * 0.22));
+  const percentLine = Math.round(percentSize * 1.2);
+  const idleIconOffset = (layoutSize - spec.icon) / 2;
+  const selectedTop = (layoutSize - (selectedIcon + percentLine)) / 2;
+  const idleColor = withAlpha(spec.color, 0.2);
   const originX = useSharedValue(0);
   const originY = useSharedValue(0);
   const dragging = useSharedValue(0);
@@ -220,16 +248,39 @@ function PhysicsBubble({
     const frame = tick.value;
     const body = bodies.value[index];
     if (!body || body.active === 0) {
-      return { opacity: 0, transform: [{ translateX: 0 }, { translateY: -999 }] };
+      return {
+        opacity: 0,
+        zIndex: 1,
+        backgroundColor: idleColor,
+        transform: [{ translateX: 0 }, { translateY: -999 }, { scale: 1 }],
+      };
     }
     return {
       opacity: 1,
-      zIndex: selected || dragging.value === 1 ? 4 : 1,
+      zIndex: body.select > 0.01 || dragging.value === 1 ? 4 : 1,
+      backgroundColor: interpolateColor(
+        body.select,
+        [0, 1],
+        [idleColor, spec.color],
+      ),
       transform: [
-        { translateX: body.x - body.r + frame * 0 },
-        { translateY: body.y - body.r },
+        { translateX: body.x - layoutSize / 2 + frame * 0 },
+        { translateY: body.y - layoutSize / 2 },
+        { scale: (body.r * 2) / layoutSize },
       ],
     };
+  });
+
+  const selectedLayerStyle = useAnimatedStyle(() => {
+    const body = bodies.value[index];
+    const frame = tick.value;
+    return { opacity: (body?.select ?? 0) + frame * 0 };
+  });
+
+  const idleLayerStyle = useAnimatedStyle(() => {
+    const body = bodies.value[index];
+    const frame = tick.value;
+    return { opacity: 1 - (body?.select ?? 0) + frame * 0 };
   });
 
   const pan = Gesture.Pan()
@@ -302,52 +353,80 @@ function PhysicsBubble({
     });
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.bubble, style]}>
+    <Animated.View
+      pointerEvents="box-none"
+      style={[
+        styles.bubble,
+        {
+          width: layoutSize,
+          height: layoutSize,
+          borderRadius: layoutSize / 2,
+        },
+        style,
+      ]}
+    >
       <GestureDetector gesture={Gesture.Race(pan, tap)}>
         <View
           collapsable={false}
-          style={[
-            styles.bubbleHit,
-            {
-              width: size,
-              height: size,
-              borderRadius: size / 2,
-              backgroundColor: selected
-                ? spec.color
-                : withAlpha(spec.color, 0.2),
-            },
-          ]}
+          style={{ width: layoutSize, height: layoutSize }}
         >
-          {selected ? (
-            <View style={styles.selectedCopy} pointerEvents="none">
-              <View style={{ width: iconSize, height: iconSize }}>
-                <CategoryChipIcon
-                  iconKey={spec.iconKey}
-                  color={BearCashColors.background}
-                  size={iconSize}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.percent,
-                  { fontSize: percentSize, lineHeight: percentSize * 1.2 },
-                ]}
-              >
-                {`${Math.round(spec.percent)}%`}
-              </Text>
-            </View>
-          ) : (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              {
+                position: "absolute",
+                left: idleIconOffset,
+                top: idleIconOffset,
+                width: spec.icon,
+                height: spec.icon,
+              },
+              idleLayerStyle,
+            ]}
+          >
+            <CategoryChipIcon
+              iconKey={spec.iconKey}
+              color={spec.color}
+              size={spec.icon}
+            />
+          </Animated.View>
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              {
+                position: "absolute",
+                left: 0,
+                top: selectedTop,
+                width: layoutSize,
+              },
+              selectedLayerStyle,
+            ]}
+          >
             <View
-              pointerEvents="none"
-              style={{ width: spec.icon, height: spec.icon }}
+              style={{
+                width: selectedIcon,
+                height: selectedIcon,
+                marginLeft: (layoutSize - selectedIcon) / 2,
+              }}
             >
               <CategoryChipIcon
                 iconKey={spec.iconKey}
-                color={spec.color}
-                size={spec.icon}
+                color={BearCashColors.background}
+                size={selectedIcon}
               />
             </View>
-          )}
+            <Text
+              style={[
+                styles.percent,
+                {
+                  width: layoutSize,
+                  fontSize: percentSize,
+                  lineHeight: percentLine,
+                },
+              ]}
+            >
+              {`${Math.round(spec.percent)}%`}
+            </Text>
+          </Animated.View>
         </View>
       </GestureDetector>
     </Animated.View>
@@ -402,10 +481,12 @@ export function CategoryBubbleField({
       if (!spec || body.active === 0) {
         return body;
       }
-      const size =
-        selectedId === spec.id ? selectedSize(spec.size) : spec.size;
-      const r = size / 2;
-      return { ...body, r, mass: Math.max(r * r, 1) };
+      return {
+        ...body,
+        baseR: spec.size / 2,
+        selectedR: selectedSize(spec.size) / 2,
+        selectTarget: selectedId === spec.id ? 1 : 0,
+      };
     });
     bodies.value = next;
     tick.value += 1;
@@ -418,10 +499,17 @@ export function CategoryBubbleField({
     }
 
     const dt = Math.min((frame.timeSincePreviousFrame ?? 16) / 1000, 1 / 30);
-    const step = dt / SUBSTEPS;
     const next = bodies.value.map((body) => ({ ...body }));
     const { width: boxW, height: boxH } = world.value;
-    const drag = Math.max(0, 1 - AIR_DRAG * step);
+    const drag = Math.max(0, 1 - AIR_DRAG * dt / SUBSTEPS);
+    const step = dt / SUBSTEPS;
+
+    for (let i = 0; i < next.length; i += 1) {
+      const body = next[i];
+      if (body && body.active === 1) {
+        easeSelect(body, dt);
+      }
+    }
 
     for (let sub = 0; sub < SUBSTEPS; sub += 1) {
       for (let i = 0; i < next.length; i += 1) {
@@ -472,7 +560,6 @@ export function CategoryBubbleField({
           key={spec.id}
           index={index}
           spec={spec}
-          selected={spec.id === selectedId}
           bodies={bodies}
           tick={tick}
           onSelect={emitSelect}
@@ -488,15 +575,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
     position: "absolute",
     left: 0,
     top: 0,
-  },
-  bubbleHit: {
-    alignItems: "center",
-    justifyContent: "center",
     overflow: "hidden",
-  },
-  selectedCopy: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   percent: {
     fontFamily: BearCashFonts.regular,
