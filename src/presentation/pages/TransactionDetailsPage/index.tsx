@@ -1,3 +1,4 @@
+import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState, type ReactNode } from 'react';
 import {
@@ -16,10 +17,10 @@ import { getErrorMessage } from '@/infra/http/get-error-message';
 import type { TransactionItem } from '@/infra/http/services/api/modules/transactions.module';
 import {
   getCategoryDisplay,
-  getCategoryGroupLabel,
-  getCategoryLabel,
+  getTransactionCategoryLabel,
 } from '@/presentation/components/ui/activities-category-catalog';
 import { CategoryChipIcon } from '@/presentation/components/ui/activities-category-icons';
+import { CopyIcon } from '@/presentation/components/ui/api-keys-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
 import { Button } from '@/presentation/components/ui/button';
 import { formatTransactionDetailsDate } from '@/presentation/components/ui/calendar';
@@ -32,11 +33,17 @@ import {
   TransactionPencilIcon,
   TransactionTrashIcon,
 } from '@/presentation/components/ui/new-transaction-icons';
-import { SettingsChevronIcon, SettingsEditIcon } from '@/presentation/components/ui/settings-icons';
+import {
+  SettingsChevronIcon,
+  SettingsEditIcon,
+  SettingsKeyIcon,
+} from '@/presentation/components/ui/settings-icons';
 import { countSimilarTransactions } from '@/presentation/components/ui/similar-transactions';
 import { HintInfoIcon } from '@/presentation/components/ui/subscription-icons';
 import { SpinningAmount } from '@/presentation/components/ui/spinning-amount';
 import { TransactionBankBadge } from '@/presentation/components/ui/transaction-bank-badge';
+import { TransactionJsonSheet } from '@/presentation/components/ui/transaction-json-sheet';
+import { isAppBeta } from '@/presentation/constants/app-beta';
 import {
   BearCashColors,
   BearCashFonts,
@@ -116,11 +123,13 @@ function FactRow({
   label,
   value,
   trailing,
+  selectable = false,
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   trailing?: ReactNode;
+  selectable?: boolean;
 }) {
   const styles = useStyles();
   return (
@@ -128,11 +137,18 @@ function FactRow({
       {icon}
       <View style={styles.factCopy}>
         <Text style={styles.factLabel}>{label}</Text>
-        <Text style={styles.factValue}>{value}</Text>
+        <Text style={styles.factValue} selectable={selectable}>
+          {value}
+        </Text>
       </View>
       {trailing}
     </View>
   );
+}
+
+async function copyText(label: string, value: string) {
+  await Clipboard.setStringAsync(value);
+  Alert.alert('Copiado', `${label} copiado para a área de transferência.`);
 }
 
 export function TransactionDetailsPage() {
@@ -144,6 +160,7 @@ export function TransactionDetailsPage() {
   const [item, setItem] = useState<TransactionItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
+  const [jsonSheetOpen, setJsonSheetOpen] = useState(false);
   const [categorySheetOpen, setCategorySheetOpen] = useState(false);
   const [savingRecurring, setSavingRecurring] = useState(false);
   const [savingCategory, setSavingCategory] = useState(false);
@@ -186,7 +203,9 @@ export function TransactionDetailsPage() {
     ? getCategoryDisplay(item.categoryId)
     : undefined;
   const categoryLabel =
-    (item?.categoryId ? getCategoryGroupLabel(item.categoryId) : undefined) ??
+    (item?.categoryId
+      ? getTransactionCategoryLabel(item.categoryId)
+      : undefined) ??
     category?.label ??
     item?.category ??
     'Sem categoria';
@@ -220,7 +239,7 @@ export function TransactionDetailsPage() {
     }
 
     const previous = item;
-    const label = getCategoryLabel(id) ?? item.category;
+    const label = getTransactionCategoryLabel(id) ?? item.category;
     setItem({ ...item, categoryId: id, category: label ?? item.category });
     setSavingCategory(true);
 
@@ -289,6 +308,8 @@ export function TransactionDetailsPage() {
   const accountLabel = item.bankName?.trim() || 'BearCash';
   const installmentLabel = getInstallmentLabel(item);
   const canEdit = item.source === 'MANUAL';
+  const showBetaTools = isAppBeta();
+  const polpId = item.providerId?.trim() || null;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -438,6 +459,53 @@ export function TransactionDetailsPage() {
               ) : null}
             </View>
 
+            {showBetaTools ? (
+              <View style={styles.betaSection}>
+                <View style={styles.betaHeader}>
+                  <Text style={styles.betaTitle}>Teste beta</Text>
+                  <View style={styles.betaBadge}>
+                    <Text style={styles.betaBadgeText}>Beta</Text>
+                  </View>
+                </View>
+
+                <FactRow
+                  icon={
+                    <View style={styles.categoryBox}>
+                      <SettingsKeyIcon size={24} color={BearCashColors.text} />
+                    </View>
+                  }
+                  label="ID da Polp"
+                  value={polpId ?? 'Não informado'}
+                  selectable
+                  trailing={
+                    polpId ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Copiar ID da Polp"
+                        hitSlop={8}
+                        onPress={() => {
+                          void copyText('ID da Polp', polpId);
+                        }}
+                        style={styles.categoryEdit}
+                      >
+                        <CopyIcon size={16} color={BearCashColors.text} />
+                      </Pressable>
+                    ) : undefined
+                  }
+                />
+
+                <Pressable
+                  style={styles.jsonButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Ver JSON da transação"
+                  onPress={() => setJsonSheetOpen(true)}
+                >
+                  <Text style={styles.jsonButtonLabel}>Ver JSON da transação</Text>
+                  <SettingsChevronIcon size={16} color={BearCashColors.textMid} />
+                </Pressable>
+              </View>
+            ) : null}
+
             <View style={styles.recurringShell}>
               <HighlightCardBorder />
               <View style={styles.recurringCard}>
@@ -498,6 +566,13 @@ export function TransactionDetailsPage() {
           onSelect={(id) => {
             void handleCategorySelect(id);
           }}
+        />
+      ) : null}
+      {showBetaTools ? (
+        <TransactionJsonSheet
+          visible={jsonSheetOpen}
+          payload={item}
+          onClose={() => setJsonSheetOpen(false)}
         />
       ) : null}
       <ConfirmationSheet
@@ -622,6 +697,45 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   facts: {
     gap: 16,
   },
+  betaSection: {
+    gap: 16,
+  },
+  betaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  betaTitle: {
+    ...BearCashTypography.subheading,
+    color: BearCashColors.text,
+  },
+  betaBadge: {
+    backgroundColor: BearCashColors.warning,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  betaBadgeText: {
+    ...BearCashTypography.captionSmall,
+    fontFamily: BearCashFonts.semiBold,
+    color: BearCashColors.warningText,
+    textTransform: 'uppercase',
+  },
+  jsonButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    backgroundColor: BearCashColors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  jsonButtonLabel: {
+    ...BearCashTypography.subheading,
+    color: BearCashColors.text,
+    flex: 1,
+  },
   factRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -639,6 +753,7 @@ const useStyles = createThemedStyles(() => StyleSheet.create({
   factValue: {
     ...BearCashTypography.subheading,
     color: BearCashColors.text,
+    flexShrink: 1,
   },
   categoryEdit: {
     width: 28,

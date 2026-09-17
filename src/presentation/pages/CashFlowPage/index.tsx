@@ -451,6 +451,7 @@ export function CashFlowPage() {
               showInflow={tab !== "outflow"}
               showOutflow={tab !== "inflow"}
               onSelect={setSelectedKey}
+              loading={transactions === null}
               title={
                 period === "3m"
                   ? "Análise Trimestral"

@@ -255,7 +255,6 @@ export function CategoryDetailPage() {
               <CategorySubcategories
                 items={subcategories}
                 accent={accent}
-                groupLabel={title}
                 onOpenTransaction={(item) =>
                   router.push({
                     pathname: "/transaction/[id]",
@@ -285,7 +284,6 @@ export function CategoryDetailPage() {
                   leading="mark"
                   iconKey={group?.parentIconKey}
                   iconColor={accent}
-                  categoryLabel={title}
                   onPress={() =>
                     router.push({
                       pathname: "/transaction/[id]",

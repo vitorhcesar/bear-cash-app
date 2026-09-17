@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getErrorMessage } from '@/infra/http/get-error-message';
 import {
   getCategoryDisplay,
-  getCategoryGroupLabel,
+  getTransactionCategoryLabel,
 } from '@/presentation/components/ui/activities-category-catalog';
 import { CategoryChipIcon } from '@/presentation/components/ui/activities-category-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
@@ -151,7 +151,7 @@ export function EditTransactionPage() {
         currencyCode,
         categoryId,
         category: categoryId
-          ? getCategoryGroupLabel(categoryId) ?? category?.label ?? null
+          ? getTransactionCategoryLabel(categoryId) ?? category?.label ?? null
           : null,
         hiddenFromTotals,
       });

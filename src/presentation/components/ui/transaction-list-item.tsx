@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { TransactionItem } from '@/infra/http/services/api/modules/transactions.module';
 import {
   getCategoryDisplay,
-  getCategoryGroupLabel,
+  getTransactionCategoryLabel,
 } from '@/presentation/components/ui/activities-category-catalog';
 import { CategoryChipIcon } from '@/presentation/components/ui/activities-category-icons';
 import { formatActivityDay } from '@/presentation/components/ui/calendar';
@@ -45,7 +45,9 @@ export function TransactionListItem({
     : undefined;
   const groupLabel =
     categoryLabel ??
-    (item.categoryId ? getCategoryGroupLabel(item.categoryId) : undefined) ??
+    (item.categoryId
+      ? getTransactionCategoryLabel(item.categoryId)
+      : undefined) ??
     item.category ??
     'Sem categoria';
   const isCredit = item.type === 'CREDIT';

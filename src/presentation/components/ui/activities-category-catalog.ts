@@ -915,6 +915,11 @@ export function getCategoryDisplay(id: string): CategoryDisplay | undefined {
   return undefined;
 }
 
+/** Most specific label: subcategory when `id` is a child, otherwise the parent group. */
+export function getTransactionCategoryLabel(id: string): string | undefined {
+  return getCategoryDisplay(id)?.label ?? getCategoryLabel(id);
+}
+
 export function isFilterCategoryChip(id: string): id is CategoryGroupId {
   return (FILTER_CATEGORY_CHIPS as readonly string[]).includes(
     resolveCategoryId(id),

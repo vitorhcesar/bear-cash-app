@@ -2,7 +2,7 @@
   "expo": {
     "name": "BearCash",
     "slug": "bear-cash",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "orientation": "portrait",
     "icon": "./assets/images/bear-cash-app-icon.png",
     "scheme": "bear-cash",
@@ -80,6 +80,7 @@
     },
     "extra": {
       "router": {},
+      "beta": true,
       "eas": {
         "projectId": "3e9bd49c-c462-4202-89d4-32b53d9a8ed7"
       }

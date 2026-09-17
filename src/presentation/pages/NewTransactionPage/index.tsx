@@ -17,7 +17,7 @@ import { getErrorMessage } from '@/infra/http/get-error-message';
 import type { TransactionType } from '@/infra/http/services/api/modules/transactions.module';
 import {
   getCategoryDisplay,
-  getCategoryGroupLabel,
+  getTransactionCategoryLabel,
 } from '@/presentation/components/ui/activities-category-catalog';
 import { CategoryChipIcon } from '@/presentation/components/ui/activities-category-icons';
 import { BackButton } from '@/presentation/components/ui/back-button';
@@ -98,7 +98,9 @@ export function NewTransactionPage() {
           ? {
               categoryId,
               category:
-                getCategoryGroupLabel(categoryId) ?? category?.label ?? null,
+                getTransactionCategoryLabel(categoryId) ??
+                category?.label ??
+                null,
             }
           : {}),
       });

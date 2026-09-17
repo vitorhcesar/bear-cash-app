@@ -27,13 +27,11 @@ function formatAmount(amount: number) {
 export function CategorySubcategories({
   items,
   accent,
-  groupLabel,
   onOpenTransaction,
   onSeeAll,
 }: {
   items: SubcategorySpend[];
   accent: string;
-  groupLabel: string;
   onOpenTransaction: (item: TransactionItem) => void;
   onSeeAll: (categoryId: string) => void;
 }) {
@@ -112,7 +110,6 @@ export function CategorySubcategories({
                       leading="mark"
                       iconKey={item.iconKey}
                       iconColor={accent}
-                      categoryLabel={groupLabel}
                       onPress={() => onOpenTransaction(tx)}
                     />
                   ))}

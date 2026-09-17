@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,6 +9,14 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from "react-native";
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 
 import { MONTHS_LONG } from "@/presentation/components/ui/calendar";
@@ -37,6 +46,12 @@ const BODY_HEIGHT = 160;
 const LABEL_HEIGHT = 16;
 const PLOT_HEIGHT = BODY_HEIGHT - LABEL_HEIGHT - 4;
 const PLOT_PAD = 8;
+const PLOT_BASELINE = PLOT_HEIGHT - PLOT_PAD;
+const LINE_GROW_MS = 820;
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+
+type PlotPoint = { x: number; y: number };
 const THUMB_WIDTH = 39;
 const DOT_SIZE = 10;
 const TOOLTIP_ESTIMATE = 96;
@@ -56,7 +71,8 @@ function tooltipDateLabel(date: Date, axis: "day" | "month") {
   return `${date.getDate()} de ${MONTHS_LONG[date.getMonth()]}`;
 }
 
-function linePath(points: { x: number; y: number }[]) {
+function linePath(points: PlotPoint[]) {
+  "worklet";
   if (points.length === 0) {
     return "";
   }
@@ -73,9 +89,17 @@ function linePath(points: { x: number; y: number }[]) {
   return d;
 }
 
+function grownPoints(points: PlotPoint[], progress: number) {
+  "worklet";
+  return points.map((point) => ({
+    x: point.x,
+    y: PLOT_BASELINE + (point.y - PLOT_BASELINE) * progress,
+  }));
+}
+
 function plotY(value: number, peak: number) {
   if (peak <= 0) {
-    return PLOT_HEIGHT - PLOT_PAD;
+    return PLOT_BASELINE;
   }
   const usable = PLOT_HEIGHT - PLOT_PAD * 2;
   return PLOT_PAD + (1 - value / peak) * usable;
@@ -87,6 +111,7 @@ export function CashFlowChart({
   showInflow,
   showOutflow,
   onSelect,
+  loading = false,
   title = "Análise Mensal",
   axis = "day",
   inset = "default",
@@ -97,6 +122,7 @@ export function CashFlowChart({
   showInflow: boolean;
   showOutflow: boolean;
   onSelect: (key: string) => void;
+  loading?: boolean;
   title?: string;
   axis?: "day" | "month";
   inset?: "default" | "wide";
@@ -107,6 +133,10 @@ export function CashFlowChart({
   const [trackWidth, setTrackWidth] = useState(0);
   const [contentWidth, setContentWidth] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
+  const grow = useSharedValue(0);
+  const inflowSV = useSharedValue<PlotPoint[]>([]);
+  const outflowSV = useSharedValue<PlotPoint[]>([]);
+  const selectedYSV = useSharedValue(0);
   const selectedIndex = points.findIndex((point) => point.key === selectedKey);
   const peak = Math.max(
     0,
@@ -122,14 +152,6 @@ export function CashFlowChart({
     ? Math.max(trackWidth, 0)
     : Math.max(points.length * step, trackWidth);
   const pointX = (index: number) => index * colWidth + colWidth / 2;
-  const inflowPoints = points.map((point, index) => ({
-    x: pointX(index),
-    y: plotY(point.inflow, peak),
-  }));
-  const outflowPoints = points.map((point, index) => ({
-    x: pointX(index),
-    y: plotY(point.outflow, peak),
-  }));
   const selected = selectedIndex >= 0 ? points[selectedIndex] : null;
   const selectedX = selectedIndex >= 0 ? pointX(selectedIndex) : 0;
   const selectedY = selected
@@ -146,7 +168,58 @@ export function CashFlowChart({
     Math.max(selectedX - TOOLTIP_ESTIMATE / 2, 4),
     Math.max(plotWidth - TOOLTIP_ESTIMATE - 4, 4),
   );
-  const tooltipTop = Math.max(selectedY - 78, 0);
+  const seriesKey = `${showInflow ? 1 : 0}${showOutflow ? 1 : 0}:${Math.round(colWidth * 100)}:${points
+    .map((point) => `${point.key}:${point.inflow}:${point.outflow}`)
+    .join(",")}`;
+
+  useLayoutEffect(() => {
+    selectedYSV.value = selectedY;
+  }, [selectedY, selectedYSV]);
+
+  useLayoutEffect(() => {
+    grow.value = 0;
+    if (loading || trackWidth <= 0 || points.length === 0) {
+      return;
+    }
+    inflowSV.value = points.map((point, index) => ({
+      x: pointX(index),
+      y: plotY(point.inflow, peak),
+    }));
+    outflowSV.value = points.map((point, index) => ({
+      x: pointX(index),
+      y: plotY(point.outflow, peak),
+    }));
+    grow.value = withTiming(1, {
+      duration: LINE_GROW_MS,
+      easing: Easing.bezier(0.2, 0.82, 0.22, 1),
+      reduceMotion: ReduceMotion.System,
+    });
+  }, [grow, inflowSV, loading, outflowSV, seriesKey, trackWidth]);
+
+  const inflowProps = useAnimatedProps(() => ({
+    d: linePath(grownPoints(inflowSV.value, grow.value)),
+    opacity: grow.value,
+  }));
+  const outflowProps = useAnimatedProps(() => ({
+    d: linePath(grownPoints(outflowSV.value, grow.value)),
+    opacity: grow.value,
+  }));
+  const selectedDotStyle = useAnimatedStyle(() => ({
+    opacity: grow.value,
+    top:
+      PLOT_BASELINE +
+      (selectedYSV.value - PLOT_BASELINE) * grow.value -
+      DOT_SIZE / 2,
+  }));
+  const tooltipStyle = useAnimatedStyle(() => ({
+    opacity: grow.value,
+    top: Math.max(
+      PLOT_BASELINE +
+        (selectedYSV.value - PLOT_BASELINE) * grow.value -
+        78,
+      0,
+    ),
+  }));
 
   useEffect(() => {
     if (spread || selectedIndex < 0) {
@@ -171,7 +244,7 @@ export function CashFlowChart({
         height: BODY_HEIGHT,
       }}
     >
-      {trackWidth > 0 ? (
+      {trackWidth > 0 && !loading ? (
         <Svg
           pointerEvents="none"
           width={plotWidth}
@@ -179,8 +252,10 @@ export function CashFlowChart({
           style={styles.plot}
         >
           {showInflow ? (
-            <Path
-              d={linePath(inflowPoints)}
+            <AnimatedPath
+              d=""
+              opacity={0}
+              animatedProps={inflowProps}
               stroke={BearCashColors.income}
               strokeWidth={1.5}
               fill="none"
@@ -189,8 +264,10 @@ export function CashFlowChart({
             />
           ) : null}
           {showOutflow ? (
-            <Path
-              d={linePath(outflowPoints)}
+            <AnimatedPath
+              d=""
+              opacity={0}
+              animatedProps={outflowProps}
               stroke={BearCashColors.expense}
               strokeWidth={1.5}
               fill="none"
@@ -235,23 +312,22 @@ export function CashFlowChart({
           );
         })}
       </View>
-      {selected ? (
+      {selected && !loading ? (
         <>
-          <View
+          <Animated.View
             pointerEvents="none"
             style={[
               styles.selectedDot,
-              {
-                left: selectedX - DOT_SIZE / 2,
-                top: selectedY - DOT_SIZE / 2,
-              },
+              { left: selectedX - DOT_SIZE / 2 },
+              selectedDotStyle,
             ]}
           />
-          <View
+          <Animated.View
             pointerEvents="none"
             style={[
               styles.tooltipWrap,
-              { left: tooltipLeft, top: tooltipTop },
+              { left: tooltipLeft },
+              tooltipStyle,
             ]}
           >
             <View style={styles.tooltip}>
@@ -282,7 +358,7 @@ export function CashFlowChart({
               ) : null}
             </View>
             <View style={styles.tooltipTail} />
-          </View>
+          </Animated.View>
         </>
       ) : null}
     </View>
@@ -336,6 +412,15 @@ export function CashFlowChart({
             </ScrollView>
           )}
         </View>
+        {loading ? (
+          <View pointerEvents="none" style={styles.loadingOverlay}>
+            <ActivityIndicator
+              size="large"
+              color={BearCashColors.buttonFilled}
+              accessibilityLabel="Carregando fluxo de caixa"
+            />
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.scrollTrack}>
@@ -396,15 +481,27 @@ const useStyles = createThemedStyles(() =>
       color: BearCashColors.textSoft,
     },
     body: {
-      minHeight: BODY_HEIGHT + 32,
+      height: BODY_HEIGHT + 32,
       padding: 16,
+      position: "relative",
     },
     bodySpread: {
       paddingHorizontal: 59,
       paddingVertical: 16,
     },
     plotHost: {
-      minHeight: BODY_HEIGHT,
+      height: BODY_HEIGHT,
+    },
+    loadingOverlay: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 10,
+      elevation: 10,
     },
     empty: {
       ...BearCashTypography.caption,

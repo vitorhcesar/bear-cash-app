@@ -1,8 +1,5 @@
 import type { TransactionItem } from '@/infra/http/services/api/modules/transactions.module';
-import {
-  getCategoryGroupLabel,
-  getCategoryLabel,
-} from '@/presentation/components/ui/activities-category-catalog';
+import { getTransactionCategoryLabel } from '@/presentation/components/ui/activities-category-catalog';
 
 function normalizeDescription(value: string) {
   return value
@@ -56,11 +53,9 @@ export function similarCategorySubtitle(item: TransactionItem) {
     return item.category?.trim() || 'Sem categoria';
   }
 
-  const group = getCategoryGroupLabel(item.categoryId);
-  const label = getCategoryLabel(item.categoryId);
-  if (group && label && group !== label) {
-    return `${group} — ${label}`;
-  }
-
-  return group ?? label ?? item.category ?? 'Sem categoria';
+  return (
+    getTransactionCategoryLabel(item.categoryId) ??
+    item.category ??
+    'Sem categoria'
+  );
 }
