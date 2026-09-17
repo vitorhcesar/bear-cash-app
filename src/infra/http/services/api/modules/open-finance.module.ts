@@ -46,6 +46,12 @@ export type OpenFinanceBill = {
   currency: string | null;
 };
 
+/** Fatura do ciclo aberto, derivada das transações do cartão (`billForecastDate`). */
+export type OpenFinanceCurrentInvoice = {
+  month: string;
+  amount: number;
+};
+
 export type OpenFinanceConnection = OpenFinanceConsent & {
   accounts: Array<{
     id: string;
@@ -62,7 +68,9 @@ export type OpenFinanceConnection = OpenFinanceConsent & {
     last4: string | null;
     availableLimit: number | null;
     usedAmount?: number | null;
+    limitAmount?: number | null;
     currentBill: OpenFinanceBill | null;
+    currentInvoice?: OpenFinanceCurrentInvoice | null;
   }>;
 };
 

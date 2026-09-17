@@ -75,10 +75,51 @@ function firstNumber(record: Record<string, unknown> | null, keys: string[]) {
   return null;
 }
 
-function isInstallment(item: TransactionItem) {
+function installmentPlan(item: TransactionItem) {
   const card = asRecord(item.creditCardMetadata);
   const total = firstNumber(card, ["chargeNumber", "charge_number"]);
-  return total != null && total > 1;
+  if (total == null || total <= 1) {
+    return null;
+  }
+  const current = firstNumber(card, [
+    "chargeIdentificator",
+    "charge_identificator",
+  ]);
+  return { current: current ?? 1, total };
+}
+
+/**
+ * Cada parcela chega como uma transação própria, então contar transações infla o número.
+ * Agrupamos por compra e mantemos só os planos que ainda têm parcelas a vencer.
+ */
+function countOngoingInstallments(items: TransactionItem[]) {
+  const plans = new Map<string, { current: number; total: number }>();
+
+  for (const item of items) {
+    const plan = installmentPlan(item);
+    if (!plan) {
+      continue;
+    }
+    const key = [
+      item.descriptionRaw ?? item.description,
+      plan.total,
+      Math.abs(item.amount).toFixed(2),
+    ]
+      .join("|")
+      .toLowerCase();
+    const known = plans.get(key);
+    if (!known || plan.current > known.current) {
+      plans.set(key, plan);
+    }
+  }
+
+  let ongoing = 0;
+  for (const plan of plans.values()) {
+    if (plan.current < plan.total) {
+      ongoing += 1;
+    }
+  }
+  return ongoing;
 }
 
 function formatAmount(amount: number) {
@@ -169,14 +210,16 @@ type BillEntry = {
   card: OpenFinanceConnection["creditCards"][number];
 };
 
+/** Fatura que vence agora, sem as parcelas previstas para os próximos ciclos. */
 function invoiceAmount(card: BillEntry["card"]) {
-  return card.usedAmount ?? card.currentBill?.totalAmount ?? 0;
+  return card.currentInvoice?.amount ?? card.currentBill?.totalAmount ?? 0;
 }
 
+/** Limite comprometido — aqui as parcelas futuras contam. */
 function billUsage(card: BillEntry["card"]) {
-  const used = invoiceAmount(card);
+  const used = card.usedAmount ?? invoiceAmount(card);
   const available = card.availableLimit;
-  const total = available != null ? used + available : null;
+  const total = card.limitAmount ?? (available != null ? used + available : null);
   return { used, total };
 }
 
@@ -415,10 +458,9 @@ export function HomeConnectedDashboard({
     0,
   );
   const primaryBill = billCards[0] ?? null;
-  const billUsed = primaryBill ? invoiceAmount(primaryBill.card) : billTotal;
-  const billAvailable = primaryBill?.card.availableLimit ?? null;
-  const billLimitTotal =
-    billAvailable != null ? billUsed + billAvailable : null;
+  const primaryUsage = primaryBill ? billUsage(primaryBill.card) : null;
+  const billUsed = primaryUsage?.used ?? 0;
+  const billLimitTotal = primaryUsage?.total ?? null;
 
   const monthFlow = useMemo(() => {
     let credit = 0;
@@ -451,7 +493,10 @@ export function HomeConnectedDashboard({
     };
   }, [now, visible]);
 
-  const installments = visible.filter(isInstallment).length;
+  const installments = useMemo(
+    () => countOngoingInstallments(visible),
+    [visible],
+  );
   const recurring = visible.filter((item) => item.recurring);
   const recurringTotal = recurring.reduce(
     (sum, item) => sum + Math.abs(item.amount),

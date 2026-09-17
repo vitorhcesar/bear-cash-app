@@ -342,7 +342,9 @@ export function BankConnectionPage() {
                     ))}
                     {connection.creditCards.map((card) => {
                       const due = formatDueDate(card.currentBill?.dueDate);
-                      const amount = card.usedAmount ?? card.currentBill?.totalAmount;
+                      const amount =
+                        card.currentInvoice?.amount ??
+                        card.currentBill?.totalAmount;
                       const billTotal =
                         amount != null
                           ? formatCurrencyAmount(
