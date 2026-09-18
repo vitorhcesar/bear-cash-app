@@ -2,7 +2,7 @@
   "expo": {
     "name": "BearCash",
     "slug": "bear-cash",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "orientation": "portrait",
     "icon": "./assets/images/bear-cash-app-icon.png",
     "scheme": "bear-cash",

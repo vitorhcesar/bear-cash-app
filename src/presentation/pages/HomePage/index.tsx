@@ -312,6 +312,7 @@ function HomeConnectedState({
   onPressCategories,
   onPressInflow,
   onPressOutflow,
+  onPressCreditCard,
   scrollRef,
 }: {
   firstName: string;
@@ -329,6 +330,7 @@ function HomeConnectedState({
   onPressCategories: () => void;
   onPressInflow: () => void;
   onPressOutflow: () => void;
+  onPressCreditCard: () => void;
   scrollRef: RefObject<HomeHeroPullScrollHandle | null>;
 }) {
   const styles = useStyles();
@@ -387,6 +389,7 @@ function HomeConnectedState({
             onPressCategories={onPressCategories}
             onPressInflow={onPressInflow}
             onPressOutflow={onPressOutflow}
+            onPressCreditCard={onPressCreditCard}
           />
         </View>
       </HomeHeroPullScroll>
@@ -586,6 +589,7 @@ export function HomePage() {
         onPressCategories={() => router.push("/categories")}
         onPressInflow={() => router.push("/cash-flow")}
         onPressOutflow={() => router.push("/cash-flow")}
+        onPressCreditCard={() => router.push("/credit-card")}
         scrollRef={scrollRef}
       />
       {bankSelectSheet}

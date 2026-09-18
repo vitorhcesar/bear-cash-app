@@ -15,6 +15,7 @@ import {
   HOME_DASH_WALLET_12_XML,
   HOME_MAIL_XML,
   HOME_MASTERCARD_BRAND_XML,
+  HOME_VISA_BRAND_XML,
   HOME_PLUS_12_XML,
   HOME_PLUS_16_XML,
   HOME_SHIELD_XML,
@@ -140,6 +141,20 @@ export function MastercardBrandMark({
   return (
     <View style={{ width, height }}>
       <SvgXml xml={HOME_MASTERCARD_BRAND_XML} width={width} height={height} />
+    </View>
+  );
+}
+
+export function VisaBrandMark({
+  width = 35,
+  height = 16,
+}: {
+  width?: number;
+  height?: number;
+}) {
+  return (
+    <View style={{ width, height }}>
+      <SvgXml xml={HOME_VISA_BRAND_XML} width={width} height={height} />
     </View>
   );
 }

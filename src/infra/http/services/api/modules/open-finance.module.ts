@@ -52,6 +52,34 @@ export type OpenFinanceCurrentInvoice = {
   amount: number;
 };
 
+export type CreditCardBillStatus = 'open' | 'closed';
+
+export type CreditCardMonthPoint = {
+  month: string;
+  amount: number;
+  hasData: boolean;
+};
+
+export type CreditCardOverviewItem = {
+  id: string;
+  consentId: string;
+  institutionId: string;
+  institutionName: string;
+  institutionLogoUrl: string | null;
+  accountLast4: string | null;
+  name: string | null;
+  network: string | null;
+  last4: string | null;
+  availableLimit: number | null;
+  usedAmount: number | null;
+  limitAmount: number | null;
+  currentInvoice: OpenFinanceCurrentInvoice | null;
+  currentBill: OpenFinanceBill | null;
+  billStatus: CreditCardBillStatus | null;
+  dueDate: string | null;
+  months: CreditCardMonthPoint[];
+};
+
 export type OpenFinanceConnection = OpenFinanceConsent & {
   accounts: Array<{
     id: string;
@@ -74,12 +102,31 @@ export type OpenFinanceConnection = OpenFinanceConsent & {
   }>;
 };
 
+export type CreditCardInstallmentPlan = {
+  id: string;
+  creditCardId: string;
+  institutionName: string;
+  institutionLogoUrl: string | null;
+  merchantName: string;
+  merchantLogoUrl: string | null;
+  categoryId: string | null;
+  category: string | null;
+  current: number;
+  total: number;
+  installmentAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  lastInstallmentMonth: string | null;
+};
+
 export interface IOpenFinanceModule {
   listInstitutions(): Promise<{ items: OpenFinanceInstitution[] }>;
   listConnections(): Promise<{ items: OpenFinanceConnection[] }>;
   syncConnections(): Promise<{ items: OpenFinanceConnection[] }>;
   syncConnection(id: string): Promise<OpenFinanceConnection>;
   getConnection(id: string): Promise<OpenFinanceConnection>;
+  listCreditCards(): Promise<{ items: CreditCardOverviewItem[] }>;
+  listCreditCardInstallments(): Promise<{ items: CreditCardInstallmentPlan[] }>;
   listCreditCardBills(creditCardId: string): Promise<{ items: OpenFinanceBill[] }>;
   createConsent(input: { institutionId: string }): Promise<OpenFinanceConsent>;
   getConsent(id: string): Promise<OpenFinanceConsent>;
@@ -116,6 +163,18 @@ export class OpenFinanceModule extends BaseApiModule implements IOpenFinanceModu
   getConnection(id: string) {
     return this.http.get<OpenFinanceConnection>(
       `/api/v1/open-finance/connections/${id}`,
+    );
+  }
+
+  listCreditCards() {
+    return this.http.get<{ items: CreditCardOverviewItem[] }>(
+      '/api/v1/open-finance/credit-cards',
+    );
+  }
+
+  listCreditCardInstallments() {
+    return this.http.get<{ items: CreditCardInstallmentPlan[] }>(
+      '/api/v1/open-finance/credit-cards/installments',
     );
   }
 

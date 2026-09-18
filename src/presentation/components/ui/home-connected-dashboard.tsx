@@ -47,6 +47,7 @@ type HomeConnectedDashboardProps = {
   onPressCategories?: () => void;
   onPressInflow?: () => void;
   onPressOutflow?: () => void;
+  onPressCreditCard?: () => void;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -299,9 +300,11 @@ function MoneyRow({
 function BillsCarousel({
   items,
   total,
+  onPress,
 }: {
   items: BillEntry[];
   total: number;
+  onPress?: () => void;
 }) {
   const styles = useStyles();
   const [page, setPage] = useState(0);
@@ -317,7 +320,13 @@ function BillsCarousel({
 
   return (
     <GlassCard contentStyle={styles.billManyInner}>
-      <View style={styles.billManyHeader}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Abrir cartão de crédito"
+        disabled={!onPress}
+        onPress={onPress}
+        style={styles.billManyHeader}
+      >
         <View style={styles.billCopy}>
           <Text style={styles.label}>Total fatura atual</Text>
           <View style={styles.billValue}>
@@ -340,7 +349,7 @@ function BillsCarousel({
             ))}
           </View>
         ) : null}
-      </View>
+      </Pressable>
       <ScrollView
         horizontal
         nestedScrollEnabled
@@ -356,7 +365,14 @@ function BillsCarousel({
         {items.map((item) => {
           const usage = billUsage(item.card);
           return (
-            <View key={item.card.id} style={styles.billTile}>
+            <Pressable
+              key={item.card.id}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir cartão de crédito"
+              disabled={!onPress}
+              onPress={onPress}
+              style={styles.billTile}
+            >
               <View style={styles.billTileHeader}>
                 <InstitutionMark
                   name={item.connection.institutionName}
@@ -408,7 +424,7 @@ function BillsCarousel({
                   </View>
                 </View>
               </View>
-            </View>
+            </Pressable>
           );
         })}
       </ScrollView>
@@ -424,6 +440,7 @@ export function HomeConnectedDashboard({
   onPressCategories,
   onPressInflow,
   onPressOutflow,
+  onPressCreditCard,
 }: HomeConnectedDashboardProps) {
   const styles = useStyles();
   const now = new Date();
@@ -634,9 +651,22 @@ export function HomeConnectedDashboard({
       </View>
 
       {billCards.length > 1 ? (
-        <BillsCarousel items={billCards} total={billTotal} />
+        <BillsCarousel
+          items={billCards}
+          total={billTotal}
+          onPress={onPressCreditCard}
+        />
       ) : (
-        <GlassCard contentStyle={styles.billSingleInner}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Abrir cartão de crédito"
+          disabled={!onPressCreditCard}
+          onPress={onPressCreditCard}
+          style={({ pressed }) => [
+            pressed && onPressCreditCard ? styles.flowPressed : null,
+          ]}
+        >
+          <GlassCard contentStyle={styles.billSingleInner}>
           {primaryBill ? (
             <View style={styles.billHeader}>
               <View style={styles.billHeaderMain}>
@@ -707,6 +737,7 @@ export function HomeConnectedDashboard({
             ) : null}
           </View>
         </GlassCard>
+        </Pressable>
       )}
 
       <Pressable
